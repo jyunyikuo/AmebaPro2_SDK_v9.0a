@@ -1,8 +1,8 @@
 
 /**************************************************************************//**
- * @file     rtl8735b_voe_cc_command.h
+ * @file     rtl8735b_voe_cmd.h
  * @brief    The interface commands implementation header file.
- *           
+ *
  * @version  V1.00
  * @date     2020-11-25
  *
@@ -27,8 +27,8 @@
  *
  ******************************************************************************/
 
-#ifndef _RTL8735B_VOE_CC_COMMAND_H_
-#define _RTL8735B_VOE_CC_COMMAND_H_
+#ifndef _RTL8735B_VOE_CMD_H_
+#define _RTL8735B_VOE_CMD_H_
 
 // TM9 <--> KM4 command 30 bit
 // command 14 bit 0x3FFF0000
@@ -55,42 +55,46 @@
 
 // ERAC set
 // Module index 0x100
-#define FW_RET_ERAC_OK                      0x100		// KM --> TM
-#define FW_RET_ERAC_ERR                     0x1FF		// KM --> TM
+#define FW_RET_ERAC_OK                   0x100		// KM --> TM
+#define FW_RET_ERAC_ERR                  0x1FF		// KM --> TM
 
-#define FW_ERAC_INIT_CMD                    0x110
-#define FW_ERAC_WRITE_CMD                   0x120
-#define FW_ERAC_READ_CMD                    0x130
+#define FW_ERAC_INIT_CMD                 0x110
+#define FW_ERAC_WRITE_CMD                0x120
+#define FW_ERAC_READ_CMD                 0x130
 
 
-// ISP/ENC set
-// Module index 0x200
-// VOE PAYLOAD (16 bit)
-#define VOE_OK                           0x0
-#define VOE_NOK                          0x1
+// VOE CMD/STATUS/CHANNEL set
 
-// VOE CMD  (12 bit)
+// VOE STATUS (8 bit)
+#define VOE_OK                           0x00
+#define VOE_NOK                          0x01
+#define VOE_ENC_OVERFLOW                 0x02
+
+// VOE CMD  (14 bit)
 
 // VOE normal control flow
 #define VOE_START_CMD                    0x203
 #define VOE_STOP_CMD                     0x204
 #define VOE_OPEN_CMD                     0x206
 #define VOE_CLOSE_CMD                    0x207
+#define VOE_RELEASE_ENC_CMD              0x208
+#define VOE_RELEASE_JPG_CMD              0x209
 #define VOE_OUT_CMD                      0x20B
-#define VOE_RELEASE_SLOT_CMD             0x20C
 #define VOE_FORCE_I_CMD                  0x20D
 #define VOE_SET_RC_CMD                   0x20E
-#define VOE_JPG_OUT_CMD                  0x20F
 
-#define VOE_YUV_OUT_CMD                  0x210
 #define VOE_ROI_REGION_CMD               0x211
 #define VOE_OBJ_REGION_CMD               0x212
+
+#define VOE_ENC_OUT_CMD                  0x215
+#define VOE_JPG_OUT_CMD                  0x216
+#define VOE_YUV_OUT_CMD                  0x217
 
 // VOE debug/information command
 #define VOE_MEM_INFO_CMD                 0x220
 #define VOE_BUF_INFO_CMD                 0x221
 #define VOE_PRINT_CMD                    0x222
-#define VOE_DEBUG_CMD                    0x223
+#define VOE_TEST_CMD                     0x225
 
 // ISP related command
 #define VOE_ISP_CTRL_GET_CMD			 0x240
@@ -118,8 +122,18 @@
 #define VOE_I2C_READ                     0x270
 #define VOE_I2C_WRITE                    0x271
 
+//CLK
+#define VOE_ISP_MIPI_CLK_SET			 0x0275
+
 // VOE peripheral command
 #define VOE_SET_WDT_CMD                  0x280
+
+//MD
+#define VOE_MD_START                     0x290
+#define VOE_MD_STOP                      0x291
+#define VOE_MD_GET_BUF                   0x292
+#define VOE_MD_TRIGGER                   0x293
+
 
 #define VOE_CMD_RET_ERR                  0x2FF
 
@@ -142,9 +156,9 @@
 #define FW_PROC_ERROR_RET                   0x3FFF
 
 
-#define FW_3DNR_START_CMD                   0x310 
+#define FW_3DNR_START_CMD                   0x310
 
-#define FW_3DNR_DONE_RET                    0x3301 
+#define FW_3DNR_DONE_RET                    0x3301
 
 
 // Command index
@@ -152,8 +166,8 @@
 #define CMD_VOE_INDEX                       0x02
 #define CMD_VERIFY_INDEX					0x04
 
-#define FW_CMD_3DNR                         0x03  
-#define FW_3DNR_RET                         0x33  
+#define FW_CMD_3DNR                         0x03
+#define FW_3DNR_RET                         0x33
 
 
 
@@ -169,7 +183,7 @@
 
 
 #define VOE_RECEIVE_CMD_BUSY    0x01
-#define VOE_SEND_CMD_BUSY       0x02       
+#define VOE_SEND_CMD_BUSY       0x02
 #define VOE_CMD_TYPE_UNKNOWN    0x04
 #define VOE_H264ISR_BUSY        0x08
 #define VOE_STATUS_H264_FINISH	0x10
@@ -182,7 +196,4 @@
 #define ERAC_DATA_OFFSET	0x400
 
 
-
-
-
-#endif
+#endif // _RTL8735B_VOE_CMD_H_

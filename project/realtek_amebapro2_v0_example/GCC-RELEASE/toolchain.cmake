@@ -6,6 +6,8 @@ set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_ASM_COMPILER_WORKS 1)
 
 ###****************NEW*********************#####
+set(PICOLIBC OFF)
+
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
     message(STATUS "Build LINUX")
@@ -24,8 +26,8 @@ set(CMAKE_NM "arm-none-eabi-nm" )
 add_definitions(-D__thumb2__ -DCONFIG_PLATFORM_8735B -DARM_MATH_ARMV8MML -D__FPU_PRESENT -D__ARM_ARCH_7M__=0 -D__ARM_ARCH_7EM__=0 -D__ARM_ARCH_8M_MAIN__=1 -D__ARM_ARCH_8M_BASE__=0 -D__ARM_FEATURE_FP16_SCALAR_ARITHMETIC=1 -D__DSP_PRESENT=1 -D__ARMVFP__)
 
 #set(CMAKE_C_FLAGS "-march=armv8-m.main+dsp+fp -mcpu=real-m500+fp -mthumb -mcmse -mfpu=fpv5-sp-d16 -mfp16-format=ieee -mfloat-abi=softfp ")
-set(CMAKE_C_FLAGS "-march=armv8-m.main+dsp -mthumb -mcmse -mfpu=fpv5-sp-d16 -mfp16-format=ieee -mfloat-abi=softfp -fno-common")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -fstack-usage -fdata-sections -ffunction-sections  -fno-optimize-sibling-calls")
+set(CMAKE_C_FLAGS "-march=armv8-m.main+dsp -mthumb -mcmse -mfpu=fpv5-sp-d16 -mfp16-format=ieee -mfloat-abi=softfp -fno-common -fsigned-char")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -fstack-usage -fdata-sections -ffunction-sections  -fno-optimize-sibling-calls -std=gnu99")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gdwarf-3 -MMD -nostartfiles -nodefaultlibs -nostdlib ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpointer-arith -Wstrict-prototypes -Wundef -Wno-write-strings -Wno-maybe-uninitialized -fdiagnostics-color=always ")
 
@@ -68,15 +70,40 @@ list(
 		"-Wl,-wrap,memset"
 		"-Wl,-wrap,puts"
 		"-Wl,-wrap,printf"
-		# "-Wl,-wrap,sprintf"
-		# "-Wl,-wrap,snprintf"
-		# "-Wl,-wrap,vsnprintf"
+#		"-Wl,-wrap,sprintf"
+		"-Wl,-wrap,snprintf"
+		"-Wl,-wrap,vsnprintf"
 		"-Wl,-wrap,vprintf"
 		"-Wl,-wrap,malloc"
 		"-Wl,-wrap,free"
 		"-Wl,-wrap,realloc"
 		"-Wl,-wrap,calloc" 
 		"-Wl,-wrap,abort"
+		"-Wl,-wrap,fopen"
+		"-Wl,-wrap,fclose"
+		"-Wl,-wrap,fread"
+		"-Wl,-wrap,fwrite"
+		"-Wl,-wrap,fseek"
+		"-Wl,-wrap,fsetpos"
+		"-Wl,-wrap,fgetpos"
+		"-Wl,-wrap,rewind"
+		"-Wl,-wrap,fflush"
+		"-Wl,-wrap,remove"
+		"-Wl,-wrap,rename"
+		"-Wl,-wrap,feof"
+		"-Wl,-wrap,ferror"
+		"-Wl,-wrap,ftell"
+		"-Wl,-wrap,fputc"
+		"-Wl,-wrap,fputs"
+		"-Wl,-wrap,fgets"
+		"-Wl,-wrap,stat"
+		"-Wl,-wrap,mkdir"
+		"-Wl,-wrap,scandir"
+		"-Wl,-wrap,readdir"
+		"-Wl,-wrap,opendir"
+		"-Wl,-wrap,access"
+		"-Wl,-wrap,rmdir"
+		"-Wl,-wrap,closedir"
 )
 
 list(JOIN _wrapper " " function_wrapper)

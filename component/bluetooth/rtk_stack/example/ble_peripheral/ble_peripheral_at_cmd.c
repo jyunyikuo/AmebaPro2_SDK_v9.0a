@@ -177,7 +177,7 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 				return -1;
 			}
 		}
-		//passcode = dec_str_to_int(strlen(argv[3]), argv[3]);
+
 		passcode = atoi(argv[3]);
 		if (passcode > GAP_PASSCODE_MAX) {
 			printf("ERROR:passcode is out of range[0-999999]!\r\n");
@@ -217,8 +217,7 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 		gap_set_param(GAP_PARAM_BOND_OOB_ENABLED, sizeof(uint8_t), &oob_enable);
 #endif
 		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_ENABLE, sizeof(auth_sec_req_enable), &auth_sec_req_enable);
-		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_REQUIREMENT, sizeof(auth_sec_req_flags),
-						  &auth_sec_req_flags);
+		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_REQUIREMENT, sizeof(auth_sec_req_flags), &auth_sec_req_flags);
 		ret = gap_set_pairable_mode();
 
 		if (ret == GAP_CAUSE_SUCCESS) {
@@ -278,7 +277,7 @@ int ble_peripheral_at_cmd_update_conn_request(int argc, char **argv)
 int ble_peripheral_at_cmd_bond_information(int argc, char **argv)
 {
 	(void) argc;
-	//int ret = 0;
+
 	if (strcmp(argv[1], "CLEAR") == 0) {
 		le_bond_clear_all_keys();
 	} else if (strcmp(argv[1], "INFO") == 0) {
@@ -315,15 +314,25 @@ int ble_peripheral_send_indi_notification(int argc, char **argv)
 	u16 attrib_index = hex_str_to_int(strlen(argv[3]), (s8 *) argv[3]);
 	u8 type = atoi(argv[4]);
 	int length = hex_str_to_int(strlen(argv[5]), (s8 *) argv[5]);
+	int data_count;
 
 	if (length == -1) {
 		printf("Error:value length should be hexadecimal and start with '0X' or '0x'\r\n");
 		return -1;
+	} else if (length == 0) {
+		printf("Error:value length should larger than 0\r\n");
+		return -1;
 	}
+
 	u8 *data = (u8 *)os_mem_alloc(0, length * sizeof(u8));
 
+	data_count = argc - 6;
 	for (u8 i = 0; i < length; ++ i) {
-		data[i] = hex_str_to_int(strlen(argv[i + 6]), (s8 *)argv[i + 6]);
+		if (i < data_count) {
+			data[i] = hex_str_to_int(strlen(argv[i + 6]), (s8 *)argv[i + 6]);
+		} else {
+			data[i] = 0xff;
+		}
 	}
 
 	server_send_data(conn_id, service_id, attrib_index, data, length, (T_GATT_PDU_TYPE)type);

@@ -869,6 +869,17 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
                     break;
             #endif /* configENABLE_MPU */
 
+        case portSVC_SECCALL:
+        {
+            uint32_t ulR0 = pulCallerStackAddress[ 0 ];
+            uint32_t ulR1 = pulCallerStackAddress[ 1 ];
+            uint32_t ulR2 = pulCallerStackAddress[ 2 ];
+            uint32_t ulR3 = pulCallerStackAddress[ 3 ];
+            ulR0 = vPortDoSecCall(ulR0, ulR1, ulR2, ulR3);
+            pulCallerStackAddress[ 0 ] = ulR0;
+        }
+        break;
+
         default:
             /* Incorrect SVC call. */
             configASSERT( pdFALSE );
@@ -1040,6 +1051,15 @@ void vPortEndScheduler( void ) /* PRIVILEGED_FUNCTION */
     /* Not implemented in ports where there is nothing to return to.
      * Artificially force an assert. */
     configASSERT( ulCriticalNesting == 1000UL );
+}
+/*-----------------------------------------------------------*/
+
+int vPortSecCall( void *pvFunc, uint32_t ulArg0, uint32_t ulArg1, uint32_t ulArg2 ) /* PRIVILEGED_FUNCTION */
+{
+    uint32_t res;
+    __asm volatile ( "svc %0 \n" :: "i" ( portSVC_SECCALL ) : "memory" );
+    __asm volatile ( "mov %0, r0" : "=r" (res));
+    return res;	
 }
 /*-----------------------------------------------------------*/
 

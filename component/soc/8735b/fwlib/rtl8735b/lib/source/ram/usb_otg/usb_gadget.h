@@ -536,7 +536,7 @@ usb_ep_fifo_flush(struct usb_ep *ep)
  * driver suspend() calls.  They are valid only when is_otg, and when the
  * device is acting as a B-Peripheral (so is_a_peripheral is false).
  */
-#include"rtl8735_otg_zero.h"
+//#include"rtl8735_otg_zero.h"
 struct usb_gadget {
 	/* readonly to gadget driver */
 	const struct usb_gadget_ops     *ops;

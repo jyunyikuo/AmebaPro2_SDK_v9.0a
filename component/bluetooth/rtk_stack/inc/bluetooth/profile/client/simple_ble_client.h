@@ -328,106 +328,120 @@ extern "C" {
   */
 
 /** @brief SIMP client handle type*/
-typedef enum {
-	HDL_SIMBLE_SRV_START,           //!< start handle of simple ble service
-	HDL_SIMBLE_SRV_END,             //!< end handle of simple ble service
-	HDL_SIMBLE_V1_READ,             //!< V1 read characteristic value handle
-	HDL_SIMBLE_V2_WRITE,            //!< V2 write characteristic value handle
-	HDL_SIMBLE_V3_NOTIFY,           //!< V3 notify characteristic value handle
-	HDL_SIMBLE_V3_NOTIFY_CCCD,      //!< V3 notify characteristic CCCD handle
-	HDL_SIMBLE_V4_INDICATE,         //!< V4 indicate characteristic value handle
-	HDL_SIMBLE_V4_INDICATE_CCCD,    //!< V4 indicate characteristic CCCD handle
-	HDL_SIMBLE_CACHE_LEN            //!< handle cache length
+typedef enum
+{
+    HDL_SIMBLE_SRV_START,           //!< start handle of simple ble service
+    HDL_SIMBLE_SRV_END,             //!< end handle of simple ble service
+    HDL_SIMBLE_V1_READ,             //!< V1 read characteristic value handle
+    HDL_SIMBLE_V2_WRITE,            //!< V2 write characteristic value handle
+    HDL_SIMBLE_V3_NOTIFY,           //!< V3 notify characteristic value handle
+    HDL_SIMBLE_V3_NOTIFY_CCCD,      //!< V3 notify characteristic CCCD handle
+    HDL_SIMBLE_V4_INDICATE,         //!< V4 indicate characteristic value handle
+    HDL_SIMBLE_V4_INDICATE_CCCD,    //!< V4 indicate characteristic CCCD handle
+    HDL_SIMBLE_CACHE_LEN            //!< handle cache length
 } T_SIMP_HANDLE_TYPE;
 
 /** @brief SIMP client discovery state*/
-typedef enum {
-	DISC_SIMP_IDLE,
-	DISC_SIMP_START,
-	DISC_SIMP_DONE,
-	DISC_SIMP_FAILED
+typedef enum
+{
+    DISC_SIMP_IDLE,
+    DISC_SIMP_START,
+    DISC_SIMP_DONE,
+    DISC_SIMP_FAILED
 } T_SIMP_DISC_STATE;
 
 /** @brief SIMP client read type*/
-typedef enum {
-	SIMP_READ_V1_READ,
-	SIMP_READ_V3_NOTIFY_CCCD,
-	SIMP_READ_V4_INDICATE_CCCD,
+typedef enum
+{
+    SIMP_READ_V1_READ,
+    SIMP_READ_V3_NOTIFY_CCCD,
+    SIMP_READ_V4_INDICATE_CCCD,
 } T_SIMP_READ_TYPE;
 
 /** @brief SIMP client read value*/
-typedef struct {
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_SIMP_READ_VALUE;
 
 /** @brief SIMP client read data*/
-typedef union {
-	T_SIMP_READ_VALUE v1_read;
-	bool v3_notify_cccd;
-	bool v4_indicate_cccd;
+typedef union
+{
+    T_SIMP_READ_VALUE v1_read;
+    bool v3_notify_cccd;
+    bool v4_indicate_cccd;
 } T_SIMP_READ_DATA;
 
 /** @brief SIMP client read result*/
-typedef struct {
-	T_SIMP_READ_TYPE type;
-	T_SIMP_READ_DATA data;
-	uint16_t cause;
+typedef struct
+{
+    T_SIMP_READ_TYPE type;
+    T_SIMP_READ_DATA data;
+    uint16_t cause;
 } T_SIMP_READ_RESULT;
 
 
 /** @brief SIMP client write type*/
-typedef enum {
-	SIMP_WRITE_V2_WRITE,
-	SIMP_WRITE_V3_NOTIFY_CCCD,
-	SIMP_WRITE_V4_INDICATE_CCCD,
+typedef enum
+{
+    SIMP_WRITE_V2_WRITE,
+    SIMP_WRITE_V3_NOTIFY_CCCD,
+    SIMP_WRITE_V4_INDICATE_CCCD,
 } T_SIMP_WRTIE_TYPE;
 
 /** @brief SIMP client write result*/
-typedef struct {
-	T_SIMP_WRTIE_TYPE type;
-	uint16_t cause;
+typedef struct
+{
+    T_SIMP_WRTIE_TYPE type;
+    uint16_t cause;
 } T_SIMP_WRITE_RESULT;
 
 /** @brief SIMP client notif/ind receive type*/
-typedef enum {
-	SIMP_V3_NOTIFY,
-	SIMP_V4_INDICATE,
+typedef enum
+{
+    SIMP_V3_NOTIFY,
+    SIMP_V4_INDICATE,
 } T_SIMP_NOTIF_IND_TYPE;
 
 /** @brief SIMP client notif/ind receive data*/
-typedef struct {
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_SIMP_NOTIF_IND_VALUE;
 
 /** @brief SIMP client notif/ind receive content*/
-typedef struct {
-	T_SIMP_NOTIF_IND_TYPE type;
-	T_SIMP_NOTIF_IND_VALUE data;
+typedef struct
+{
+    T_SIMP_NOTIF_IND_TYPE type;
+    T_SIMP_NOTIF_IND_VALUE data;
 } T_SIMP_NOTIF_IND_DATA;
 
 /** @brief SIMP client callback type*/
-typedef enum {
-	SIMP_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
-	SIMP_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
-	SIMP_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
-	SIMP_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
-	SIMP_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    SIMP_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
+    SIMP_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
+    SIMP_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
+    SIMP_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
+    SIMP_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
 } T_SIMP_CLIENT_CB_TYPE;
 
 /** @brief SIMP client callback content*/
-typedef union {
-	T_SIMP_DISC_STATE      disc_state;
-	T_SIMP_READ_RESULT     read_result;
-	T_SIMP_WRITE_RESULT    write_result;
-	T_SIMP_NOTIF_IND_DATA  notif_ind_data;
+typedef union
+{
+    T_SIMP_DISC_STATE      disc_state;
+    T_SIMP_READ_RESULT     read_result;
+    T_SIMP_WRITE_RESULT    write_result;
+    T_SIMP_NOTIF_IND_DATA  notif_ind_data;
 } T_SIMP_CLIENT_CB_CONTENT;
 
 /** @brief SIMP client callback data*/
-typedef struct {
-	T_SIMP_CLIENT_CB_TYPE     cb_type;
-	T_SIMP_CLIENT_CB_CONTENT  cb_content;
+typedef struct
+{
+    T_SIMP_CLIENT_CB_TYPE     cb_type;
+    T_SIMP_CLIENT_CB_CONTENT  cb_content;
 } T_SIMP_CLIENT_CB_DATA;
 
 /** End of SIMP_Client_Exported_Types * @} */
@@ -491,7 +505,7 @@ bool simp_ble_client_read_by_uuid(uint8_t conn_id, T_SIMP_READ_TYPE read_type);
   * @retval false send request to upper stack failed.
   */
 bool simp_ble_client_write_v2_char(uint8_t conn_id, uint16_t length, uint8_t *p_value,
-								   T_GATT_WRITE_TYPE type);
+                                   T_GATT_WRITE_TYPE type);
 
 /**
   * @brief  Used by application, to enable or disable the notification of peer server's V3 Notify Characteristic.

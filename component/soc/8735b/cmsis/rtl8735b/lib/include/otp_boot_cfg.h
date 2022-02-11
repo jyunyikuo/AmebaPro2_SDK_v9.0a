@@ -2,7 +2,7 @@
  * @file     otp_boot_cfg.h
  * @brief    Define the structure types for boot flow configuration those from OTP.
  * @version  V1.00
- * @date     2021-08-04
+ * @date     2021-08-05
  *
  * @note
  *
@@ -49,10 +49,31 @@ extern "C" {
 
 #define RMA0_PTN_BASE_ADDR                  (0x330)
 #define RMA1_MGNPTN_BASE_ADDR               (0x338)
+#define RMA1_CHK_SIGN_FLSH_OFFSET           (0x6000)
 
-#define RMA0_PTN_SIZE           (8)
-#define RMA1_MGN_PTN_SIZE       (8)
-#define RMA2_UUID_PTN_SIZE      (4)
+#define RMA0_PTN_SIZE                       (8)
+#define RMA1_MGN_PTN_SIZE                   (8)
+#define RMA1_CHK_SIGN_SIZE                  (64)
+#define RMA1_CHK_PBK_SIZE                   (32)
+#define RMA1_TOCKEN_SIZE                    (4)
+#define RMA2_UUID_PTN_SIZE                  (4)
+
+#define HIGH_VAL_SZ_LOCK_ADDR               (0x350)
+#define HIGH_VAL_SSZ_LOCK_ADDR              (0x49F)
+#define HIGH_VAL_SSZ_LOCK_CHK_MAX_SIZE      (1)
+#define HIGH_VAL_SZ_LOCK_CHK_MAX_SIZE       (32)
+#define HIGH_VAL_SZ_WLOCK_ENTRY_VAL         (0x0)
+
+enum high_val_assets_lock_sel {
+	HighVal_SSZ_R_W_LOCK        = 0x1,
+	HighVal_SZ_W_LOCK           = 0x2
+};
+
+enum high_val_assets_lock_chk {
+	HighVal_SSZ_R_W_LOCK_CHK_VAL = 0x0,
+	HighVal_SSZ_R_W_LOCK_SET_VAL = 0xFE,
+	HighVal_SZ_W_LOCK_CHK_VAL    = 0xFF,
+};
 
 /**
   \brief  Define the boot method
@@ -205,7 +226,10 @@ typedef union {
 		__IOM uint8_t sb_otp_err_chk_en: 1;       /*!< [0..0] Before Secure boot load high value assets check otp error enable: 1'b0: disable otp err check,
                                                                                                                    1'b1: enable otp err check */
 		__IOM uint8_t ld_key_random_en : 1;       /*!< [1..1] Load key random enable: 1'b0: disable random load, 1'b1: enable random load */
-		__IM  uint8_t : 3;                        /*!< [4..2] Reserved */
+		__IM  uint8_t : 2;                        /*!< [3..2] Reserved */
+__IOM uint8_t sect_ld_vrf_en   :
+		1;       /*!< [4..4] img section load check enable: 1'b0: disable img section load check, without img section load check verify flow;
+                                                                                             1'b1: enable img section load check, with img section load verify flow */
 		__IOM uint8_t img_hsh_en       : 1;       /*!< [5..5] img hash check enable: 1'b0: disable img hash check, without img hash check verify flow;
                                                                                      1'b1: enable img hash check, with img hash check verify flow */
 		__IOM uint8_t tb_en            : 1;       /*!< [6..6] Trust boot enable: 1'b0: disable trust boot, without img manifest signature verify flow;
@@ -271,7 +295,8 @@ typedef union {
 		__IOM uint8_t rom_dcache_dis          : 1;       /*!< [0..0] ROM dcache disable control (1'b0: not disable/ 1'b1: disable */
 		__IOM uint8_t ntlv_img_ld_en          : 1;       /*!< [1..1] Non-TLV IMG Format load enable: 1'b0: disable, 1'b1: enable */
 		__IOM uint8_t fcs_rom_flow_dis        : 1;       /*!< [2..2] Fast Camera Start rom flow disable control (1'b0: not disable/ 1'b1: disable */
-		__IM  uint8_t : 5;
+		__IOM uint8_t boot_rom_adv_dbg_en     : 1;       /*!< [3..3] Boot ROM advanced debugging message enable control (1'b0: disable/ 1'b1: enable */
+		__IM  uint8_t : 4;
 	} bit;
 } otp_boot_cfg7_t, *potp_boot_cfg7_t;
 

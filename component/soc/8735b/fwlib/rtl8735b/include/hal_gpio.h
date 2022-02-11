@@ -44,6 +44,17 @@ extern "C"
 
 	extern const hal_gpio_func_stubs_t hal_gpio_stubs;
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER) // Only for Test Chip
+	/**
+	 *  @brief Function declaration for GPIO port write patch function
+	 *
+	 *  @param[in]  irq_handler  The GPIO interrupt handler.
+	 *
+	 *  @returns    void
+	 */
+	void hal_rtl_gpio_port_write_patch(phal_gpio_port_adapter_t pgpio_port_adapter, uint32_t mask, uint32_t io_data);
+#endif
+
 	/**
 	 *  @brief To register an interrupt handler for all GPIO interrupt pins and enable
 	 *         the GPIO interrupt.
@@ -507,6 +518,8 @@ extern "C"
 	hal_status_t hal_gpio_schmitt_ctrl(uint32_t pin_name, BOOLEAN ctrl);
 	hal_status_t hal_gpio_drive_ctrl(uint32_t pin_name, uint8_t drv);
 	hal_status_t hal_gpio_slew_rate_ctrl(uint32_t pin_name, uint8_t slew_rate_func);
+
+	void hal_gpio_reinit(phal_gpio_adapter_t pgpio_adapter, uint32_t pin_name);
 
 	/** @} */ /* End of group hs_hal_gpio */
 

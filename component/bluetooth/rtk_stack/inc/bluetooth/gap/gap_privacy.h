@@ -302,62 +302,71 @@ extern "C"
 
 
 /** @brief Define the subtype of Message IO_MSG_TYPE_BT_STATUS */
-typedef enum {
-	GAP_PARAM_PRIVACY_TIMEOUT           = 0x300, //!< Timeout value for privacy
-	GAP_PARAM_PRIVACY_RESOLUTION_STATE  = 0x301, //!< Resolution state
-	GAP_PARAM_PRIVACY_RESOLV_LIST_SIZE  = 0x302, //!< Resolvable list size
+typedef enum
+{
+    GAP_PARAM_PRIVACY_TIMEOUT           = 0x300, //!< Timeout value for privacy
+    GAP_PARAM_PRIVACY_RESOLUTION_STATE  = 0x301, //!< Resolution state
+    GAP_PARAM_PRIVACY_RESOLV_LIST_SIZE  = 0x302, //!< Resolvable list size
 } T_LE_PRIVACY_PARAM_TYPE;
 
 /** @brief Define the privacy state */
-typedef enum {
-	LE_PRIVACY_RESOLUTION_DISABLED,
-	LE_PRIVACY_RESOLUTION_DISABLING,
-	LE_PRIVACY_RESOLUTION_ENABLING,
-	LE_PRIVACY_RESOLUTION_ENABLED
+typedef enum
+{
+    LE_PRIVACY_RESOLUTION_DISABLED,
+    LE_PRIVACY_RESOLUTION_DISABLING,
+    LE_PRIVACY_RESOLUTION_ENABLING,
+    LE_PRIVACY_RESOLUTION_ENABLED
 } T_LE_PRIVACY_STATE;
 
 /** @brief LE resolution status info */
-typedef struct {
-	T_LE_PRIVACY_STATE   status;
-	uint16_t             cause;
+typedef struct
+{
+    T_LE_PRIVACY_STATE   status;
+    uint16_t             cause;
 } T_LE_PRIVACY_RESOLUTION_STATUS_INFO;
 
 /** @brief  Response of le set resolvable private address timeout request.*/
-typedef struct {
-	uint16_t             cause;
+typedef struct
+{
+    uint16_t             cause;
 } T_LE_PRIVACY_SET_RESOLV_PRIV_ADDR_TIMEOUT_RSP;
 
 /** @brief  Response of le modify resolvable list request.*/
-typedef struct {
-	T_GAP_RESOLV_LIST_OP operation;
-	uint16_t             cause;
+typedef struct
+{
+    T_GAP_RESOLV_LIST_OP operation;
+    uint16_t             cause;
 } T_LE_PRIVACY_MODIFY_RESOLV_LIST_RSP;
 
 /** @brief  Response of le read peer resolvable address request.*/
-typedef struct {
-	uint16_t             cause;
-	uint8_t              peer_resolv_addr[6];
+typedef struct
+{
+    uint16_t             cause;
+    uint8_t              peer_resolv_addr[6];
 } T_LE_PRIVACY_READ_PEER_RESOLV_ADDR_RSP;
 
 /** @brief  Response of le read local resolvable address request.*/
-typedef struct {
-	uint16_t             cause;
-	uint8_t              local_resolv_addr[6];
+typedef struct
+{
+    uint16_t             cause;
+    uint8_t              local_resolv_addr[6];
 } T_LE_PRIVACY_READ_LOCAL_RESOLV_ADDR_RSP;
 
 /** @brief  Response of set privacy mode.*/
-typedef struct {
-	uint16_t             cause;
+typedef struct
+{
+    uint16_t             cause;
 } T_LE_PRIVACY_SET_MODE_RSP;
 
 /** @brief LE privacy callback data  */
-typedef union {
-	T_LE_PRIVACY_RESOLUTION_STATUS_INFO            le_privacy_resolution_status_info;
-	T_LE_PRIVACY_SET_RESOLV_PRIV_ADDR_TIMEOUT_RSP *p_le_privacy_set_resolv_priv_addr_timeout_rsp;
-	T_LE_PRIVACY_MODIFY_RESOLV_LIST_RSP           *p_le_privacy_modify_resolv_list_rsp;
-	T_LE_PRIVACY_READ_PEER_RESOLV_ADDR_RSP        *p_le_privacy_read_peer_resolv_addr_rsp;
-	T_LE_PRIVACY_READ_LOCAL_RESOLV_ADDR_RSP       *p_le_privacy_read_local_resolv_addr_rsp;
-	T_LE_PRIVACY_SET_MODE_RSP                     *p_le_privacy_set_mode_rsp;
+typedef union
+{
+    T_LE_PRIVACY_RESOLUTION_STATUS_INFO            le_privacy_resolution_status_info;
+    T_LE_PRIVACY_SET_RESOLV_PRIV_ADDR_TIMEOUT_RSP *p_le_privacy_set_resolv_priv_addr_timeout_rsp;
+    T_LE_PRIVACY_MODIFY_RESOLV_LIST_RSP           *p_le_privacy_modify_resolv_list_rsp;
+    T_LE_PRIVACY_READ_PEER_RESOLV_ADDR_RSP        *p_le_privacy_read_peer_resolv_addr_rsp;
+    T_LE_PRIVACY_READ_LOCAL_RESOLV_ADDR_RSP       *p_le_privacy_read_local_resolv_addr_rsp;
+    T_LE_PRIVACY_SET_MODE_RSP                     *p_le_privacy_set_mode_rsp;
 } T_LE_PRIVACY_CB_DATA;
 
 /**
@@ -439,7 +448,7 @@ T_GAP_CAUSE le_privacy_set_addr_resolution(bool enable);
   * @retval Others Operation failure.
   */
 T_GAP_CAUSE le_privacy_read_peer_resolv_addr(T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
-		uint8_t *peer_identity_address);
+                                             uint8_t *peer_identity_address);
 
 /**
   * @brief  Read local resolvable random address.
@@ -450,7 +459,7 @@ T_GAP_CAUSE le_privacy_read_peer_resolv_addr(T_GAP_IDENT_ADDR_TYPE peer_identity
   * @retval Others Operation failure.
   */
 T_GAP_CAUSE le_privacy_read_local_resolv_addr(T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
-		uint8_t *peer_identity_address);
+                                              uint8_t *peer_identity_address);
 
 /**
   * @brief  Set resolvable private address timeout.
@@ -462,7 +471,7 @@ T_GAP_CAUSE le_privacy_set_resolv_priv_addr_timeout(void);
 
 
 /**
-  * @brief  Modicy local resolvable device list.
+  * @brief  Modify local resolvable device list.
   *         NOTE: You can call this function to add, remove or clear the resolvable list
   *
   * @param[in] operation type, @ref T_GAP_RESOLV_LIST_OP.
@@ -473,8 +482,26 @@ T_GAP_CAUSE le_privacy_set_resolv_priv_addr_timeout(void);
   * @retval Others Operation failure.
   */
 T_GAP_CAUSE le_privacy_modify_resolv_list(T_GAP_RESOLV_LIST_OP operation,
-		T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
-		uint8_t *peer_identity_address);
+                                          T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
+                                          uint8_t *peer_identity_address);
+
+/**
+  * @brief  Add device to local resolving list.
+  *
+  * @param[in] peer_identity_address_type Peer identity address type.
+  * @param[in] peer_identity_address Peer identity address.
+  * @param[in] peer_irk              Pointer to peer IRK (16 octets).
+                                     Note:
+                                          NULL: no peer IRK, use all-zero IRK
+  * @param[in] use_local_irk         Indicates whether local IRK has been distributed to peer device.
+                                     False: local IRK has not been distributed to peer device
+                                     True: local IRK has been distributed to peer device
+  * @return Operation result
+  * @retval GAP_CAUSE_SUCCESS Operation success.
+  * @retval Others Operation failure.
+  */
+T_GAP_CAUSE le_privacy_add_resolv_list(T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
+                                       uint8_t *peer_identity_address, uint8_t *peer_irk, bool use_local_irk);
 
 /**
   * @brief  Set privacy mode.
@@ -486,8 +513,8 @@ T_GAP_CAUSE le_privacy_modify_resolv_list(T_GAP_RESOLV_LIST_OP operation,
   * @retval GAP_CAUSE_SEND_REQ_FAILED Operation failure.
   */
 T_GAP_CAUSE le_privacy_set_mode(T_GAP_IDENT_ADDR_TYPE peer_identity_address_type,
-								uint8_t *peer_identity_address,
-								T_GAP_PRIVACY_MODE privacy_mode);
+                                uint8_t *peer_identity_address,
+                                T_GAP_PRIVACY_MODE privacy_mode);
 
 /**
   * @brief  Convert remote bluetooth device address type to identity address type.

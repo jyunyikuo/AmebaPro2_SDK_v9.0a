@@ -51,8 +51,7 @@ void main(void)
 
 	dbg_printf("--------------------------------------------------------\n\r");
 	for (Counter = 0, TestData = 0xFF; Counter < TestingTimes; Counter++) {
-		dbg_printf(ANSI_COLOR_CYAN"Slave  read : %02X\n\r"ANSI_COLOR_RESET,
-				   spi_slave_read(&spi_slave));
+		dbg_printf("Slave  read : %02X\n\r", spi_slave_read(&spi_slave));
 		TestData--;
 	}
 	spi_free(&spi_slave);

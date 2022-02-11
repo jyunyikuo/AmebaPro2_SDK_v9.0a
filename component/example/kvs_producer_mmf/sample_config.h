@@ -26,11 +26,21 @@
 
 /* Audio configuration */
 #if ENABLE_AUDIO_TRACK
-#define AUDIO_CODEC_NAME                    "A_AAC"
-#define AUDIO_FPS                           5
-#define AUDIO_SAMPLING_RATE                 8000
-#define AUDIO_CHANNEL_NUMBER                1
-#define AUDIO_NAME                          "my audio"
+#define USE_AUDIO_AAC                   1   /* Set to 1 to use AAC as audio track */
+#define USE_AUDIO_G711                  0   /* Set to 1 to use G711 as audio track */
+#if USE_AUDIO_AAC == USE_AUDIO_G711
+#error KVS producer audio format setting error! USE_AUDIO_AAC and USE_AUDIO_G711 cannot be both 1 or both 0.
+#endif
+#if USE_AUDIO_AAC
+#define AUDIO_CODEC_NAME                "A_AAC"
+#elif USE_AUDIO_G711
+#define AUDIO_CODEC_NAME                "A_MS/ACM"
+#endif
+#define AUDIO_MPEG_OBJECT_TYPE          MPEG4_AAC_LC
+#define AUDIO_PCM_OBJECT_TYPE           PCM_FORMAT_CODE_MULAW
+#define AUDIO_SAMPLING_RATE             8000
+#define AUDIO_CHANNEL_NUMBER            1
+#define AUDIO_NAME                      "my audio"
 #endif /* ENABLE_AUDIO_TRACK */
 
 /* IoT credential configuration */

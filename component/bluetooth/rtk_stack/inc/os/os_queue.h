@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2015, Realtek Semiconductor Corporation. All rights reserved.
  */
 
@@ -339,8 +339,9 @@ extern "C" {
  *
  * \ingroup  Queue
  */
-typedef struct t_os_queue_elem {
-	struct t_os_queue_elem *p_next; /**< Pointer to next list queue element. */
+typedef struct t_os_queue_elem
+{
+    struct t_os_queue_elem *p_next; /**< Pointer to next list queue element. */
 } T_OS_QUEUE_ELEM;
 
 /**
@@ -350,11 +351,12 @@ typedef struct t_os_queue_elem {
  *
  * \ingroup  Queue
  */
-typedef struct {
-	T_OS_QUEUE_ELEM *p_first;   /**< Pointer to the first queue element. */
-	T_OS_QUEUE_ELEM *p_last;    /**< Pointer to the last queue element. */
-	uint16_t         count;     /**< The queue element count. */
-	uint16_t         flags;     /**< The flags for customer usage. */
+typedef struct
+{
+    T_OS_QUEUE_ELEM *p_first;   /**< Pointer to the first queue element. */
+    T_OS_QUEUE_ELEM *p_last;    /**< Pointer to the last queue element. */
+    uint16_t         count;     /**< The queue element count. */
+    uint16_t         flags;     /**< The flags for customer usage. */
 } T_OS_QUEUE;
 
 /**

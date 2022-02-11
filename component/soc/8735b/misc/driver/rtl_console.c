@@ -197,6 +197,11 @@ void console_init(void)
 	log_service_init();
 }
 
+void console_reinit_uart(void)
+{
+	hal_uart_reset_rx_fifo(&log_uart);
+	hal_uart_rxind_hook(&log_uart, uart_irq, 0, 0);
+}
 
 
 

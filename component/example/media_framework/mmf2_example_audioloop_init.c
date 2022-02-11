@@ -19,9 +19,12 @@ static audio_params_t audio_params = {
 	// .direction = APP_AMIC_IN|APP_LINE_OUT,
 	.direction = APP_LINE_IN | APP_LINE_OUT,
 #else
-	.sample_rate = ASR_8KHZ,
-	.word_length = WL_16BIT,
-	.mic_gain    = MIC_40DB,
+	.sample_rate    = ASR_8KHZ,
+	.word_length    = WL_16BIT,
+	.mic_gain       = MIC_40DB,
+	.dmic_l_gain    = DMIC_BOOST_24DB,
+	.dmic_r_gain    = DMIC_BOOST_24DB,
+	.use_mic_type   = USE_AUDIO_AMIC,
 	.channel     = 1,
 #endif
 	.mix_mode = 0,
@@ -53,7 +56,6 @@ void mmf2_example_audioloop_init(void)
 	}
 
 	rt_printf("siso1 started\n\r");
-
 
 	return;
 mmf2_exmaple_audioloop_fail:

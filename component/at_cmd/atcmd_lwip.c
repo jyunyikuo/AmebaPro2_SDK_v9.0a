@@ -4013,11 +4013,13 @@ static void client_start(void *param)
 		mbedtls_ssl_conf_authmode(conf, auth_mode);
 		mbedtls_ssl_conf_rng(conf, atcmd_ssl_random, NULL);
 
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
 		if (ret = mbedtls_ssl_conf_max_frag_len(conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
 			AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ERROR, "mbedtls_ssl_conf_max_frag_len fail for ssl");
 			error_no = 23;
 			goto err_exit;
 		}
+#endif
 
 		mbedtls_ssl_set_bio(ssl, &ClientNodeUsed->sockfd, mbedtls_net_send, mbedtls_net_recv, NULL);
 		mbedtls_ssl_conf_dbg(conf, atcmd_ssl_debug, NULL);
@@ -6844,11 +6846,13 @@ int atcmd_lwip_auto_connect(void)
 			mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_NONE);
 			mbedtls_ssl_conf_rng(conf, atcmd_ssl_random, NULL);
 
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
 			if (ret = mbedtls_ssl_conf_max_frag_len(conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
 				AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ERROR, "ssl config max fragment length fail");
 				error_no = 23;
 				continue;
 			}
+#endif
 
 			mbedtls_ssl_set_bio(ssl, &re_node->sockfd, mbedtls_net_send, mbedtls_net_recv, NULL);
 			mbedtls_ssl_conf_dbg(conf, atcmd_ssl_debug, NULL);

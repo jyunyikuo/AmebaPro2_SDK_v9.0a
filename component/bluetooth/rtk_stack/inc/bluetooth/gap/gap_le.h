@@ -498,40 +498,41 @@ extern "C"
   * @{
   */
 /** @brief  GAP LE Parameter Types List.*/
-typedef enum {
-	GAP_PARAM_DEV_STATE                = 0x220, //!< Device's current GAP device state. Read/Write. Size is sizeof(TGapDevState).
-	GAP_PARAM_APPEARANCE               = 0x221, //!< Local Device's Appearance. Read/Write. size is uint16. Appearance value please refer to GAP Appearance Values.(@ref GAP_LE_APPEARANCE_VALUES)
-	GAP_PARAM_DEVICE_NAME              = 0x222, //!< Local Device's Name. Write Only. Name string length is GAP_DEVICE_NAME_LEN.
+typedef enum
+{
+    GAP_PARAM_DEV_STATE                = 0x220, //!< Device's current GAP device state. Read/Write. Size is sizeof(TGapDevState).
+    GAP_PARAM_APPEARANCE               = 0x221, //!< Local Device's Appearance. Read/Write. size is uint16. Appearance value please refer to GAP Appearance Values.(@ref GAP_LE_APPEARANCE_VALUES)
+    GAP_PARAM_DEVICE_NAME              = 0x222, //!< Local Device's Name. Write Only. Name string length is GAP_DEVICE_NAME_LEN.
 #if F_BT_LE_GAP_PERIPHERAL_SUPPORT
-	GAP_PARAM_SLAVE_INIT_GATT_MTU_REQ  = 0x223, //!< Slave initiate the GATT exchange MTU procedure. Write Only.
+    GAP_PARAM_SLAVE_INIT_GATT_MTU_REQ  = 0x223, //!< Slave initiate the GATT exchange MTU procedure. Write Only.
 #endif
-	GAP_PARAM_RANDOM_ADDR              = 0x224, //!< Random address. Write Only.
-	GAP_PARAM_LATEST_CONN_BD_ADDR      = 0x226, //!< Latest connected bluetooth devive address. Read Only.
-	GAP_PARAM_LATEST_CONN_BD_ADDR_TYPE = 0x227, //!< Latest connected bluetooth devive address type. Read Only.
-	GAP_PARAM_HANDLE_CREATE_CONN_IND   = 0x228, //!< App handle the create connection indication message.
+    GAP_PARAM_RANDOM_ADDR              = 0x224, //!< Random address. Write Only.
+    GAP_PARAM_LATEST_CONN_BD_ADDR      = 0x226, //!< Latest connected bluetooth devive address. Read Only.
+    GAP_PARAM_LATEST_CONN_BD_ADDR_TYPE = 0x227, //!< Latest connected bluetooth devive address type. Read Only.
+    GAP_PARAM_HANDLE_CREATE_CONN_IND   = 0x228, //!< App handle the create connection indication message.
 #if F_BT_LE_5_0_SET_PHYS_SUPPORT
-	GAP_PARAM_DEFAULT_PHYS_PREFER      = 0x229, //!< Preferred values for the transmitter PHY and receiver PHY to be used for all subsequent connections over the LE transport.
-	GAP_PARAM_DEFAULT_TX_PHYS_PREFER   = 0x22a, //!< The transmitter PHYs that the Host prefers the Controller to use.
-	GAP_PARAM_DEFAULT_RX_PHYS_PREFER   = 0x22b, //!< The receiver PHYs that the Host prefers the Controller to use.
+    GAP_PARAM_DEFAULT_PHYS_PREFER      = 0x229, //!< Preferred values for the transmitter PHY and receiver PHY to be used for all subsequent connections over the LE transport.
+    GAP_PARAM_DEFAULT_TX_PHYS_PREFER   = 0x22a, //!< The transmitter PHYs that the Host prefers the Controller to use.
+    GAP_PARAM_DEFAULT_RX_PHYS_PREFER   = 0x22b, //!< The receiver PHYs that the Host prefers the Controller to use.
 #endif
 #if F_BT_LE_5_0_AE_ADV_SUPPORT
-	GAP_PARAM_USE_EXTENDED_ADV         = 0x22c, //!< Use LE Advertising Extensions.
+    GAP_PARAM_USE_EXTENDED_ADV         = 0x22c, //!< Use LE Advertising Extensions.
 #endif
 #if F_BT_LE_4_2_DATA_LEN_EXT_SUPPORT
-	GAP_PARAM_DEFAULT_DATA_LEN_MAX_TX_OCTETS = 0x22e,
-	GAP_PARAM_DEFAULT_DATA_LEN_MAX_TX_TIME   = 0x22f,
+    GAP_PARAM_DEFAULT_DATA_LEN_MAX_TX_OCTETS = 0x22e,
+    GAP_PARAM_DEFAULT_DATA_LEN_MAX_TX_TIME   = 0x22f,
 #endif
-	GAP_PARAM_LOCAL_FEATURES           = 0x230, //!< Local supported features.
-	GAP_PARAM_DS_POOL_ID               = 0x231, //!< Downstream PoolID.  Read only.  size is uint16.
-	GAP_PARAM_DS_DATA_OFFSET           = 0x232, //!< Downstream pool buffer data offset.  Read only.  size is uint16.
-	GAP_PARAM_LE_REMAIN_CREDITS        = 0x233, //!< Remain credits avaiable for TX.  Read only.  size is uint16.
-	GAP_PARAM_MAX_WL_SIZE              = 0x234, //!< Max white list size.  Read only.  size is uint16.
+    GAP_PARAM_LOCAL_FEATURES           = 0x230, //!< Local supported features.
+    GAP_PARAM_DS_POOL_ID               = 0x231, //!< Downstream PoolID.  Read only.  size is uint16.
+    GAP_PARAM_DS_DATA_OFFSET           = 0x232, //!< Downstream pool buffer data offset.  Read only.  size is uint16.
+    GAP_PARAM_LE_REMAIN_CREDITS        = 0x233, //!< Remain credits avaiable for TX.  Read only.  size is uint16.
+    GAP_PARAM_MAX_WL_SIZE              = 0x234, //!< Max white list size.  Read only.  size is uint16.
 #if F_BT_LE_5_0_READ_POWER_SUPPORT
-	GAP_PARAM_MIN_TX_POWER             = 0x235, //!< The minimum transmit powers supported by the Controller.
-	GAP_PARAM_MAX_TX_POWER             = 0x236, //!< The maximum transmit powers supported by the Controller.
+    GAP_PARAM_MIN_TX_POWER             = 0x235, //!< The minimum transmit powers supported by the Controller.
+    GAP_PARAM_MAX_TX_POWER             = 0x236, //!< The maximum transmit powers supported by the Controller.
 #endif
 #if F_BT_LE_5_2_ISOC_CIS_SUPPORT
-	GAP_PARAM_CIS_HOST_SUPPORT         = 0x237, //!< Host supports creating CISes.
+    GAP_PARAM_CIS_HOST_SUPPORT         = 0x237, //!< Host supports creating CISes.
 #endif
 } T_GAP_LE_PARAM_TYPE;
 
@@ -723,10 +724,10 @@ T_GAP_CAUSE le_get_gap_param(T_GAP_LE_PARAM_TYPE param, void *p_value);
 
 /**
   * @brief  Modify local white list.
-  *         NOTE: You can call this function to add, remove or clear whist list.
+  *         NOTE: You can call this function to add, remove or clear white list.
   *               This function can be called after @ref gap_start_bt_stack is invoked.
   *
-  * @param[in] operation Bluetooth Device Random Address type, @ref T_GAP_RAND_ADDR_TYPE.
+  * @param[in] operation Add, remove or clear white list, @ref T_GAP_WHITE_LIST_OP.
   * @param[in] bd_addr Bluetooth Device Address.
   * @param[in] bd_type Bluetooth Device Address type.
   * @retval GAP_CAUSE_SUCCESS Operation success.
@@ -761,7 +762,7 @@ T_GAP_CAUSE le_get_gap_param(T_GAP_LE_PARAM_TYPE param, void *p_value);
   * \endcode
   */
 T_GAP_CAUSE le_modify_white_list(T_GAP_WHITE_LIST_OP operation, uint8_t *bd_addr,
-								 T_GAP_REMOTE_ADDR_TYPE bd_type);
+                                 T_GAP_REMOTE_ADDR_TYPE bd_type);
 
 /**
   * @brief    Generate local random address.

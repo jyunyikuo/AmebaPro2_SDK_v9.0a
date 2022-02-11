@@ -15,13 +15,22 @@
 
 #include <osif.h>
 
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+#include "platform_autoconf.h"
+#include "ameba_soc.h"
+#endif
+
 #if   defined ( __CC_ARM )
 #include "cmsis_armcc.h"
 /*
  * GNU Compiler
  */
 #elif defined ( __GNUC__ )
+#if defined(ARM_CORE_CA7) && ARM_CORE_CA7
+#include "cmsis_gcc_ca.h"
+#else
 #include "cmsis_gcc.h"
+#endif
 /*
  * IAR Compiler
  */
@@ -33,12 +42,21 @@
 #include "cmsis_iar.h"
 #endif
 #endif
+
 /****************************************************************************/
 /* Check if in task context (true), or isr context (false)                  */
 /****************************************************************************/
 static inline bool osif_task_context_check(void)
 {
-	return (__get_IPSR() == 0);
+#ifdef ARM_CORE_CA7
+	return (__get_mode() == CPSR_M_USR) || (__get_mode() == CPSR_M_SYS);
+#else
+#if defined(__ICCARM__)
+	return (__get_PSR() & 0x1FF) == 0;
+#elif defined(__GNUC__)
+	return (__get_xPSR() & 0x1FF) == 0;
+#endif
+#endif
 }
 
 /****************************************************************************/
@@ -900,7 +918,7 @@ bool osif_timer_dump(void)
 }
 
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
-extern void rtw_create_secure_context(u32 secure_stack_size);
+extern void rtw_create_secure_context(uint32_t secure_stack_size);
 #endif
 void osif_create_secure_context(uint32_t size)
 {

@@ -66,6 +66,7 @@ uint32_t hal_snand_pio_read(hal_snafc_adaptor_t *pAdaptor, void *memAddr, uint32
 uint32_t hal_snand_pio_write(hal_snafc_adaptor_t *pAdaptor, void *memAddr, uint32_t dataLens, uint32_t blkPageAddr);
 uint32_t hal_snand_dma_read(hal_snafc_adaptor_t *pAdaptor, void *memAddr, uint32_t dataLens, uint32_t blkPageAddr);
 uint32_t hal_snand_dma_write(hal_snafc_adaptor_t *pAdaptor, void *memAddr, uint32_t dataLens, uint32_t blkPageAddr);
+uint32_t hal_snand_page_read(hal_snafc_adaptor_t *pAdaptor, void *memAddr, uint32_t dataLens, uint32_t blkPageAddr);
 
 /** *@} */ /* End of group hs_hal_snand_ram_func */
 

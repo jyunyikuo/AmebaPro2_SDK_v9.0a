@@ -99,6 +99,12 @@ void *boot_get_key_certi(void)
 }
 
 __STATIC_INLINE
+void *boot_get_enc_sec_info(void)
+{
+	return hal_flash_boot_tlv_stubs.penc_sec_info;
+}
+
+__STATIC_INLINE
 void boot_clear_partition_tbl_info(void)
 {
 	hal_flash_boot_tlv_stubs.clear_export_partition_tbl_info();
@@ -108,6 +114,16 @@ __STATIC_INLINE
 void boot_clear_keycerti_info(void)
 {
 	hal_flash_boot_tlv_stubs.clear_export_sb_keycerti_info();
+}
+
+__STATIC_INLINE
+void boot_clear_sec_info(void)
+{
+	uint8_t v_main = 0, v_sub = 0;
+	hal_sys_get_rom_v(&v_main, &v_sub);
+	if ((v_main > 0) && ((v_main - 1) >= CHIP_B_CUT)) {
+		hal_flash_boot_tlv_stubs.clear_export_enc_sec_info();
+	}
 }
 
 __STATIC_INLINE
@@ -225,6 +241,18 @@ __STATIC_INLINE
 int boot_img_sel_op_idx(void *p_tbl_info, const uint8_t img_obj, const uint8_t img_sel_op)
 {
 	return (hal_flash_boot_tlv_stubs.img_sel_op_idx(p_tbl_info, img_obj, img_sel_op));
+}
+
+__STATIC_INLINE
+void boot_flash_sec_crypto_gen_iv(uint32_t flash_addr, uint32_t cahce_line_size, Flash_SEC_IV_Data_t *p_sec_iv, uint32_t iv_len)
+{
+	hal_flash_boot_tlv_stubs.flash_sec_crypto_gen_iv(flash_addr, cahce_line_size, p_sec_iv, iv_len);
+}
+
+__STATIC_INLINE
+void boot_flash_sec_crypto_xor_data(unsigned char *buf1, unsigned char *buf2, uint32_t len, unsigned char *result)
+{
+	hal_flash_boot_tlv_stubs.flash_sec_crypto_xor_data(buf1, buf2, len, result);
 }
 
 #endif  // end of "#if !defined(CONFIG_BUILD_NONSECURE)"

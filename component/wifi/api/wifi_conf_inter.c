@@ -16,7 +16,7 @@
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD)
 #include "at_cmd/atcmd_wifi.h"
 #endif
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #include "platform_opts_bt.h"
 #endif
 #if defined(CONFIG_ENABLE_WPS_AP) && CONFIG_ENABLE_WPS_AP
@@ -68,7 +68,7 @@ int wifi_set_pmk_cache_enable(unsigned char value)
 //----------------------------------------------------------------------------//
 int wifi_get_sw_statistic(unsigned char idx, rtw_sw_statistics_t *sw_statistics)
 {
-	rltk_wlan_statistic(idx, sw_statistics);
+	return rltk_wlan_statistic(idx, sw_statistics);
 }
 
 int wifi_set_wps_phase(unsigned char is_trigger_wps)

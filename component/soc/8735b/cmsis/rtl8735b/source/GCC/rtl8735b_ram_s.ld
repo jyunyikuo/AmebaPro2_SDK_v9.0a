@@ -6,23 +6,23 @@ INCLUDE "romsym_s.so"
 MEMORY
 {
   /* !!! These memory map configuration MUST match with the SAU setting !!! */
-  ITCM_RAM (wrx) 		: ORIGIN = 0x00028000, LENGTH = 0x00030000 - 0x00028000		/*  32KB */
+  ITCM_RAM (wrx) 		: ORIGIN = 0x00017000, LENGTH = 0x00018000 - 0x00017000		/*  4KB */
   
   /* The vector table, it must start with 256 bytes aligned address */
   VECTORS_RAM (rwx)     : ORIGIN = 0x20002000, LENGTH = 0x20002200 - 0x20002000		/*  512B     */
   DTCM_RAM (wrx) 		: ORIGIN = 0x20002200, LENGTH = 0x20004000 - 0x20002200 	/*  7.5KB    */
 
   /* Non-Secure Callable: for Non-Secure callable functions and secure gateway */  
-  NSC (rwx)             : ORIGIN = 0x2015E000, LENGTH = 0x20166000 - 0x2015E000	    /*  32KB     */
-
-  /* Internal SRAM for text, rodata & data */
-  RAM (rwx)             : ORIGIN = 0x20172400, LENGTH = 0x2017A800 - 0x20172400		/*  33KB  */
-  
-  /* RAM image Signature */
-  RAM_IMG_SIGN (rwx)    : ORIGIN = 0x201723F0, LENGTH = 0x20172400 - 0x201723F0		/*  16B      */
+  NSC (rwx)             : ORIGIN = 0x2015E000, LENGTH = 0x2016C300 - 0x2015E000	    /*  56.75KB  */
   
   /* RAM functions entry table */
-  RAM_FUN_TABLE (rwx)   : ORIGIN = 0x20172300, LENGTH = 0x201723F0 - 0x20172300     /* 240B */ 
+  RAM_FUN_TABLE (rwx)   : ORIGIN = 0x2016C300, LENGTH = 0x2016C3F0 - 0x2016C300     /* 240B   */ 
+  
+  /* RAM image Signature */
+  RAM_IMG_SIGN (rwx)    : ORIGIN = 0x2016C3F0, LENGTH = 0x2016C400 - 0x2016C3F0		/*  16B   */
+
+  /* Internal SRAM for text, rodata & data */
+  RAM (rwx)             : ORIGIN = 0x2016C400, LENGTH = 0x20177800 - 0x2016C400		/*  45KB  */
 
   DDR (rwx)	            : ORIGIN = 0x70000040, LENGTH = 0x70200000 - 0x70000040		/*2047kB+960B */
 
@@ -74,23 +74,6 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__itcm_ram_code_rodata_start__ = .;
-		*ram_start.o(.text*)
-		*app_start.o(.text*)
-		*mpu_config.o(.text*)
-		*hal_sys_ctrl.o(.text*)
-		*hal_dram_init.o(.text*)
-		*hal_timer.o(.text*)
-		*hal_uart.o(.text*)
-		*hal_pinmux.o(.text*)
-		*hal_gpio.o(.text*)
-		*hal_wdt.o(.text*)
-		*libc_wrap.o(.text*)
-		*lib_a*(.text*)
-		
-		*lib_a*(.rodata*)
-		*hal_sys_ctrl.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
-		*hal_flash.o(.rodata*)
 		__itcm_ram_code_rodata_end__ = .;
 	} > ITCM_RAM
 
@@ -152,7 +135,27 @@ SECTIONS
 		__ram_entry_text_end__ = .;
 		
 		__ram_code_text_start__ = .;
-		*(.text*)	
+		*ram_start.o(.text*)
+		*app_start.o(.text*)
+		*mpu_config.o(.text*)
+		*hal_sys_ctrl.o(.text*)
+		*hal_dram*.o(.text*)
+		*hal_timer.o(.text*)
+		*hal_uart.o(.text*)
+		*hal_pinmux.o(.text*)
+		*hal_gpio.o(.text*)
+		*hal_wdt.o(.text*)
+		*libc_wrap.o(.text*)
+		*lib_a*(.text*)
+        *rtos_api_s.o(.text*)
+        *stack_s.o(.text*)
+        *task_s.o(.text*)
+        *cmse_nonsecure_call.o*(.text*)
+		
+		*lib_a*(.rodata*)
+		*hal_sys_ctrl.o(.rodata*)
+		*hal_dram*.o(.rodata*)
+		*hal_flash.o(.rodata*)
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
 	} > RAM
@@ -162,8 +165,15 @@ SECTIONS
 		__fw_img_start__ = .;
   	    __etext = .; 
 		__data_start__ = .;
+		__bl4fw_data_start__ = .;
+        KEEP(*(.bl4fw.ram.data))
+        __bl4fw_data_end__ = .;
+		__bl4voe_data_start__ = .;
+        KEEP(*(.bl4voe.ram.data))
+        __bl4voe_data_end__ = .;
 		*(vtable)
 		*(.data*)
+		*hal_dram*.o(.data*)
 
 		. = ALIGN(4);
 		/* preinit data */
@@ -190,7 +200,7 @@ SECTIONS
 		/* All data end */
 		__data_end__ = .;
 
-	} > ITCM_RAM
+	} > RAM
 	
 	.ram.bss :
 	{
@@ -202,7 +212,7 @@ SECTIONS
 		*(.bss*)
 		*(COMMON)
 		*hal_sys_ctrl.o(.bss*)
-		*hal_dram_init.o(.bss*)
+		*hal_dram*.o(.bss*)
 		*hal_flash.o(.bss*)
 		__bss_end__ = .;
 		__sram_heap_start__ = .;
@@ -226,6 +236,14 @@ SECTIONS
 		KEEP(*(.stack*))
 	} > DTCM_RAM
 		
+	.ddr.text :
+	{
+		. = ALIGN(4);
+		__eram_text_start__ = .;	
+		*(.text*)							
+		__eram_text_end__ = .;	
+	} > DDR
+
 	.ddr.data :
 	{
 		. = ALIGN(4);

@@ -3,7 +3,7 @@
  * @brief    Define the shell command table and implement the shell command
  *           task.
  * @version  V1.00
- * @date     2020-11-11
+ * @date     2021-08-07
  *
  * @note
  *
@@ -66,7 +66,8 @@ SECTION_SHELL_CMD_STUBS const cmd_shell_func_stubs_t cmd_shell_stubs = {
 	.shell_task = _shell_task,
 	.shell_parse_one_cmd = _shell_parse_one_cmd,
 	.shell_rom_cmd_set_prompt = rom_cmd_shell_set_prompt,
-	.rom_cmd_table = rom_cmd_table
+	.rom_cmd_table = rom_cmd_table,
+	.shell_cmd_without_rom_tbl_task_init = shell_cmd_without_rom_tbl_task_init
 };
 
 SECTION_SHELL_CMD_TEXT
@@ -83,6 +84,20 @@ void shell_cmd_task_init(void)
 	_shell_set_cmd_table(&shell_cmd_hdl_rom, rom_cmd_table);
 //    _shell_set_prompt (&shell_cmd_hdl_rom, prompt_str_rom);
 
+}
+
+SECTION_SHELL_CMD_TEXT
+void shell_cmd_without_rom_tbl_task_init(void)
+{
+	// assign the buffer for input command
+	_shell_set_cmd_buf(&shell_cmd_hdl_rom, shell_cmd_buffer_rom, SHELL_CMD_BUF_SIZE);
+
+	// assign the buffer for command history
+	_shell_set_hist_buf(&shell_cmd_hdl_rom, shell_cmd_hist_rom, SHELL_CMD_HIST_SIZE);
+
+	// hook the putc & getc functions
+	_shell_init(&shell_cmd_hdl_rom, _stdio_port_getc, _stdio_port_putc, NULL);
+	_shell_set_cmd_table(&shell_cmd_hdl_rom, NULL);
 }
 
 SECTION_SHELL_CMD_TEXT

@@ -117,8 +117,8 @@ DRESULT SD_disk_ioctl(BYTE cmd, void *buff)
 
 	/* Make sure that no pending write process in the physical drive */
 	case CTRL_SYNC:		/* Flush disk cache (for write functions) */
-		//result = SD_WaitReady();
-		res = interpret_sd_result(result);
+		/* No write buffer for writing operation */
+		res = RES_OK;
 		break;
 	case GET_SECTOR_COUNT:	/* Get media size (for only f_mkfs()) */
 		result = SD_GetCapacity((unsigned long *) buff);

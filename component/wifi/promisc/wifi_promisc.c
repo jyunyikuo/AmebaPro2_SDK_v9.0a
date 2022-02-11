@@ -13,6 +13,10 @@
 #if CONFIG_WLAN
 #include <platform_stdlib.h>
 
+#ifndef CONFIG_UNSUPPORT_PLCPHDR_RPT
+#define CONFIG_UNSUPPORT_PLCPHDR_RPT 0
+#endif
+
 extern void _promisc_deinit(void *padapter);
 extern int _promisc_recv_func(void *padapter, void *rframe);
 extern int _promisc_set(rtw_rcr_level_t enabled, void (*callback)(unsigned char *, unsigned int, void *), unsigned char len_used);
@@ -65,32 +69,35 @@ int promisc_recv_lens_func(void *padapter, u8 *payload, u8 plen)
 #endif
 }
 
-int promisc_filter_retransmit_pkt(u8 enable, u8 filter_interval_ms)
+int promisc_filter_retransmit_pkt(unsigned char enable, unsigned char filter_interval_ms)
 {
 #ifdef CONFIG_PROMISC
 #if CONFIG_UNSUPPORT_PLCPHDR_RPT
-	return _promisc_filter_retransmit_plcp_pkt(enable, filter_interval_ms);
+	return _promisc_filter_retransmit_plcp_pkt((u8)enable, (u8)filter_interval_ms);
 #else
+	(void) enable;
+	(void) filter_interval_ms;
 	return -1;//_promisc_filter_retransmit_normal_pkt(enable);
 #endif
 #else
+	(void) enable;
+	(void) filter_interval_ms;
 	return -1;
 #endif
 }
 
 int promisc_filter_with_len(u16 len)
 {
-	/* To avoid gcc warnings */
-	(void) len;
-
 	// Never reach here if not define CONFIG_PROMISC
 #ifdef CONFIG_PROMISC
 #if defined(CONFIG_UNSUPPORT_PLCPHDR_RPT) && CONFIG_UNSUPPORT_PLCPHDR_RPT
 	return _promisc_filter_with_len(len);
 #else
+	(void) len;
 	return -1;
 #endif
 #else
+	(void) len;
 	return -1;
 #endif
 }
@@ -113,42 +120,42 @@ unsigned char is_promisc_enabled(void)
 #endif
 }
 
-int promisc_get_fixed_channel(void *fixed_bssid, u8 *ssid, int *ssid_length)
+int promisc_get_fixed_channel(void *fixed_bssid, unsigned char *ssid, int *ssid_length)
 {
 #ifdef CONFIG_PROMISC
-	return _promisc_get_fixed_channel(fixed_bssid, ssid, ssid_length);
+	return _promisc_get_fixed_channel(fixed_bssid, (u8 *)ssid, ssid_length);
 #else
 	return 0;
 #endif
 }
 
-void promisc_filter_by_ap_and_phone_mac(u8 enable, void *ap_mac, void *phone_mac)
+void promisc_filter_by_ap_and_phone_mac(unsigned char enable, void *ap_mac, void *phone_mac)
 {
 #ifdef CONFIG_PROMISC
-	_promisc_filter_by_ap_and_phone_mac(enable, ap_mac, phone_mac);
+	_promisc_filter_by_ap_and_phone_mac((u8)enable, ap_mac, phone_mac);
 #endif
 }
 
-int promisc_set_mgntframe(u8 enable)
+int promisc_set_mgntframe(unsigned char enable)
 {
 #ifdef CONFIG_PROMISC
-	_promisc_set_mgntframe(enable);
+	_promisc_set_mgntframe((u8)enable);
 #endif
 	return -1;
 }
 
-int promisc_get_chnl_by_bssid(u8 *bssid)
+int promisc_get_chnl_by_bssid(unsigned char *bssid)
 {
 #ifdef CONFIG_PROMISC
-	_promisc_get_chnl_by_bssid(bssid);
+	_promisc_get_chnl_by_bssid((u8 *)bssid);
 #endif
 	return 0;
 }
 
-void promisc_update_candi_ap_rssi_avg(s8 rssi, u8 cnt)
+void promisc_update_candi_ap_rssi_avg(signed char rssi, unsigned char cnt)
 {
 #ifdef CONFIG_PROMISC
-	_promisc_update_candi_ap_rssi_avg(rssi, cnt);
+	_promisc_update_candi_ap_rssi_avg((s8)rssi, (u8)cnt);
 #endif
 }
 

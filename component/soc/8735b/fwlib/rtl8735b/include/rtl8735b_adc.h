@@ -86,15 +86,15 @@ extern "C"
 /// hp adc constant value
 #define HP_ADC_GAIN_DENO_ADDR           0x4A8 // 2 bytes (Start Address is indicated here)
 #define HP_ADC_GAIN_MOLE_ADDR           0x4AA // 2 bytes (Start Address is indicated here)
-
 #define HP_ADC_OFFSET_DENO_ADDR         0x4AC // 2 bytes (Start Address is indicated here)
 #define HP_ADC_OFFSET_MOLE_ADDR         0x4AE // 4 bytes (Start Address is indicated here)
 
-#define HP_ADC_BATT_GAIN_DENO_ADDR      0x4B2 // 2 bytes (Start Address is indicated here)
-#define HP_ADC_BATT_GAIN_MOLE_ADDR      0x4B4 // 2 bytes (Start Address is indicated here)
-#define HP_ADC_BATT_OFFSET_DENO_ADDR    0x4B6 // 4 bytes (Start Address is indicated here)
-#define HP_ADC_BATT_OFFSET_MOLE_ADDR    0x4BA // 2 bytes (Start Address is indicated here)
-#define HP_ADC_BATT_INTERNAL_R_ADDR     0x4BC // 2 bytes (Start Address is indicated here)
+#define HP_ADC_BATT_INTERNAL_R_ADDR     0x4B2 // 2 bytes (Start Address is indicated here)
+
+#define HP_ADC_BATT_GAIN_DENO_ADDR      0x4B4 // 2 bytes (Start Address is indicated here)
+#define HP_ADC_BATT_GAIN_MOLE_ADDR      0x4B6 // 2 bytes (Start Address is indicated here)
+#define HP_ADC_BATT_OFFSET_DENO_ADDR    0x4B8 // 4 bytes (Start Address is indicated here)
+#define HP_ADC_BATT_OFFSET_MOLE_ADDR    0x4BC // 2 bytes (Start Address is indicated here)
 
 /*  Macros for adc reigster access  */
 /** @defgroup adc_reg_access_macro ADC REG ACCESS MACRO

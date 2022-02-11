@@ -31,7 +31,7 @@
 /**
  * @brief Byte alignment requirements.
  */
-#define secureportBYTE_ALIGNMENT         8
+#define secureportBYTE_ALIGNMENT         32
 #define secureportBYTE_ALIGNMENT_MASK    ( 0x0007 )
 
 /**

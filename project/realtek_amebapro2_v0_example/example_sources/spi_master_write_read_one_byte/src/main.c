@@ -43,7 +43,7 @@ void main(void)
 		ReadData = spi_master_write(&spi_master, ~TestData);
 		dbg_printf("Slave write: %02X, Master read: %02X\n\r", TestData, ReadData);
 		ReadData = spi_slave_read(&spi_slave);
-		dbg_printf(ANSI_COLOR_CYAN"Master  write: %02X, Slave read: %02X\n\r"ANSI_COLOR_RESET, ~TestData, ReadData);
+		dbg_printf("Master  write: %02X, Slave read: %02X\n\r", ~TestData, ReadData);
 	}
 
 	spi_free(&spi_master);

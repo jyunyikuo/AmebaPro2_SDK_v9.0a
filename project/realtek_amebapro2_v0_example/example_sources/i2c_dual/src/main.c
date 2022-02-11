@@ -6,11 +6,12 @@
 #include "pinmap.h"
 #include "ex_api.h"
 
-#define MBED_I2C_MTR_SDA    PF_3
-#define MBED_I2C_MTR_SCL    PF_2
+#define MBED_I2C_MTR_SDA PF_2 //3
+#define MBED_I2C_MTR_SCL PF_1 //2
 
-#define MBED_I2C_SLV_SDA    PF_3
-#define MBED_I2C_SLV_SCL    PF_2
+#define MBED_I2C_SLV_SDA PF_2 //3
+#define MBED_I2C_SLV_SCL PF_1 //2
+
 
 #define MBED_I2C_SLAVE_ADDR0    0xAA
 #define MBED_I2C_BUS_CLK        100000  //hz

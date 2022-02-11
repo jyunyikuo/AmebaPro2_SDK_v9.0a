@@ -8,89 +8,45 @@
 - Clone the following repository for KVS webrtc
 	- amazon-kinesis-video-streams-webrtc-sdk-c
     ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-webrtc-sdk-c.git
-    ```
-    - amazon-kinesis-video-streams-producer-c
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-producer-c.git
-    ```
-    - amazon-kinesis-video-streams-pic
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-pic.git
+    git clone -b webrtc-on-freertos-wss-0126-R https://github.com/ambiot-mini/amazon-kinesis-video-streams-webrtc-sdk-c.git
     ```
     - cisco/libsrtp
     ```
     git clone -b webrtc-on-freertos https://github.com/ambiot-mini/libsrtp.git
     ```
-    - warmcat/libwebsockets
+    - tatsuhiro-t/wslay
     ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/libwebsockets.git
+    git clone https://github.com/ambiot-mini/wslay.git
     ```
-- Clone the following repository for KVS producer
-	- amazon-kinesis-video-streams-producer-embedded-c
+    - nodejs/llhttp
     ```
-    cd project/realtek_amebapro2_v0_example/src/amazon_kvs/lib_amazon
-    git clone --recursive https://github.com/aws-samples/amazon-kinesis-video-streams-producer-embedded-c.git producer
-    cd producer
-    git reset --hard 8c9d4b29cb95ddcfad816e50a34e770222bb8ff5
+    git clone -b release https://github.com/nodejs/llhttp.git
+    cd llhttp
+    git reset --hard a4aa7a70e8b9a67f378b53264c61bb044a224366
+    ```
+    - sctplab/usrsctp
+    ```
+    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/usrsctp.git
     ```
 
-## Add KVS demo code to your project
-- Add the KVS demo code to project, we do it in `project/realtek_amebapro2_v0_example/GCC-RELEASE/application_ntz/libkvs_amazon.cmake`:  
-```
-list(
-	APPEND app_ntz_sources
-
-    #kvs mmf module
-    ${sdk_root}/component/example/kvs_producer_mmf/module_kvs_producer.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/module_kvs_webrtc.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/module_kvs_webrtc_audio.c
-
-    #kvs example
-	${sdk_root}/component/example/kvs_producer_mmf/example_kvs_producer_mmf.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/Common.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/example_kvs_webrtc_mmf.c
-)
-```
-
-## Using mbedtls-2.16.6 to replace the existing mbedtls version in project
+## Set mbedtls version
 - In KVS webrtc project, we have to use some function in mbedtls-2.16.6  
-we have to remove original mbedtls src add the src of mbedtls-2.16.6 to project, and we already do it in `project/realtek_amebapro2_v0_example/GCC-RELEASE/application_ntz/libkvs_amazon.cmake`:
-```
-...
-list(FILTER app_ntz_sources EXCLUDE REGEX "mbedtls-") #remove the existing mbedtls in project, then add mbedtls-2.16.6
-list(FILTER app_ntz_sources EXCLUDE REGEX "ssl_func_stubs.c")
-list(
-	APPEND app_ntz_sources
-    #mbedtls-2.16.6
-    ${sdk_root}/component/ssl/mbedtls-2.16.6/library/aes.c
-    ${sdk_root}/component/ssl/mbedtls-2.16.6/library/aesni.c
-    ${sdk_root}/component/ssl/mbedtls-2.16.6/library/arc4.c
-    ${sdk_root}/component/ssl/mbedtls-2.16.6/library/aria.c
-    ...
-)
-...
-```
-also, modify the include path for mbedtls-2.16.6 in `project\realtek_amebapro2_v0_example\GCC-RELEASE\includepath.cmake`  
-```
-...
-if(BUILD_KVS_DEMO)
-    list(FILTER inc_path EXCLUDE REGEX "mbedtls-") #remove the existing mbedtls in project, then add mbedtls-2.16.6
-    list (
-        APPEND inc_path
-        "${sdk_root}/component/ssl/mbedtls-2.16.6/include"
-    )
-endif()
-...
-```
+- Set mbedtls version to 2.16.6 in `project/realtek_amebapro2_v0_example/GCC-RELEASE/application/CMakeLists.txt`
+    ```
+    set(mbedtls "mbedtls-2.16.6")
+    ```
 
-## Replace the file
-- replace the following file in SDK with the files in `project\realtek_amebapro2_v0_example\src\amazon_kvs\replace\`
-    - `project/realtek_amebapro2_v0_example/src/main.c`
-    - `project/realtek_amebapro2_v0_example/inc/FreeRTOSConfig.h`
-    - `component/os/freertos/freertos_cb.c`
-    - `component/os/freertos/freertos_v202012.00/Source/portable/MemMang/heap_4_2.c`
-    - `component/lwip/api/lwipopts.h`
+## Modify lwipopts.h
+- Modify lwipopts.h in `component/lwip/api/`
+    ```
+    #define LWIP_IPV6       1
+    ```
+    
+## Enlarge SKB buffer number
+- go to `component/wifi/driver/src/core/option/rtw_opt_skbuf_rtl8735b.c`  
+    ```
+    #define MAX_SKB_BUF_NUM      1024
+    ```
 
 ## No using the wrapper function for snprintf 
 - In `project/realtek_amebapro2_v0_example/GCC-RELEASE/toolchain.cmake`, comment the following wrapper function
@@ -101,7 +57,7 @@ endif()
     ```
 
 ## Congiure the example
-- configure AWS key channel name in `component/example/kvs_webrtc_mmf/example_kvs_webrtc.h`
+- configure AWS key channel name in `component/example/kvs_webrtc_mmf/sample_config_webrtc.h`
     ```
     /* Enter your AWS KVS key here */
     #define KVS_WEBRTC_ACCESS_KEY   "xxxxxxxxxx"
@@ -118,25 +74,35 @@ endif()
     #define V1_GOP 30
     #define V1_BPS 1024*1024
     ```
-- add following code to the end of example_entry.c:  
+
+## Prepare cert
+- Put the cert to SD card (`component/example/kvs_webrtc_mmf/certs/cert.pem`), and set its path in `sample_config_webrtc.h`
     ```
-    #if CONFIG_EXAMPLE_KVS_WEBRTC_MMF
-        example_kvs_webrtc_mmf();
-    #endif
-    ```
-- define the demo you want to run in platform_opts.h  
-    ```
-    /* For KVS WebRTC mmf module example*/
-    #define CONFIG_EXAMPLE_KVS_WEBRTC_MMF           1
+    /* Cert path */
+    #define KVS_WEBRTC_ROOT_CA_PATH "0://cert.pem"
     ```
 
+## Select camera sensor
+
+- Check your camera sensor model, and define it in <AmebaPro2_SDK>/project/realtek_amebapro2_v0_example/inc/platform_opts.h
+    ```
+    //SENSOR_GC2053, SENSOR_PS5258
+    #define USE_SENSOR SENSOR_PS5258
+    ```
+    
+## Using AWS-IoT credential (optional)
+
+- Testing Amazon KVS WebRTC with IAM user key(AK/SK) is easy but it is not recommended, user can refer the following links to set up webrtc with AWS-IoT credential
+  - With AWS IoT Thing credentials, it can be managed more securely.(https://iotlabtpe.github.io/Amazon-KVS-WebRTC-WorkShop/lab/lab-4.html)
+  - Script for generate iot credential: https://github.com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-c/blob/master/scripts/generate-iot-credential.sh
+
 ## Build the project
-- run following commands to build the image with option `-DBUILD_KVS_DEMO=ON`
+- run following commands to build the image with option `-DEXAMPLE=kvs_webrtc_mmf`
     ```
     cd project/realtek_amebapro2_v0_example/GCC-RELEASE
     mkdir build
     cd build
-    cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DBUILD_KVS_DEMO=ON
+    cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DEXAMPLE=kvs_webrtc_mmf
     cmake --build . --target flash
     ```
 

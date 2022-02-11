@@ -30,12 +30,13 @@ extern "C" {
  *
  * \ingroup BT_RFC
  */
-typedef enum {
-	BT_RFC_MSG_CONN_IND        = 0x00,      /**< RFCOMM connect indicate */
-	BT_RFC_MSG_CONN_CMPL       = 0x01,      /**< RFCOMM connect successful */
-	BT_RFC_MSG_DISCONN_CMPL    = 0x02,      /**< RFCOMM disconnect successful */
-	BT_RFC_MSG_DATA_IND        = 0x03,      /**< RFCOMM data indicate */
-	BT_RFC_MSG_CREDIT_INFO     = 0x04,      /**< RFCOMM remote credits infomation */
+typedef enum
+{
+    BT_RFC_MSG_CONN_IND        = 0x00,      /**< RFCOMM connect indicate */
+    BT_RFC_MSG_CONN_CMPL       = 0x01,      /**< RFCOMM connect successful */
+    BT_RFC_MSG_DISCONN_CMPL    = 0x02,      /**< RFCOMM disconnect successful */
+    BT_RFC_MSG_DATA_IND        = 0x03,      /**< RFCOMM data indicate */
+    BT_RFC_MSG_CREDIT_INFO     = 0x04,      /**< RFCOMM remote credits infomation */
 } BT_RFC_MSG_TYPE;
 
 /**
@@ -47,9 +48,10 @@ typedef enum {
  *
  * \ingroup BT_RFC
  */
-typedef struct {
-	uint8_t     local_server_chann;
-	uint16_t    frame_size;
+typedef struct
+{
+    uint8_t     local_server_chann;
+    uint16_t    frame_size;
 } BT_RFC_CONN_IND;
 
 /**
@@ -61,10 +63,11 @@ typedef struct {
  *
  * \ingroup BT_RFC
  */
-typedef struct {
-	uint8_t     local_server_chann;
-	uint16_t    frame_size;
-	uint8_t     remain_credits;
+typedef struct
+{
+    uint8_t     local_server_chann;
+    uint16_t    frame_size;
+    uint8_t     remain_credits;
 } BT_RFC_CONN_CMPL;
 
 /**
@@ -76,9 +79,10 @@ typedef struct {
  *
  * \ingroup BT_RFC
  */
-typedef struct {
-	uint8_t     local_server_chann;
-	uint16_t    cause;
+typedef struct
+{
+    uint8_t     local_server_chann;
+    uint16_t    cause;
 } BT_RFC_DISCONN_CMPL;
 
 /**
@@ -90,11 +94,12 @@ typedef struct {
  *
  * \ingroup BT_RFC
  */
-typedef struct {
-	uint8_t     local_server_chann;
-	uint8_t     remain_credits;
-	uint16_t    length;
-	uint8_t    *buf;
+typedef struct
+{
+    uint8_t     local_server_chann;
+    uint8_t     remain_credits;
+    uint16_t    length;
+    uint8_t    *buf;
 } BT_RFC_DATA_IND;
 
 /**
@@ -105,9 +110,10 @@ typedef struct {
  *
  * \ingroup BT_RFC
  */
-typedef struct {
-	uint8_t     local_server_chann;
-	uint8_t     remain_credits;
+typedef struct
+{
+    uint8_t     local_server_chann;
+    uint8_t     remain_credits;
 } BT_RFC_CREDIT_INFO;
 
 /**
@@ -159,7 +165,7 @@ bool bt_rfc_profile_register(uint8_t server_chann, P_BT_RFC_PROFILE_CBACK cback)
  * \ingroup BT_RFC
  */
 bool bt_rfc_conn_req(uint8_t *bd_addr, uint8_t local_server_chann, uint8_t remote_server_chann,
-					 uint16_t frame_size, uint8_t init_credits);
+                     uint16_t frame_size, uint8_t init_credits);
 
 /**
  * bt_rfc.h
@@ -183,7 +189,7 @@ bool bt_rfc_conn_req(uint8_t *bd_addr, uint8_t local_server_chann, uint8_t remot
  * \ingroup BT_RFC
  */
 bool bt_rfc_conn_cfm(uint8_t *bd_addr, uint8_t local_server_chann, bool accept,
-					 uint16_t frame_size, uint8_t init_credits);
+                     uint16_t frame_size, uint8_t init_credits);
 
 /**
  * bt_rfc.h
@@ -202,7 +208,7 @@ bool bt_rfc_conn_cfm(uint8_t *bd_addr, uint8_t local_server_chann, bool accept,
  * \ingroup BT_RFC
  */
 bool bt_rfc_data_send(uint8_t *bd_addr, uint8_t local_server_chann,
-					  uint8_t *p_data, uint16_t data_len);
+                      uint8_t *p_data, uint16_t data_len);
 
 /**
  * bt_rfc.h

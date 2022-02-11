@@ -8,7 +8,6 @@
  */
 #include "integer.h"
 #include "stdint.h"
-#include "stdio.h"
 #include <disk_if/inc/flash_fatfs.h>
 #include "device_lock.h"
 #include "platform_opts.h"

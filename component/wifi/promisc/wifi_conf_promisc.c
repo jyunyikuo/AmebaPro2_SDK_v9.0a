@@ -37,6 +37,17 @@ extern rtw_mode_t wifi_mode;
 /******************************************************
  *               Function Definitions
  ******************************************************/
+#ifdef CONFIG_PROMISC
+extern void promisc_init_packet_filter(void);
+extern int promisc_add_packet_filter(u8 filter_id, rtw_packet_filter_pattern_t *patt, rtw_packet_filter_rule_t rule);
+extern int promisc_enable_packet_filter(u8 filter_id);
+extern int promisc_disable_packet_filter(u8 filter_id);
+extern int promisc_remove_packet_filter(u8 filter_id);
+extern int promisc_set(rtw_rcr_level_t enabled, void (*callback)(unsigned char *, unsigned int, void *), unsigned char len_used);
+extern int promisc_filter_retransmit_pkt(u8 enable, u8 filter_interval_ms);
+extern void promisc_filter_by_ap_and_phone_mac(u8 enable, void *ap_mac, void *phone_mac);
+extern int promisc_ctrl_packet_rpt(u8 enable);
+#endif
 
 #if CONFIG_WLAN
 
@@ -48,7 +59,6 @@ int wifi_set_promisc(rtw_rcr_level_t enabled, void (*callback)(unsigned char *, 
 void wifi_enter_promisc_mode()
 {
 #ifdef CONFIG_PROMISC
-	int mode = 0;
 	rtw_wifi_setting_t setting = {0};
 
 	if (wifi_mode == RTW_MODE_STA_AP) {
@@ -69,7 +79,7 @@ void wifi_enter_promisc_mode()
 #endif
 			break;
 		case RTW_MODE_STA:		//In STA mode
-			if (strlen(setting.ssid) > 0) {
+			if (strlen((const char *)setting.ssid) > 0) {
 				wifi_disconnect();
 			}
 		}

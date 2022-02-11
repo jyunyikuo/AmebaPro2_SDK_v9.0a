@@ -177,7 +177,7 @@ extern u16 GlobalDebugLevel;
 #if !defined(CONFIG_PLATFORM_8711B) \
 	&& !defined(CONFIG_PLATFORM_8721D) && !defined(CONFIG_PLATFORM_8195BHP) \
 	&& !defined(CONFIG_PLATFORM_8710C) && !defined(CONFIG_PLATFORM_AMEBAD2) \
-	&& !defined(CONFIG_PLATFORM_8735B)
+	&& !defined(CONFIG_PLATFORM_8735B) && !defined(CONFIG_PLATFORM_AMEBALITE)
 #define DRIVER_PREFIX	"RTL871X: "
 #else
 #include <diag.h> // for DRIVER_PREFIX
@@ -239,6 +239,15 @@ extern int msg_uart_port(const char *fmt, ...);
 	}while(0)
 #endif
 #endif /* CONFIG_DEBUG */
+
+#ifdef CONFIG_PHL_DBG
+#define PHL_ERR(...)     do {\
+		_dbgdump_nr(DRIVER_PREFIX __VA_ARGS__);\
+	}while(0)
+
+#else
+#define PHL_ERR(x, ...) do {} while(0)
+#endif/*CONFIG_PHL_DBG*/
 
 //define RTW_INFO to get debug message of phydm
 //command phydm dbg can open debug message from uart interface

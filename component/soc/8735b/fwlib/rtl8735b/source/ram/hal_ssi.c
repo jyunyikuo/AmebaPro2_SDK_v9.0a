@@ -95,6 +95,7 @@ hal_status_t hal_ssi_pin_ctl(phal_ssi_adaptor_t phal_ssi_adaptor, u8 ctl)
 				DBG_SSI_ERR("PIN %x cannot be registered.\r\n", *(((u32 *)pspi_pin) + index));
 				return ret;
 			}
+			hal_gpio_schmitt_ctrl(*(((u32 *)pspi_pin) + index), ctl);
 		}
 	} else {
 		for (index = 0; index < 4; index++) {
@@ -103,10 +104,10 @@ hal_status_t hal_ssi_pin_ctl(phal_ssi_adaptor_t phal_ssi_adaptor, u8 ctl)
 				DBG_SSI_ERR("PIN %x cannot be unregistered.\r\n", *(((u32 *)pspi_pin) + index));
 				return ret;
 			}
+			hal_gpio_schmitt_ctrl(*(((u32 *)pspi_pin) + index), ctl);
 		}
 	}
 
-	hal_gpio_schmitt_ctrl((u32)pspi_pin->spi_clk_pin, ctl);
 
 	return HAL_OK;
 }
@@ -237,6 +238,11 @@ hal_status_t hal_ssi_deinit(phal_ssi_adaptor_t phal_ssi_adaptor)
 	ret = hal_ssi_pin_ctl(phal_ssi_adaptor, DISABLE);
 	if (ret != HAL_OK) {
 		DBG_SSI_ERR("Deinit pins fails.\r\n");
+	}
+
+	ret = hal_ssi_deinit_setting(phal_ssi_adaptor);
+	if (ret != HAL_OK) {
+		DBG_SSI_ERR("Deinit fails.\r\n");
 	}
 
 	hal_ssi_tx_gdma_deinit(phal_ssi_adaptor);
@@ -508,4 +514,5 @@ hal_status_t hal_ssi_dma_recv(phal_ssi_adaptor_t phal_ssi_adaptor, u8  *prx_data
 /** *@} */ /* End of group hs_hal_ssi_ram_func */
 
 /** *@} */ /* End of group hs_hal_ssi */
+
 

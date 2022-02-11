@@ -198,6 +198,9 @@ void example_mmf2_video_surport()
 
 void example_mmf2_signal_stream_main(void *param)
 {
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_PLATFORM_8735B)
+	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
+#endif
 	//int ret;
 #if ISP_BOOT_MODE_ENABLE == 0
 	common_init();

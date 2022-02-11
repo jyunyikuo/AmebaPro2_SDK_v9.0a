@@ -40,6 +40,9 @@ int MQTTDeserialize_unsubscribe(unsigned char *dup, unsigned short *packetid, in
 	int rc = 0;
 	int mylen = 0;
 
+	/* To avoid gcc warnings */
+	(void) maxcount;
+	(void)len;
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);
 	if (header.bits.type != UNSUBSCRIBE) {

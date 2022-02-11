@@ -36,6 +36,8 @@ typedef struct Kvs {
 
 typedef struct kvs_producer_ctx_s {
 	void *parent;
+	TaskHandle_t    kvs_producer_module_task;
+
 } kvs_producer_ctx_t;
 
 extern mm_module_t kvs_producer_module;

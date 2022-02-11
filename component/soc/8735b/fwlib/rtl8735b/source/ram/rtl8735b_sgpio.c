@@ -33,7 +33,7 @@
 #include "rtl8735b_sgpio_type.h"
 #include "hal_cache.h"
 #include "hal_sys_ctrl.h"
-
+#include "hal_sys_ctrl_nsc.h"
 
 #if CONFIG_SGPIO_EN
 

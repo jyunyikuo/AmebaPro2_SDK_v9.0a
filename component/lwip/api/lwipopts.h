@@ -218,7 +218,7 @@ extern unsigned int sys_now(void);
 #define TCP_KEEPCNT_DEFAULT			10U
 #endif
 
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && (CONFIG_EXAMPLE_UART_ATCMD)) \
+#if (defined(SUPPORT_UART_LOG_SERVICE) && (SUPPORT_UART_LOG_SERVICE)) \
     || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && (CONFIG_EXAMPLE_SPI_ATCMD))
 #undef  LWIP_SO_SNDTIMEO
 #define LWIP_SO_SNDTIMEO                        1
@@ -266,14 +266,17 @@ extern unsigned int sys_now(void);
 #endif
 
 #if defined(CONFIG_VIDEO_APPLICATION) && CONFIG_VIDEO_APPLICATION
-#undef MEM_SIZE
-#define MEM_SIZE (20*1024)
+#undef	LWIP_WND_SCALE
+#define	LWIP_WND_SCALE                  1
 
-#undef MEMP_NUM_TCP_SEG
-#define MEMP_NUM_TCP_SEG 60
+#undef	TCP_RCV_SCALE
+#define	TCP_RCV_SCALE                   1
+
+#undef MEM_SIZE
+#define MEM_SIZE (512*1024)
 
 #undef PBUF_POOL_SIZE
-#define PBUF_POOL_SIZE 60
+#define PBUF_POOL_SIZE 880
 
 #undef MEMP_NUM_NETBUF
 #define MEMP_NUM_NETBUF 60
@@ -282,13 +285,52 @@ extern unsigned int sys_now(void);
 #define IP_REASS_MAX_PBUFS 40
 
 #undef TCP_SND_BUF
-#define TCP_SND_BUF (10*TCP_MSS)
+#define TCP_SND_BUF (80*TCP_MSS)
+
+#undef TCP_SND_QUEUELEN
+#define TCP_SND_QUEUELEN (6*TCP_SND_BUF/TCP_MSS)
+
+#undef MEMP_NUM_TCP_SEG
+#define MEMP_NUM_TCP_SEG TCP_SND_QUEUELEN
+
+#undef TCP_WND
+#define TCP_WND (80*TCP_MSS)
+
+#undef MEMP_NUM_NETCONN
+#define MEMP_NUM_NETCONN        64
+
+#undef MEMP_NUM_UDP_PCB
+#define MEMP_NUM_UDP_PCB        MEMP_NUM_NETCONN
+
+#undef MEMP_NUM_TCP_PCB
+#define MEMP_NUM_TCP_PCB        MEMP_NUM_NETCONN
+
+#undef MEMP_NUM_TCP_PCB_LISTEN
+#define MEMP_NUM_TCP_PCB_LISTEN MEMP_NUM_NETCONN
+
+#undef LWIP_SO_SNDTIMEO
+#define LWIP_SO_SNDTIMEO                		1
+
+#endif
+
+#if defined(CONFIG_INIC_IPC_HIGH_TP) && CONFIG_INIC_IPC_HIGH_TP
+#undef MEM_SIZE
+#define MEM_SIZE (34*1024)
+
+#undef MEMP_NUM_TCP_SEG
+#define MEMP_NUM_TCP_SEG        132
+
+#undef PBUF_POOL_SIZE
+#define PBUF_POOL_SIZE 70
+
+#undef TCP_SND_BUF
+#define TCP_SND_BUF (22*TCP_MSS)
 
 #undef TCP_SND_QUEUELEN
 #define TCP_SND_QUEUELEN (6*TCP_SND_BUF/TCP_MSS)
 
 #undef TCP_WND
-#define TCP_WND (12*TCP_MSS)
+#define TCP_WND (18*TCP_MSS)
 #endif
 
 /* ---------- Statistics options ---------- */
@@ -377,11 +419,18 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 
 #define TCPIP_THREAD_STACKSIZE          1000
 #if defined(CONFIG_VIDEO_APPLICATION) && CONFIG_VIDEO_APPLICATION
-#define TCPIP_MBOX_SIZE                 60
-#define DEFAULT_UDP_RECVMBOX_SIZE       60
-#define DEFAULT_TCP_RECVMBOX_SIZE       60
-#define DEFAULT_RAW_RECVMBOX_SIZE       60
-#define DEFAULT_ACCEPTMBOX_SIZE         60
+#define TCPIP_MBOX_SIZE                 600
+#define DEFAULT_UDP_RECVMBOX_SIZE       600
+#define DEFAULT_TCP_RECVMBOX_SIZE       600
+#define DEFAULT_RAW_RECVMBOX_SIZE       600
+#define DEFAULT_ACCEPTMBOX_SIZE         600
+#elif defined(CONFIG_INIC_IPC_HIGH_TP) && CONFIG_INIC_IPC_HIGH_TP
+#define TCPIP_MBOX_SIZE                 30
+#define DEFAULT_UDP_RECVMBOX_SIZE       18
+#define DEFAULT_TCP_RECVMBOX_SIZE       18
+#define DEFAULT_RAW_RECVMBOX_SIZE       6
+#define DEFAULT_ACCEPTMBOX_SIZE         6
+#define MEMP_NUM_TCPIP_MSG_INPKT        20
 #else
 #define TCPIP_MBOX_SIZE                 6
 #define DEFAULT_UDP_RECVMBOX_SIZE       6

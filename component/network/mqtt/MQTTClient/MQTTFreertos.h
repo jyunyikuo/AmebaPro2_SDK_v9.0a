@@ -39,6 +39,10 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/version.h"
+#if (MBEDTLS_VERSION_NUMBER == 0x03000000)
+#include "mbedtls/psa_util.h"
+#endif
 #endif
 #endif
 
@@ -52,7 +56,7 @@ enum {
 	do {\
 		if (level >= MQTT_DEBUG) {\
 			{\
-				printf("\r\n[%d]mqtt:", rtw_get_current_time());\
+				printf("\r\n[%d]mqtt:", (int)rtw_get_current_time());\
 				printf(fmt, ##arg);\
 				printf("\n\r");\
 			} \
@@ -85,6 +89,7 @@ struct Network {
 	char *clientCA;
 	char *private_key;
 #endif
+	int *ciphersuites;
 };
 
 void TimerInit(Timer *);

@@ -43,6 +43,8 @@
 #define SERIAL_RX_IRQ_EN        0x02
 #define SERIAL_TX_DMA_EN        0x01
 #define SERIAL_RX_DMA_EN        0x02
+#define DRAM_ADDR_OFFSET        (24)
+#define DRAM_HIGH_ADDR          (0x7)
 
 #ifdef CONFIG_GDMA_EN
 static uint8_t serial_dma_init[UART_NUM] = {0, 0, 0, 0, 0};
@@ -79,9 +81,13 @@ void serial_free(serial_t *obj)
 	uint8_t uart_idx;
 
 	uart_idx = obj->uart_adp.uart_idx;
-	if (serial_dma_init[uart_idx] != 0) {
+	if ((serial_dma_init[uart_idx] & SERIAL_RX_DMA_EN) != 0) {
 		hal_uart_rx_gdma_deinit(&obj->uart_adp);
-		serial_dma_init[uart_idx] = 0;
+		serial_dma_init[uart_idx] &= ~SERIAL_RX_DMA_EN;
+	}
+	if ((serial_dma_init[uart_idx] & SERIAL_TX_DMA_EN) != 0) {
+		hal_uart_tx_gdma_deinit(&obj->uart_adp);
+		serial_dma_init[uart_idx] &= ~SERIAL_TX_DMA_EN;
 	}
 	hal_uart_deinit(&obj->uart_adp);
 }
@@ -316,6 +322,14 @@ int32_t serial_recv_stream_dma(serial_t *obj, char *prxbuf, uint32_t len)
 		return ret;
 	}
 
+	//Checks DRAM misalignment
+	if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> DRAM_ADDR_OFFSET) == DRAM_HIGH_ADDR) {
+		if (((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+			DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+			return HAL_ERR_MEM;
+		}
+	}
+
 	ret = hal_uart_dma_recv(&obj->uart_adp, (uint8_t *)prxbuf, len);
 	return ret;
 }
@@ -324,6 +338,14 @@ int32_t serial_send_stream_dma(serial_t *obj, char *ptxbuf, uint32_t len)
 {
 	uint8_t  uart_idx = obj->uart_adp.uart_idx;
 	hal_status_t ret;
+
+	//Checks DRAM misalignment
+	if (is_dcache_enabled() && (((uint32_t)(ptxbuf)) >> DRAM_ADDR_OFFSET) == DRAM_HIGH_ADDR) {
+		if (((uint32_t)(ptxbuf) & 0x1F) != 0x0) {
+			DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+			return HAL_ERR_MEM;
+		}
+	}
 
 	if ((serial_dma_init[uart_idx] & SERIAL_TX_DMA_EN) == 0) {
 		ret = hal_uart_tx_gdma_init(&obj->uart_adp, &obj->tx_gdma);
@@ -348,6 +370,14 @@ int32_t serial_recv_stream_dma_timeout(serial_t *obj, char *prxbuf, uint32_t len
 	ret = _serial_recv_dma_enable(obj);
 	if (ret != HAL_OK) {
 		return -ret;
+	}
+
+	//Checks DRAM misalignment
+	if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> DRAM_ADDR_OFFSET) == DRAM_HIGH_ADDR) {
+		if (((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+			DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+			return HAL_ERR_MEM;
+		}
 	}
 
 	ret = hal_uart_dma_recv(&obj->uart_adp, (uint8_t *)prxbuf, len);

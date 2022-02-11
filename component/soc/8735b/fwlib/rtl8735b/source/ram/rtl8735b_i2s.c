@@ -345,7 +345,8 @@ HAL_Status hal_rtl_i2s_en_clk_ctrl(i2s_index_sel_t index_sel, BOOL en)
 		hal_sys_peripheral_en(I2S1_SYS, en); //I2S1 En and Clock 0x0C
 	}
 
-	hal_sys_peripheral_en(LXBUS_SYS, ENABLE); //LXBUS En and Clock
+	//hal_sys_peripheral_en(LXBUS_SYS, ENABLE); //LXBUS En and Clock
+	hal_sys_lxbus_shared_en(LXBUS_CTRL_I2S, en);
 
 	return HAL_OK;
 

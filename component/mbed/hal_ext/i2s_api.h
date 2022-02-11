@@ -75,6 +75,53 @@ enum {
 	WL_32b = I2S_WL_32
 };
 
+enum {
+	I2S_DIR_RX   = I2S_ONLY_RX,    // Rx Only
+	I2S_DIR_TX   = I2S_ONLY_TX,    // Tx Only
+	I2S_DIR_TXRX = I2S_TXRX     // Tx & Rx (BiDirection)
+};
+
+#elif (defined(CONFIG_PLATFORM_AMEBAD2) && (CONFIG_PLATFORM_AMEBAD2 == 1))
+// AmebaD2
+enum {
+	SR_8KHZ = SP_8K,
+	SR_12KHZ = SP_12K,
+	SR_16KHZ = SP_16K,
+	SR_24KHZ = SP_24K,
+	SR_32KHZ = SP_32K,
+	SR_48KHZ = SP_48K,
+	SR_96KHZ = SP_96K,
+	SR_192KHZ = SP_192K,
+	SR_384KHZ = SP_384K,
+
+	SR_11p02PKHZ = SP_11P025K,
+	SR_22P05KHZ = SP_22P05K,
+	SR_44P1KHZ = SP_44P1K,
+	SR_88P2KHZ = SP_88P2K,
+	SR_176P4KHZ = SP_176P4K
+};
+
+enum {
+	CH_STEREO = SP_CH_STEREO,
+	CH_MONO = SP_CH_MONO
+};
+
+enum {
+	WL_16b = SP_TXWL_16,
+	WL_24b = SP_TXWL_24
+};
+
+enum {
+	I2S_IDX1 = I2S2,
+	I2S_IDX2 = I2S3
+};
+
+enum {
+	I2S_DIR_RX   = SP_DIR_RX,    // Rx Only
+	I2S_DIR_TX   = SP_DIR_TX,    // Tx Only
+	//I2S_DIR_TXRX = I2S_TXRX     // Tx & Rx (BiDirection)
+};
+
 #else
 
 ///@name Ameba Common
@@ -104,12 +151,13 @@ enum {
 	WL_24b = I2S_WL_24
 };
 ///@}
-#endif  // end of "#if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8195BLP) || defined(CONFIG_PLATFORM_8735B)"
 enum {
 	I2S_DIR_RX   = I2S_ONLY_RX,    // Rx Only
 	I2S_DIR_TX   = I2S_ONLY_TX,    // Tx Only
 	I2S_DIR_TXRX = I2S_TXRX     // Tx & Rx (BiDirection)
 };
+
+#endif  // end of "#if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8195BLP) || defined(CONFIG_PLATFORM_8735B)"
 
 typedef void (*i2s_irq_handler)(uint32_t id, char *pbuf);
 

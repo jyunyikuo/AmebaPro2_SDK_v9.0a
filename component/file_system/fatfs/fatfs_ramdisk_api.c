@@ -13,7 +13,7 @@
 #endif
 
 ////**** Implement the basic functions for RAM FatFs ****////
-#define RAM_DISK_SZIE 1204*1024*10
+#define RAM_DISK_SZIE 1024*1024*10
 #define SECTOR_SIZE_RAM		512
 #define SECTOR_COUNT_RAM (RAM_DISK_SZIE/512)	//4096  // File system volumes = SECTOR_SIZE_RAM * SECTOR_COUNT_RAM
 
@@ -100,6 +100,32 @@ ll_diskio_drv RAM_disk_Driver = {
 #endif
 	.TAG	= "RAM"
 };
+/*For usb operation.........................................*/
+int usb_ram_init(void)
+{
+	int ret = 0;
+	return ret;
+}
+int usb_ram_deinit(void)
+{
+	int ret = 0;
+	return ret;
+}
+int usb_ram_getcapacity(u32 *sector_count)
+{
+	*sector_count = SECTOR_COUNT_RAM;
+	return 0;
+}
+int usb_ram_readblocks(u32 sector, u8 *data, u32 count)
+{
+	RAM_disk_read(data, sector, count);
+	return 0;
+}
+int usb_ram_writeblocks(u32 sector, const u8 *data, u32 count)
+{
+	RAM_disk_write(data, sector, count);
+	return 0;
+}
 
 
 ////**** API for the usage of the FatFs on RAM ****////

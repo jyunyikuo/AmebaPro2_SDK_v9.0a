@@ -3,40 +3,35 @@
 ******************************************************************************/
 
 typedef enum _ODM_PW_LMT_REGULATION_TYPE {
-	PW_LMT_REGU_NULL = 0,
-	PW_LMT_REGU_FCC = 1,
-	PW_LMT_REGU_ETSI = 2,
-	PW_LMT_REGU_MKK = 3,
-	PW_LMT_REGU_WW13 = 4
+	PW_LMT_REGU_FCC = 0,
+	PW_LMT_REGU_ETSI = 1,
+	PW_LMT_REGU_MKK = 2,
+	PW_LMT_REGU_WW13 = 3
 } ODM_PW_LMT_REGULATION_TYPE;
 
 typedef enum _ODM_PW_LMT_BAND_TYPE {
-	PW_LMT_BAND_NULL = 0,
-	PW_LMT_BAND_2_4G = 1,
-	PW_LMT_BAND_5G = 2
+	PW_LMT_BAND_2_4G = 0,
+	PW_LMT_BAND_5G = 1
 } ODM_PW_LMT_BAND_TYPE;
 
 typedef enum _ODM_PW_LMT_BANDWIDTH_TYPE {
-	PW_LMT_BW_NULL = 0,
-	PW_LMT_BW_20M = 1,
-	PW_LMT_BW_40M = 2,
-	PW_LMT_BW_80M = 3
+	PW_LMT_BW_20M = 0,
+	PW_LMT_BW_40M = 1,
+	PW_LMT_BW_80M = 2
 } ODM_PW_LMT_BANDWIDTH_TYPE;
 
 typedef enum _ODM_PW_LMT_RATESECTION_TYPE {
-	PW_LMT_RS_NULL = 0,
-	PW_LMT_RS_CCK = 1,
-	PW_LMT_RS_OFDM = 2,
-	PW_LMT_RS_HT = 3,
-	PW_LMT_RS_VHT = 4
+	PW_LMT_RS_CCK = 0,
+	PW_LMT_RS_OFDM = 1,
+	PW_LMT_RS_HT = 2,
+	PW_LMT_RS_VHT = 3
 } ODM_PW_LMT_RATESECTION_TYPE;
 
 typedef enum _ODM_PW_LMT_RFPATH_TYPE {
-	PW_LMT_PH_NULL = 0,
-	PW_LMT_PH_1T = 1,
-	PW_LMT_PH_2T = 2,
-	PW_LMT_PH_3T = 3,
-	PW_LMT_PH_4T = 4
+	PW_LMT_PH_1T = 0,
+	PW_LMT_PH_2T = 1,
+	PW_LMT_PH_3T = 2,
+	PW_LMT_PH_4T = 3
 } ODM_PW_LMT_RFPATH_TYPE;
 
 typedef unsigned char			u1Byte;

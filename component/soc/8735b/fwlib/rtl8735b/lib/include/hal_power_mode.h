@@ -30,6 +30,7 @@
 #define _HAL_POWER_MODE_H_
 #include "cmsis.h"
 #include "rtl8735b_aon_type.h"
+#include "hal_power_mode_nsc.h"
 //#define VNDR_S      ((VNDR_S_TYPE_TypeDef*)         0x50002C00)
 #define AON         ((AON_TypeDef*)            AON_BASE)
 
@@ -102,7 +103,7 @@ void hal_sys_reg_irq(VOID);
 void hal_DeepSleep(u8  Option, u32 SDuration, u8 Clock);
 
 /**
- *  @brief The function for sleep mode.
+ *  @brief The function for SLeep CG mode.
  *
  *  @param[in]  Option, To slect GTimer, GPIO and PWM...etc
  *                - bit[8]: the WLAN Wake up event.
@@ -116,11 +117,13 @@ void hal_DeepSleep(u8  Option, u32 SDuration, u8 Clock);
  *                - bit[0]: the AON Timer Wake up event.
  *  @param[in]  SDuration, wake up after SDuration value. Uint: us
  *  @param[in]  Clock, 1: 4MHz, 0: 100kHz.
- *  @param[in]  GpioOption, Select GPIO pin as a wake up trigger.
- *
+ *  @param[in]  SramOption, Select SRAM1~SRAM2 state.
+ *                - 0: shutdown mode.
+ *                - 1: retention mode.
+ *                - 2: Normal mode.
  *  @returns void
  */
-void hal_SleepCG(u16 Option, u32 SDuration, u8 Clock, u8 GpioOption);
+void hal_SleepCG(u16 Option, u32 SDuration, u8 Clock, u8 SramOption);
 
 /**
  *  @brief The function for Standby mode.
@@ -143,7 +146,7 @@ void hal_SleepCG(u16 Option, u32 SDuration, u8 Clock, u8 GpioOption);
  *                - 2: Normal mode.
  *  @returns void
  */
-void hal_SleepPG(u16 Option, u32 SDuration, u8 Clock, u8 GpioOption);
+void hal_SleepPG(u16 Option, u32 SDuration, u8 Clock, u8 SramOption);
 
 /**
  *  @brief The function for power lib version.
@@ -152,6 +155,16 @@ void hal_SleepPG(u16 Option, u32 SDuration, u8 Clock, u8 GpioOption);
  *  @returns version
  */
 u8 hal_power_lib_version(void);
+
+/**
+ *  @brief The function for syspll and peripll spread spectrum.
+ *  @param[in]  syspll_en, 1: Enable SYSPLL spread spectrum function,
+ *                        0: Disable SYSPLL spread spectrum function
+ *  @param[in]  peripll_en, 1: Enable PERIPLL spread spectrum function,
+ *                        0: Disable PERIPLL spread spectrum function
+ *  @returns void
+ */
+void hal_syspll_peripll_spread_spectrum_en(u8 syspll_en, u8 peripll_en);
 
 #ifdef  __cplusplus
 }

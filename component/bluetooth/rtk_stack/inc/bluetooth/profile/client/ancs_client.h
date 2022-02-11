@@ -285,81 +285,91 @@ extern "C" {
   */
 
 /** @brief ANCS client handle type*/
-typedef enum {
-	HDL_ANCS_SRV_START,                //!< start handle of ANCS
-	HDL_ANCS_SRV_END,                  //!< end handle of ANCS
-	HDL_ANCS_CONTROL_POINT,            //!< control point characteristic value handle
-	HDL_ANCS_NOTIFICATION_SOURCE,      //!< notification source characteristic value handle
-	HDL_ANCS_NOTIFICATION_SOURCE_CCCD, //!< notification source characteristic CCCD handle
-	HDL_ANCS_DATA_SOURCE,              //!< data source characteristic value handle
-	HDL_ANCS_DATA_SOURCE_CCCD,         //!< data source characteristic CCCD handle
-	HDL_ANCS_CACHE_LEN                 //!< handle cache length
+typedef enum
+{
+    HDL_ANCS_SRV_START,                //!< start handle of ANCS
+    HDL_ANCS_SRV_END,                  //!< end handle of ANCS
+    HDL_ANCS_CONTROL_POINT,            //!< control point characteristic value handle
+    HDL_ANCS_NOTIFICATION_SOURCE,      //!< notification source characteristic value handle
+    HDL_ANCS_NOTIFICATION_SOURCE_CCCD, //!< notification source characteristic CCCD handle
+    HDL_ANCS_DATA_SOURCE,              //!< data source characteristic value handle
+    HDL_ANCS_DATA_SOURCE_CCCD,         //!< data source characteristic CCCD handle
+    HDL_ANCS_CACHE_LEN                 //!< handle cache length
 } T_ANCS_HANDLE_TYPE;
 
 /** @brief ANCS client control command id*/
-typedef enum {
-	CP_CMD_ID_GET_NOTIFICATION_ATTR = 0,
-	CP_CMD_ID_GET_APP_ATTR = 1,
-	CP_CMD_ID_PERFORM_NOTIFICATION_ACTION = 2,
-	CP_CMD_ID_RESERVED = 255
+typedef enum
+{
+    CP_CMD_ID_GET_NOTIFICATION_ATTR = 0,
+    CP_CMD_ID_GET_APP_ATTR = 1,
+    CP_CMD_ID_PERFORM_NOTIFICATION_ACTION = 2,
+    CP_CMD_ID_RESERVED = 255
 } T_ANCS_CP_CMD_ID;
 
 /** @brief ANCS client discovery state*/
-typedef enum {
-	DISC_ANCS_IDLE,
-	DISC_ANCS_START,
-	DISC_ANCS_DONE,
-	DISC_ANCS_FAILED
+typedef enum
+{
+    DISC_ANCS_IDLE,
+    DISC_ANCS_START,
+    DISC_ANCS_DONE,
+    DISC_ANCS_FAILED
 } T_ANCS_DISC_STATE;
 
 /** @brief ANCS client data type*/
-typedef enum {
-	ANCS_FROM_DATA_SOURCE,
-	ANCS_FROM_NOTIFICATION_SOURCE,
+typedef enum
+{
+    ANCS_FROM_DATA_SOURCE,
+    ANCS_FROM_NOTIFICATION_SOURCE,
 } T_ANCS_DATA_TYPE;
 
 /** @brief ANCS client notification data struct*/
-typedef struct {
-	T_ANCS_DATA_TYPE type;
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    T_ANCS_DATA_TYPE type;
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_ANCS_NOTIFY_DATA;
 
 /** @brief ANCS client write type*/
-typedef enum {
-	ANCS_WRITE_NOTIFICATION_SOURCE_NOTIFY_ENABLE,
-	ANCS_WRITE_NOTIFICATION_SOURCE_NOTIFY_DISABLE,
-	ANCS_WRITE_DATA_SOURCE_NOTIFY_ENABLE,
-	ANCS_WRITE_DATA_SOURCE_NOTIFY_DISABLE,
-	ANCS_WRITE_CONTROL_POINT,
+typedef enum
+{
+    ANCS_WRITE_NOTIFICATION_SOURCE_NOTIFY_ENABLE,
+    ANCS_WRITE_NOTIFICATION_SOURCE_NOTIFY_DISABLE,
+    ANCS_WRITE_DATA_SOURCE_NOTIFY_ENABLE,
+    ANCS_WRITE_DATA_SOURCE_NOTIFY_DISABLE,
+    ANCS_WRITE_CONTROL_POINT,
 } T_ANCS_WRTIE_TYPE;
 
 /** @brief ANCS client write result*/
-typedef struct {
-	T_ANCS_WRTIE_TYPE type;
-	uint16_t cause;
+typedef struct
+{
+    T_ANCS_WRTIE_TYPE type;
+    uint16_t cause;
 } T_ANCS_WRITE_RESULT;
 
 /** @brief ANCS client callback type*/
-typedef enum {
-	ANCS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
-	ANCS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
-	ANCS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
-	ANCS_CLIENT_CB_TYPE_DISCONNECT_INFO,
-	ANCS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    ANCS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
+    ANCS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
+    ANCS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
+    ANCS_CLIENT_CB_TYPE_DISCONNECT_INFO,
+    ANCS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
 } T_ANCS_CB_TYPE;
 
 /** @brief ANCS client callback content*/
-typedef union {
-	T_ANCS_DISC_STATE disc_state;
-	T_ANCS_NOTIFY_DATA notify_data;
-	T_ANCS_WRITE_RESULT write_result;
+typedef union
+{
+    T_ANCS_DISC_STATE disc_state;
+    T_ANCS_NOTIFY_DATA notify_data;
+    T_ANCS_WRITE_RESULT write_result;
 } T_ANCS_CB_CONTENT;
 
 /** @brief ANCS client callback data*/
-typedef struct {
-	T_ANCS_CB_TYPE     cb_type;
-	T_ANCS_CB_CONTENT    cb_content;
+typedef struct
+{
+    T_ANCS_CB_TYPE     cb_type;
+    T_ANCS_CB_CONTENT    cb_content;
 } T_ANCS_CB_DATA;
 /** End of ANCS_CLIENT_Exported_Types
 * @}
@@ -475,7 +485,7 @@ bool ancs_set_data_source_notify(uint8_t conn_id, bool notify);
   * @retval false send request to upper stack failed.
   */
 bool ancs_get_notification_attr(uint8_t conn_id, uint32_t notification_uid,
-								uint8_t *p_attribute_ids, uint8_t attribute_ids_len);
+                                uint8_t *p_attribute_ids, uint8_t attribute_ids_len);
 /**
   * @brief  Used by application, to get the app attribute.
   * @param[in]  conn_id           connection ID.
@@ -486,7 +496,7 @@ bool ancs_get_notification_attr(uint8_t conn_id, uint32_t notification_uid,
   * @retval false send request to upper stack failed.
   */
 bool ancs_get_app_attr(uint8_t conn_id, char *p_app_identifier, uint8_t *p_attribute_ids,
-					   uint8_t attribute_ids_len);
+                       uint8_t attribute_ids_len);
 
 /**
   * @brief  Used by application, to perfome the notication action.
@@ -497,7 +507,7 @@ bool ancs_get_app_attr(uint8_t conn_id, char *p_app_identifier, uint8_t *p_attri
   * @retval false send request to upper stack failed.
   */
 bool ancs_perform_notification_action(uint8_t conn_id, uint32_t notification_uid,
-									  uint8_t action_id);
+                                      uint8_t action_id);
 
 /**
   * @brief  Get the handle for gatt characteristic
@@ -510,6 +520,7 @@ uint16_t ancs_search_handle(uint8_t conn_id, T_ANCS_HANDLE_TYPE handle_type);
 /** @} End of ANCS_CLIENT_Exported_Functions */
 
 /** @} End of ANCS_CLIENT */
+
 #endif
 
 #ifdef  __cplusplus

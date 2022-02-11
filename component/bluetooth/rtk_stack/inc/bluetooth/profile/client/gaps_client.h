@@ -328,72 +328,81 @@ extern "C" {
   * @{
   */
 /** @brief GAPS client handle type */
-typedef enum {
-	HDL_GAPS_SRV_START,                   //!< start handle of gap service
-	HDL_GAPS_SRV_END,                     //!< end handle of gap service
-	HDL_GAPS_DEVICE_NAME,                 //!< device name value handle
-	HDL_GAPS_APPEARANCE,                  //!< appearance value handle
-	HDL_GAPS_CENTRAL_ADDR_RESOLUTION,     //!< central address resolution value handle
-	HDL_GAPS_RESOLVABLE_PRIVATE_ADDR_ONLY,//!< resolvable private address only value handle
-	HDL_GAPS_CACHE_LEN                    //!< handle cache length
+typedef enum
+{
+    HDL_GAPS_SRV_START,                   //!< start handle of gap service
+    HDL_GAPS_SRV_END,                     //!< end handle of gap service
+    HDL_GAPS_DEVICE_NAME,                 //!< device name value handle
+    HDL_GAPS_APPEARANCE,                  //!< appearance value handle
+    HDL_GAPS_CENTRAL_ADDR_RESOLUTION,     //!< central address resolution value handle
+    HDL_GAPS_RESOLVABLE_PRIVATE_ADDR_ONLY,//!< resolvable private address only value handle
+    HDL_GAPS_CACHE_LEN                    //!< handle cache length
 } T_GAP_CLIENT_HANDLE_TYPE;
 
 
 /** @brief GAPS client discovery state */
-typedef enum {
-	DISC_GAPS_IDLE,
-	DISC_GAPS_START,
-	DISC_GAPS_DONE,
-	DISC_GAPS_FAILED
+typedef enum
+{
+    DISC_GAPS_IDLE,
+    DISC_GAPS_START,
+    DISC_GAPS_DONE,
+    DISC_GAPS_FAILED
 } T_GAPS_DISC_STATE;
 
 
 /** @brief GAPS client read type */
-typedef enum {
-	GAPS_READ_DEVICE_NAME,
-	GAPS_READ_APPEARANCE,
-	GAPS_READ_CENTRAL_ADDR_RESOLUTION,
+typedef enum
+{
+    GAPS_READ_DEVICE_NAME,
+    GAPS_READ_APPEARANCE,
+    GAPS_READ_CENTRAL_ADDR_RESOLUTION,
 } T_GAPS_READ_TYPE;
 
 /** @brief Device name value */
-typedef struct {
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_DEVICE_NAME;
 
 /** @brief GAPS client read content */
-typedef union {
-	uint16_t appearance;
-	T_DEVICE_NAME device_name;
-	uint8_t central_addr_res;
+typedef union
+{
+    uint16_t appearance;
+    T_DEVICE_NAME device_name;
+    uint8_t central_addr_res;
 } T_GAPS_READ_DATA;
 
 /** @brief GAPS client read data, used to inform app read response data */
-typedef struct {
-	T_GAPS_READ_TYPE type;
-	T_GAPS_READ_DATA data;
-	uint16_t cause;
+typedef struct
+{
+    T_GAPS_READ_TYPE type;
+    T_GAPS_READ_DATA data;
+    uint16_t cause;
 } T_GAPS_READ_RESULT;
 
 
 /** @brief GAPS client callback type */
-typedef enum {
-	GAPS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
-	GAPS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
-	GAPS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    GAPS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
+    GAPS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
+    GAPS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
 } T_GAPS_CLIENT_CB_TYPE;
 
 /** @brief GAPS client callback content */
-typedef union {
-	T_GAPS_DISC_STATE disc_state;
-	T_GAPS_READ_RESULT read_result;
+typedef union
+{
+    T_GAPS_DISC_STATE disc_state;
+    T_GAPS_READ_RESULT read_result;
 } T_GAPS_CLIENT_CB_CONTENT;
 
 
 /** @brief GAPS client callback data */
-typedef struct {
-	T_GAPS_CLIENT_CB_TYPE     cb_type;
-	T_GAPS_CLIENT_CB_CONTENT  cb_content;
+typedef struct
+{
+    T_GAPS_CLIENT_CB_TYPE     cb_type;
+    T_GAPS_CLIENT_CB_CONTENT  cb_content;
 } T_GAPS_CLIENT_CB_DATA;
 
 /** End of GAPS_Client_Exported_Types * @} */

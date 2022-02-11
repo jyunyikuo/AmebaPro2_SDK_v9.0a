@@ -6,7 +6,7 @@
 #include <flash_api.h>
 #include "analogin_api.h"
 
-#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_8710C) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B)
+#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_8710C) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B) && !defined(CONFIG_PLATFORM_AMEBALITE)
 #include <rtl_lib.h>
 #endif
 #include <build_info.h>
@@ -73,7 +73,7 @@ void fATXX(void *arg)
 
 void fATSD(void *arg)
 {
-#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B)
+#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B) && !defined(CONFIG_PLATFORM_AMEBALITE)
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 
@@ -91,7 +91,7 @@ void fATSD(void *arg)
 
 void fATSE(void *arg)
 {
-#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B)
+#if !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B) && !defined(CONFIG_PLATFORM_AMEBALITE)
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 
@@ -341,6 +341,8 @@ void fATSA(void *arg)
 	AT_DBG_MSG(AT_FLAG_ADC, AT_DBG_ALWAYS, "[ATSA] A%d = 0x%04X", channel, adcdat);
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 
 #endif
 }
@@ -811,6 +813,8 @@ void fATSG(void *arg)
 
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 
 #endif
 }
@@ -993,6 +997,8 @@ void fATSc(void *arg)
 	AT_PRINTK("[ATS!] ConfigDebugWarn = 0x%08X", ConfigDebug[LEVEL_WARN]);
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 #else
 	int argc = 0, config = 0;
 	char *argv[MAX_ARGC] = {0};
@@ -1142,7 +1148,8 @@ void fATSJ(void *arg)
 #endif
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
-
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 #else
 
 	AT_PRINTK("[ATSJ]: _AT_SYSTEM_JTAG_");
@@ -1222,6 +1229,8 @@ void fATSx(void *arg)
 	strcat(buf, ".6.2." RTL_FW_COMPILE_DATE);
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 #else
 	strcat(buf, ".4.0." RTL_FW_COMPILE_DATE);
 #endif
@@ -1310,6 +1319,8 @@ void fATSV(void *arg)
 	at_printf("\r\n[ATSV] OK:%s,%s(%s)", at_buf, fw_buf, RTL_FW_COMPILE_TIME);
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 	printf("RTL8730A_WL_TODO \n");
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+	printf("RTL8720E_WL_TODO \n");
 #endif
 }
 
@@ -1450,7 +1461,7 @@ void fATSE(void *arg)
 		goto exit;
 	}
 
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 	if (argv[1] != NULL) {
 		echo = atoi(argv[1]);
 		if (echo > 1 || echo < 0) {
@@ -1487,7 +1498,7 @@ void fATSY(void *arg)
 {
 	Erase_Fastconnect_data();
 
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 	reset_uart_atcmd_setting();
 #endif
 
@@ -1566,7 +1577,7 @@ void fATSC(void *arg)
 }
 #endif
 
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 extern const u32 log_uart_support_rate[];
 
 void fATSU(void *arg)
@@ -1647,7 +1658,7 @@ void fATSU(void *arg)
 
 	at_printf("\r\n[ATSU] OK");
 }
-#endif //#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#endif //#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 #endif //#if CONFIG_WLAN
 
 void fATSG(void *arg)
@@ -1933,7 +1944,7 @@ log_item_t at_sys_items[] = {
 	{"ATSO", fATSO,},	// ota upgrate
 	{"ATSC", fATSC,},	// chose the activited image
 #endif
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 	{"ATSU", fATSU,},	// AT uart configuration
 #endif
 #endif

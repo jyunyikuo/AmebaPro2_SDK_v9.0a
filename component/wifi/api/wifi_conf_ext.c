@@ -16,7 +16,7 @@
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD)
 #include "at_cmd/atcmd_wifi.h"
 #endif
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #include "platform_opts_bt.h"
 #endif
 #if defined(CONFIG_ENABLE_WPS_AP) && CONFIG_ENABLE_WPS_AP
@@ -50,7 +50,7 @@ extern struct netif xnetif[NET_IF_NUM];
 #endif
 #endif
 #if CONFIG_AUTO_RECONNECT
-extern void (*p_wlan_autoreconnect_hdl)(rtw_security_t, char *, int, char *, int, int);
+extern p_wlan_autoreconnect_hdl_t p_wlan_autoreconnect_hdl;
 #endif
 
 #if ATCMD_VER == ATVER_2
@@ -280,8 +280,9 @@ static void _wifi_autoreconnect_thread(void *param)
 
 	RTW_API_INFO("\n\rauto reconnect ...\n");
 	ret = wifi_connect(&connect_param, 1);
-#if CONFIG_LWIP_LAYER
+
 	if (ret == RTW_SUCCESS) {
+#if CONFIG_LWIP_LAYER
 #if ATCMD_VER == ATVER_2
 		if (dhcp_mode_sta == 2) {
 			struct netif *pnetif = &xnetif[0];
@@ -295,15 +296,18 @@ static void _wifi_autoreconnect_thread(void *param)
 		{
 			LwIP_DHCP(0, DHCP_START);
 #if LWIP_AUTOIP
-			uint8_t *ip = LwIP_GetIP(0);
-			if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
-				RTW_API_INFO("\n\nIPv4 AUTOIP ...");
-				LwIP_AUTOIP(0);
-			}
+			/*delete auto ip process for conflict with dhcp
+						uint8_t *ip = LwIP_GetIP(0);
+						if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
+							RTW_API_INFO("\n\nIPv4 AUTOIP ...");
+							LwIP_AUTOIP(0);
+						}
+			*/
 #endif
 		}
-	}
 #endif //#if CONFIG_LWIP_LAYER
+	}
+
 	param_indicator = NULL;
 	rtw_delete_task(&wifi_autoreconnect_task);
 #endif
@@ -456,6 +460,7 @@ int wifi_get_antenna_info(unsigned char *antenna)
 	ret = rtw_ex_get_antenna_info(WLAN0_IDX, antenna);
 	return ret;
 #else
+	UNUSED(antenna);
 	return -1;
 #endif
 }
@@ -465,4 +470,49 @@ unsigned int wifi_get_tsf_low(unsigned char port_id)
 	return rltk_wlan_get_tsf(port_id);
 }
 
+int wifi_set_tx_rate_by_ToS(unsigned char enable, unsigned char ToS_precedence, unsigned char tx_rate)
+{
+	return rltk_wlan_set_tx_rate_by_ToS(enable, ToS_precedence, tx_rate);
+}
+
+int wifi_set_EDCA_param(unsigned int AC_param)
+{
+	return rltk_wlan_set_EDCA_param(AC_param);
+}
+
+int wifi_set_TX_CCA(unsigned char enable)
+{
+	return rltk_wlan_set_TX_CCA(enable);
+}
+
+int wifi_ap_switch_chl_and_inform(unsigned char new_chl, unsigned char chl_switch_cnt, ap_channel_switch_callback_t callback)
+{
+	return rltk_wlan_ap_switch_chl_and_inform_sta(new_chl, chl_switch_cnt, callback);
+}
+
+int wifi_set_cts2self_duration_and_send(unsigned char wlan_idx, unsigned short duration)
+{
+	return rltk_wlan_set_cts2self_dur_and_send(wlan_idx, duration);
+}
+
+int wifi_get_sta_max_data_rate(OUT unsigned char *inidata_rate)
+{
+	return rltk_wlan_get_sta_max_data_rate(inidata_rate);
+}
+
+void wifi_set_no_beacon_timeout(unsigned char timeout_sec)
+{
+	rltk_wlan_set_no_beacon_timeout(timeout_sec);
+}
+
+/**
+Example:
+unsigned char mac[ETH_ALEN] = {0x00, 0xe0, 0x4c, 0x87, 0x12, 0x34};
+wifi_change_mac_address_from_ram(idx, mac);
+This method is to modify the mac and don't write to efuse.
+**/
+int wifi_change_mac_address_from_ram(int idx, unsigned char *mac)
+{
+	return rltk_change_mac_address_from_ram(idx, mac);
+}
 #endif	//#if CONFIG_WLAN

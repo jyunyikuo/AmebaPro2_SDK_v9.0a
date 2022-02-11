@@ -59,6 +59,10 @@ __weak void _init(void)
 
 }
 #endif
+//#define TM_TTFF_MEASURE
+#if defined(TM_TTFF_MEASURE)
+#define dbg_printf(...)                     do {  } while(0)
+#endif
 
 void app_start(void)
 {

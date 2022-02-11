@@ -103,6 +103,8 @@ static void trace_task(void *pParameters)
 	}
 	trace.handle = NULL;
 	trace.QueueHandleEvent = NULL;
+	trace.Buffer.Pointer = (uint8_t *)0;
+	trace.Buffer.Length = 0;
 	flag_trace_deinit = 2;
 	os_task_delete(NULL);
 }

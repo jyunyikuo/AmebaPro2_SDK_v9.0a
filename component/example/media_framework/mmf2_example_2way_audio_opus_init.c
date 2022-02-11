@@ -40,6 +40,9 @@ static audio_params_t audio_params = {
 	.sample_rate = ASR_8KHZ,//ASR_16KHZ,//
 	.word_length = WL_16BIT,
 	.mic_gain    = MIC_40DB,
+	.dmic_l_gain    = DMIC_BOOST_24DB,
+	.dmic_r_gain    = DMIC_BOOST_24DB,
+	.use_mic_type   = USE_AUDIO_AMIC,
 	.channel     = 1,
 #endif
 	.mix_mode = 0,
@@ -47,8 +50,7 @@ static audio_params_t audio_params = {
 };
 
 static opusc_params_t opusc_rtsp_params = {
-	//voice	8000/12000/16000/24000/48000
-	//audio	8000/16000/24000/48000
+	//audio	8000/16000
 	.sample_rate = 8000,//16000,//
 	.channel = 1,
 	.bit_length = 16,     //16 recommand

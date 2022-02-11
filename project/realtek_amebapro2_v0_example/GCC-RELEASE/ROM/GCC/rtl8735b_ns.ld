@@ -6,7 +6,7 @@ useERAM = 1;
 MEMORY
 {
   ITCM_ROM (rx) 		: ORIGIN = 0x00003000, LENGTH = 0x00008000 - 0x00003000		/*  20 KB    */
-  ITCM_RAM (rx) 		: ORIGIN = 0x00010000, LENGTH = 0x00030000 - 0x00010000		/*  128KB    */
+  ITCM_RAM (rx) 		: ORIGIN = 0x00010000, LENGTH = 0x00017000 - 0x00010000		/*  28KB    */
   ROM (rx) 				: ORIGIN = 0x1004A800, LENGTH = 0x100BBF00 - 0x1004A800		/* 453KB+768B*/
   ROM_STUB (rx) 		: ORIGIN = 0x100BBF00, LENGTH = 0x100BFF00 - 0x100BBF00		/*  16 KB    */
   ROM_NS4S_STUB (rx)    : ORIGIN = 0x100BFF00, LENGTH = 0x100C0000 - 0x100BFF00		/*  256B     */
@@ -89,6 +89,14 @@ __voe_code_size__   = LENGTH(VOE);
 
 SECTIONS
 {
+	.sysview :
+	{
+		KEEP(*(.sysview.start))	
+		KEEP(*SEGGER_*.o(.data*))
+		KEEP(*SEGGER_*.o(.text*))
+		KEEP(*SEGGER_*.o(.rodata*))		
+	} > ITCM_RAM
+
 	.rom.itcm.text :
 	{
 		KEEP(*(.rom.ssl.itcm))
@@ -148,8 +156,8 @@ SECTIONS
 		KEEP(*strproc.o(.rodata*))
 		KEEP(*atoi.o(.text*))
 		KEEP(*atoi.o(.rodata*))
-		KEEP(*scanf.o(.text*))
-		KEEP(*scanf.o(.rodata*))
+		KEEP(*rt_scanf.o(.text*))
+		KEEP(*rt_scanf.o(.rodata*))
 
 		/**** WLAN ROM code ****/
 		KEEP(*(.rom.wlan.text))
@@ -257,6 +265,7 @@ SECTIONS
 		KEEP(*rtl8735b_ecdsa.o(.rodata*))
 		KEEP(*rtl8735b_crypto.o(.rodata*))
 		KEEP(*rtl8735b_rsa.o(.rodata*))
+		KEEP(*rtl8735b_trng.o(.rodata*))
 	
 		KEEP(*rom_rtw_message_e.o(.rodata.str1*))
 		KEEP(*rom_rtw_message_f.o(.rodata.str1*))
@@ -421,6 +430,10 @@ SECTIONS
 		KEEP(*(.rom.faac.stubs))
 
 		/**** New stubs for B-Cut ROM start from here ****/
+		. = ALIGN(0x10);
+		__rom_stubs_hal_trng = .;
+		KEEP(*(.rom.hal_trng.stubs))
+
 		/**** New stubs for C-Cut ROM start from here ****/
 	} > ROM_STUB
 
@@ -494,8 +507,10 @@ SECTIONS
 		KEEP(*(.rom.hal_sdioh.bss))
 		KEEP(*(.rom.hal_cache.bss))
 		KEEP(*(.rom.hal_crypto_ns.bss))
+		KEEP(*(.rom.hal_ecdsa.bss))
 		KEEP(*(.rom.hal_rsa.bss))
 		KEEP(*(.rom.hal_lpi.bss))
+		KEEP(*(.rom.hal_trng.bss))
 		KEEP(*(.xprintf.bss))
 		KEEP(*(.logbuf.bss))
 		KEEP(*(.stdioport.bss))
@@ -592,7 +607,11 @@ SECTIONS
 		__etext = .; 
 		__data_start__ = .;
 		*(vtable)
-		*(.data*)
+		*ram_start.o(.data*)
+		*hal_gdma.o(.data*)
+		*hal_gpio.o(.data*)
+		*hal_timer.o(.data*)
+		*hal_uart.o(.data*)
 
 		. = ALIGN(4);
 		/* preinit data */
@@ -630,8 +649,12 @@ SECTIONS
 
 /*		*(.text*) */
 		*ram_start.o(.text*)
+		*hal_timer.o(.text*)
+		*hal_uart.o(.text*)
 		*app_start.o(.text*)
 		*hal_sys_ctrl.o(.text*)
+		*hal_pinmux.o(.text*)
+		*mpu_config.o(.text*)
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
 	} > RAM
@@ -711,12 +734,14 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__ram_code_rodata_start__ = .;
-
-/*		*(.rodata*) */
 		*ram_start.o(.rodata*)
+		*hal_gdma.o(.rodata*)
+		*hal_gpio.o(.rodata*)
+		*hal_timer.o(.rodata*)
+		*hal_uart.o(.rodata*)
+		*lib_a*(.rodata*)
+		*mpu_config.o(.rodata*)
 		*app_start.o(.rodata*)
-				
-		*(.rodata.str1*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > RAM
@@ -793,8 +818,11 @@ SECTIONS
 		*(.ram.bss.noinit*)
 
 		__bss_start__ = .;
-		*(.bss*)
-		*(COMMON)
+		*lib_a*(.bss*)
+		*lib_a*(COMMON)
+		*(.ram.*.bss*)
+		*ram_start.o(.bss*)
+		*ram_start.o(COMMON)
 		. = ALIGN(4);
 		__bss_end__ = .;
 		__sram_heap_start__ = .;
@@ -869,7 +897,9 @@ SECTIONS
 	.ddr.bss :
 	{
 		. = ALIGN(4);
-		__eram_bss_start__ = .;	
+		__eram_bss_start__ = .;
+		*(.bss*)
+		*(COMMON)
 		__eram_bss_end__ = .;
 		__eram_heap_start__ = .;
 		

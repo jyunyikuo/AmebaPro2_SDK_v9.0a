@@ -11,7 +11,6 @@ struct skb_buf {
 	struct list_head list;
 	struct sk_buff skb;
 };
-
 struct skb_data {
 	struct list_head list;
 	unsigned char buf[MAX_SKB_BUF_SIZE];
@@ -32,12 +31,11 @@ struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM];
 #define SKB_DATA_POOL_USING_GLOBAL_BUF	1
 #if SKB_DATA_POOL_USING_GLOBAL_BUF
 // SRAM_BD_DATA_SECTION default in SRAM. Can modify image2.icf to link to the end of SDRAM
-SRAM_BD_DATA_SECTION
+SECTION(".sdram.bss")
 struct skb_data skb_data_pool[MAX_SKB_BUF_NUM];
-
 #else
 // Change to use heap (malloc) to save SRAM memory
-SRAM_BD_DATA_SECTION
+SECTION(".sdram.bss")
 struct skb_data *skb_data_pool;
 
 extern struct list_head skbdata_list;
@@ -68,6 +66,6 @@ void init_skb_data_pool(void)
 void deinit_skb_data_pool(void)
 {
 	//printf("\ndeinit_skb_data_pool\n");
-	rtw_mfree(skb_data_pool, MAX_SKB_BUF_NUM * sizeof(struct skb_data));
+	rtw_mfree((void *)skb_data_pool, MAX_SKB_BUF_NUM * sizeof(struct skb_data));
 }
 #endif

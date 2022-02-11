@@ -10,14 +10,15 @@ extern "C"
 
 #define DRAMC_CTRL_BASE_ADDR 0x40604000
 #define DRAMC_FRONTEND_BASE_ADDR (DRAMC_CTRL_BASE_ADDR + 0x1000)
+#define DRAMC_FUNC_BASE_ADDR (DRAMC_CTRL_BASE_ADDR + 0x5000)
 #define DPI_REG_BASE_ADDR 0x40608000
 
 #define REG_SYS_LPDDR1_CTRL (SYSON_S_BASE + 0x80)
 #define REG_SYS_DDRPHY_CTRL (SYSON_S_BASE + 0x84)
 
 #if CONFIG_PXP || SIMU_DDR_PXP_INIT_FLOW_EN // PXP , asic simu run flow
-#define DRAM_TYPE_DDR2 0
-#define DRAM_TYPE_DDR3 1
+#define DRAM_TYPE_DDR2 1
+#define DRAM_TYPE_DDR3 0
 #endif
 
 enum rxi316_dram_type {
@@ -363,6 +364,7 @@ void hal_dramc_ftend_init(DRAM_FE_TypeDef *dram_ft_dev);
 void hal_dramc_perf_tune(DRAMC_TypeDef *dramc_dev, struct rxi316_dram_device_info *rxi316_dram_info);
 void hal_dramc_init(DRAMC_TypeDef *dramc_dev, struct rxi316_dram_device_info *rxi316_dram_info);
 void hal_dram_phy_init(uint32_t dram_period_ps);
+void hal_dram_scramble_ctrl(u8 ctrl);
 void hal_init_dram(void);
 void cpu_read_modify_write(volatile uint32_t *addr, u32 data, u32 data_mask);
 

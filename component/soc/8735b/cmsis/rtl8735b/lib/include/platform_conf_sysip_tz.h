@@ -2,7 +2,7 @@
  * @file     platform_conf_sysip_s_ns.h
  * @brief    The configuration for AmebaPro High Power(TM9) platform.
  * @version  V1.00
- * @date     2020-11-11
+ * @date     2022-01-12
  *
  * @note
  *
@@ -35,6 +35,8 @@
     <0=> Secure state <1=> Non-Secure state
 */
 // Internal IPs default setting
+#define CONFIG_SEC_AON                        SET_S_STATE
+#define CONFIG_SEC_TRNG                       SET_S_STATE
 #define CONFIG_SEC_GDMA0                      SET_NS_STATE
 #define CONFIG_SEC_GDMA1                      SET_NS_STATE
 #define CONFIG_SEC_SGDMA0                     SET_S_STATE

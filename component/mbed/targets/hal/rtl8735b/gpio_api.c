@@ -31,6 +31,10 @@
 #include "gpio_api.h"
 #include "hal_gpio.h"
 
+#if defined(CONFIG_BUILD_NONSECURE)
+#include "hal_gpio_nsc.h"
+#endif
+
 /* map mbed pin mode definition to RTK HAL pull control type */
 #define MAX_PIN_MODE            4
 
@@ -243,3 +247,4 @@ void gpio_schmitt_ctrl(PinName pin, BOOLEAN ctrl, uint8_t v_h3l1)
 }
 
 #endif
+

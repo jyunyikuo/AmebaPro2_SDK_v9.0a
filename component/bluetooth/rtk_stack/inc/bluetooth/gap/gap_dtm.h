@@ -248,27 +248,30 @@ T_GAP_CAUSE le_dtm_test_end(void);
   * @brief
   * @{
   */
-typedef enum {
-	GAP_DTM_MODULATION_INDEX_STANDARD   = 0x00,    /**< Assume transmitter will have a standard modulation index. */
-	GAP_DTM_MODULATION_INDEX_STABLE     = 0x01,    /**< Assume transmitter will have a stable modulation index. */
+typedef enum
+{
+    GAP_DTM_MODULATION_INDEX_STANDARD   = 0x00,    /**< Assume transmitter will have a standard modulation index. */
+    GAP_DTM_MODULATION_INDEX_STABLE     = 0x01,    /**< Assume transmitter will have a stable modulation index. */
 } T_GAP_DTM_MODULATION_INDEX_TYPE;
 
-typedef enum {
-	GAP_DTM_PACKET_PAYLOAD_PRBS9 = 0x00,    /**< PRBS9 sequence '11111111100000111101' (in transmission order). */
-	GAP_DTM_PACKET_PAYLOAD_1100 = 0x01,     /**< Repeated '11110000' (in transmission order) sequence. */
-	GAP_DTM_PACKET_PAYLOAD_10 = 0x02,       /**< Repeated '10101010' (in transmission order) sequence. */
-	GAP_DTM_PACKET_PAYLOAD_PRBS15 = 0x03,   /**< PRBS15 sequence. */
-	GAP_DTM_PACKET_PAYLOAD_ALL1 = 0x04,     /**< Repeated '11111111' (in transmission order) sequence. . */
-	GAP_DTM_PACKET_PAYLOAD_ALL0 = 0x05,     /**< Repeated '00000000' (in transmission order) sequence. . */
-	GAP_DTM_PACKET_PAYLOAD_0011 = 0x06,     /**< Repeated '00001111' (in transmission order) sequence. . */
-	GAP_DTM_PACKET_PAYLOAD_01 = 0x07        /**< Repeated '01010101' (in transmission order) sequence. . */
+typedef enum
+{
+    GAP_DTM_PACKET_PAYLOAD_PRBS9 = 0x00,    /**< PRBS9 sequence '11111111100000111101' (in transmission order). */
+    GAP_DTM_PACKET_PAYLOAD_1100 = 0x01,     /**< Repeated '11110000' (in transmission order) sequence. */
+    GAP_DTM_PACKET_PAYLOAD_10 = 0x02,       /**< Repeated '10101010' (in transmission order) sequence. */
+    GAP_DTM_PACKET_PAYLOAD_PRBS15 = 0x03,   /**< PRBS15 sequence. */
+    GAP_DTM_PACKET_PAYLOAD_ALL1 = 0x04,     /**< Repeated '11111111' (in transmission order) sequence. . */
+    GAP_DTM_PACKET_PAYLOAD_ALL0 = 0x05,     /**< Repeated '00000000' (in transmission order) sequence. . */
+    GAP_DTM_PACKET_PAYLOAD_0011 = 0x06,     /**< Repeated '00001111' (in transmission order) sequence. . */
+    GAP_DTM_PACKET_PAYLOAD_01 = 0x07        /**< Repeated '01010101' (in transmission order) sequence. . */
 } T_GAP_DTM_PACKET_PAYLOAD_TYPE;
 
-typedef enum {
-	GAP_DTM_PHYS_1M       = 0x01,    /**< LE PHY 1M used. */
-	GAP_DTM_PHYS_2M       = 0x02,    /**< LE PHY 2M used. */
-	GAP_DTM_PHYS_CODED_S8 = 0x03,    /**< LE Coded PHY with S=8 data coding. */
-	GAP_DTM_PHYS_CODED_S2 = 0x04,    /**< LE Coded PHY with S=2 data coding. */
+typedef enum
+{
+    GAP_DTM_PHYS_1M       = 0x01,    /**< LE PHY 1M used. */
+    GAP_DTM_PHYS_2M       = 0x02,    /**< LE PHY 2M used. */
+    GAP_DTM_PHYS_CODED_S8 = 0x03,    /**< LE Coded PHY with S=8 data coding. */
+    GAP_DTM_PHYS_CODED_S2 = 0x04,    /**< LE Coded PHY with S=2 data coding. */
 } T_GAP_DTM_PHYS_TYPE;
 
 /** End of GAP_LE_DTM_Exported_Types
@@ -546,7 +549,7 @@ T_GAP_CAUSE le_dtm_enhanced_receiver_test(uint8_t rx_chann, uint8_t phy, uint8_t
   */
 
 T_GAP_CAUSE le_dtm_enhanced_transmitter_test(uint8_t tx_chann, uint8_t data_len, uint8_t pkt_pl,
-		uint8_t phy);
+                                             uint8_t phy);
 #endif
 
 #if F_BT_LE_5_1_DTM_SUPPORT
@@ -612,10 +615,10 @@ T_GAP_CAUSE le_dtm_enhanced_transmitter_test(uint8_t tx_chann, uint8_t data_len,
   * \endcode
   */
 T_GAP_CAUSE le_dtm_receiver_test_v3(uint8_t rx_channel, T_GAP_PHYS_TYPE phy,
-									T_GAP_DTM_MODULATION_INDEX_TYPE modulation_index,
-									uint8_t expected_cte_length, T_GAP_CTE_TYPE expected_cte_type,
-									T_GAP_SLOT_DUATIONS_TYPE slot_durations,
-									uint8_t switching_pattern_length, uint8_t *p_antenna_ids);
+                                    T_GAP_DTM_MODULATION_INDEX_TYPE modulation_index,
+                                    uint8_t expected_cte_length, T_GAP_CTE_TYPE expected_cte_type,
+                                    T_GAP_SLOT_DUATIONS_TYPE slot_durations,
+                                    uint8_t switching_pattern_length, uint8_t *p_antenna_ids);
 
 /**
 * @brief   Start a test where the DUT receives test reference packets at a fixed interval.
@@ -679,9 +682,9 @@ T_GAP_CAUSE le_dtm_receiver_test_v3(uint8_t rx_channel, T_GAP_PHYS_TYPE phy,
   * \endcode
   */
 T_GAP_CAUSE le_dtm_transmitter_test_v3(uint8_t tx_channel, uint8_t test_data_length,
-									   T_GAP_DTM_PACKET_PAYLOAD_TYPE packet_payload, T_GAP_DTM_PHYS_TYPE phy,
-									   uint8_t cte_length, T_GAP_CTE_TYPE cte_type,
-									   uint8_t switching_pattern_length, uint8_t *p_antenna_ids);
+                                       T_GAP_DTM_PACKET_PAYLOAD_TYPE packet_payload, T_GAP_DTM_PHYS_TYPE phy,
+                                       uint8_t cte_length, T_GAP_CTE_TYPE cte_type,
+                                       uint8_t switching_pattern_length, uint8_t *p_antenna_ids);
 #endif
 /** End of GAP_LE_DTM_Exported_Functions
   * @}
@@ -690,8 +693,6 @@ T_GAP_CAUSE le_dtm_transmitter_test_v3(uint8_t tx_channel, uint8_t test_data_len
 /** End of GAP_LE_DTM
   * @}
   */
-#endif
-
 #endif
 
 #endif

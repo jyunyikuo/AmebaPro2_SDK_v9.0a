@@ -1,3 +1,5 @@
+#ifndef _FATFS_WRAP_H
+#define _FATFS_WRAP_H
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -96,3 +98,4 @@ int stat(const char *path, struct stat *buf);
 #ifdef __cplusplus
 }
 #endif
+#endif //_FATFS_WRAP_H

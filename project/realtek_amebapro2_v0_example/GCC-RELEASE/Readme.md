@@ -80,6 +80,7 @@
 		- if this is configurated project
 			- Run  `cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../../toolchain.cmake -DBUILD_FPGA=OFF -DBUILD_PXP=OFF`
 			- Or remove CMakeCache.txt and Run `cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../../toolchain.cmake`
+
 	- To check current build config
 		- Run **cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../../toolchain.cmake**
 		- and check
@@ -117,6 +118,22 @@
 		- Run **cmake --build . --target flash** to build and generate flash binary 
 		- If want to build NTZ binary after TZ build
 		- 	please configurate project by running **cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DBUILD_TZ=OFF**
+		
+	- Build for test chip
+		- currently, test chip is default setting 
+		- if want to switch from other cut configuration, use `-DCUTVER=TEST` when run cmake configuration
+			- for example, run `cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DCUTVER=TEST`
+			- check configuration message `MPCHIP OFF : TEST-CUT` 
+	
+	- Build for MP (A/B/C) cut
+		- if want to switch from other cut configuration, use `-DCUTVER=A` or `-DCUTVER=B` or `-DCUTVER=C` when run cmake configuration
+			- for example, run `cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DCUTVER=B`
+			- check configuration message `MPCHIP ON : B-CUT` 
+
+	- Use GCC 10.3.0 with picolibc support
+		- Install Realtek ASDK 10.3.0 and set `asdk-10.3.0/mingw32/picolibc/bin` to PATH
+			- NOTE: make sure this path is set before other ASDK version
+		- change toolchain.cmake to toolchain_picolibc.cmake and re-run configuration
 
 # test MAC Loopback in ram_model
 - Define CONFIG_MAC_LOOPBACK_DRIVER_RTL8735B of autoconf.h to 1

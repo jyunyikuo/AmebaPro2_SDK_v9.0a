@@ -36,6 +36,9 @@
 int MQTTDeserialize_publish(unsigned char *dup, int *qos, unsigned char *retained, unsigned short *packetid, MQTTString *topicName,
 							unsigned char **payload, int *payloadlen, unsigned char *buf, int buflen)
 {
+	/* To avoid gcc warnings */
+	(void) buflen;
+
 	MQTTHeader header = {0};
 	unsigned char *curdata = buf;
 	unsigned char *enddata = NULL;
@@ -89,6 +92,9 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 	unsigned char *enddata = NULL;
 	int rc = 0;
 	int mylen;
+
+	/* To avoid gcc warnings */
+	(void) buflen;
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);

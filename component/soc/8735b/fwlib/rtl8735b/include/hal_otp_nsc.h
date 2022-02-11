@@ -100,6 +100,33 @@ void NS_ENTRY hal_otp_byte_wr_syss_nsc(uint32_t addr, uint8_t wr_data);
 uint32_t NS_ENTRY hal_otp_cmp_syss_nsc(uint32_t addr, uint8_t cmp_data);
 uint32_t NS_ENTRY hal_otp_al_ctrl_syss_nsc(uint32_t al_en);
 
+uint8_t NS_ENTRY hal_otp_byte_wr_marr_aon_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+uint8_t NS_ENTRY hal_otp_byte_wr_marr_sys_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+uint8_t NS_ENTRY hal_otp_byte_wr_marr_syss_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+void NS_ENTRY hal_otp_set_aon_vol_nsc(uint8_t aon_vol);
+
+uint8_t NS_ENTRY hal_otp_rp_mar_rd_syss_nsc(uint8_t auto_en);
+uint8_t NS_ENTRY hal_otp_rp_chk_syss_nsc(void);
+uint8_t NS_ENTRY hal_otp_rp_pg_syss_nsc(void);
+
+uint32_t NS_ENTRY hal_otp_sz_key_wr_nsc(uint8_t sz_key_idx, uint8_t *wr_data);
+uint32_t NS_ENTRY hal_otp_sz_key_rd_nsc(uint8_t sz_key_idx, uint8_t *rd_data);
+uint32_t NS_ENTRY hal_otp_sz_key_lock_nsc(uint8_t sz_key_idx);
+uint32_t NS_ENTRY hal_otp_ssz_key_wr_nsc(uint8_t ssz_key_idx, uint8_t *wr_data);
+uint32_t NS_ENTRY hal_otp_ssz_key_rd_nsc(uint8_t ssz_key_idx, uint8_t *rd_data);
+
+int NS_ENTRY hal_user_otp_get_nsc(uint8_t offset, uint8_t len, uint8_t *buf);
+int NS_ENTRY hal_user_otp_set_nsc(uint8_t offset, uint8_t len, uint8_t *buf);
+int NS_ENTRY hal_otp_sb_key_get_nsc(uint8_t *psec_key, uint8_t key_type);
+int NS_ENTRY hal_otp_sb_key_write_nsc(uint8_t *psec_key, uint8_t key_type);
+int NS_ENTRY hal_otp_s_jtag_key_write_nsc(u8 *buf, u8 key_num);
+int NS_ENTRY hal_otp_ns_jtag_key_write_nsc(u8 *buf, u8 key_num);
+int NS_ENTRY hal_otp_crypto_key_get_nsc(uint8_t *pkey, uint8_t key_num);
+int NS_ENTRY hal_otp_crypto_key_write_nsc(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int NS_ENTRY hal_otp_ecdsa_key_get_nsc(uint8_t *pkey, uint8_t key_num);
+int NS_ENTRY hal_otp_ecdsa_key_write_nsc(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int NS_ENTRY hal_otp_ssz_lock_nsc(void);
+
 /** *@} */ /* End of group hal_otp_nsc_api */
 #endif // end of "#if defined(CONFIG_BUILD_SECURE)"
 
@@ -160,6 +187,33 @@ void hal_otp_byte_wr_syss_nsc(uint32_t addr, uint8_t wr_data);
 uint32_t hal_otp_cmp_syss_nsc(uint32_t addr, uint8_t cmp_data);
 uint32_t hal_otp_al_ctrl_syss_nsc(uint32_t al_en);
 
+uint8_t hal_otp_byte_wr_marr_aon_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+uint8_t hal_otp_byte_wr_marr_sys_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+uint8_t hal_otp_byte_wr_marr_syss_nsc(uint32_t addr, uint8_t wr_data, uint8_t adj_vol);
+void hal_otp_set_aon_vol_nsc(uint8_t aon_vol);
+
+uint8_t hal_otp_rp_mar_rd_syss_nsc(uint8_t auto_en);
+uint8_t hal_otp_rp_chk_syss_nsc(void);
+uint8_t hal_otp_rp_pg_syss_nsc(void);
+
+uint32_t hal_otp_sz_key_wr_nsc(uint8_t sz_key_idx, uint8_t *wr_data);
+uint32_t hal_otp_sz_key_rd_nsc(uint8_t sz_key_idx, uint8_t *rd_data);
+uint32_t hal_otp_sz_key_lock_nsc(uint8_t sz_key_idx);
+uint32_t hal_otp_ssz_key_wr_nsc(uint8_t ssz_key_idx, uint8_t *wr_data);
+uint32_t hal_otp_ssz_key_rd_nsc(uint8_t ssz_key_idx, uint8_t *rd_data);
+
+int hal_user_otp_get_nsc(uint8_t offset, uint8_t len, uint8_t *buf);
+int hal_user_otp_set_nsc(uint8_t offset, uint8_t len, uint8_t *buf);
+int hal_otp_sb_key_get_nsc(uint8_t *psec_key, uint8_t key_type);
+int hal_otp_sb_key_write_nsc(uint8_t *psec_key, uint8_t key_type);
+int hal_otp_s_jtag_key_write_nsc(u8 *buf, u8 key_num);
+int hal_otp_ns_jtag_key_write_nsc(u8 *buf, u8 key_num);
+int hal_otp_crypto_key_get_nsc(uint8_t *pkey, uint8_t key_num);
+int hal_otp_crypto_key_write_nsc(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int hal_otp_ecdsa_key_get_nsc(uint8_t *pkey, uint8_t key_num);
+int hal_otp_ecdsa_key_write_nsc(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int hal_otp_ssz_lock_nsc(void);
+
 /* Wrapper for NSC functions */
 #define hal_otp_init                            hal_otp_init_nsc
 #define hal_otp_deinit                          hal_otp_deinit_nsc
@@ -210,12 +264,43 @@ uint32_t hal_otp_al_ctrl_syss_nsc(uint32_t al_en);
 #define hal_otp_al_ctrl_sys                     hal_otp_al_ctrl_sys_nsc
 #define hal_otp_rd_sub_syss                     hal_otp_rd_sub_syss_nsc
 #define hal_otp_rd_syss                         hal_otp_rd_syss_nsc
+#if !defined(ENABLE_SECCALL_PATCH)
 #define hal_otp_byte_rd_syss                    hal_otp_byte_rd_syss_nsc
+#endif
 #define hal_otp_wr_sub_syss                     hal_otp_wr_sub_syss_nsc
 #define hal_otp_wr_syss                         hal_otp_wr_syss_nsc
+#if !defined(ENABLE_SECCALL_PATCH)
 #define hal_otp_byte_wr_syss                    hal_otp_byte_wr_syss_nsc
+#endif
 #define hal_otp_cmp_syss                        hal_otp_cmp_syss_nsc
 #define hal_otp_al_ctrl_syss                    hal_otp_al_ctrl_syss_nsc
+
+#define hal_otp_byte_wr_marr_aon hal_otp_byte_wr_marr_aon_nsc
+#define hal_otp_byte_wr_marr_sys hal_otp_byte_wr_marr_sys_nsc
+#define hal_otp_byte_wr_marr_syss hal_otp_byte_wr_marr_syss_nsc
+#define hal_otp_set_aon_vol hal_otp_set_aon_vol_nsc
+
+#define hal_otp_rp_mar_rd_syss hal_otp_rp_mar_rd_syss_nsc
+#define hal_otp_rp_chk_syss hal_otp_rp_chk_syss_nsc
+#define hal_otp_rp_pg_syss hal_otp_rp_pg_syss_nsc
+
+#define hal_otp_sz_key_wr hal_otp_sz_key_wr_nsc
+#define hal_otp_sz_key_rd hal_otp_sz_key_rd_nsc
+#define hal_otp_sz_key_lock hal_otp_sz_key_lock_nsc
+#define hal_otp_ssz_key_wr hal_otp_ssz_key_wr_nsc
+#define hal_otp_ssz_key_rd hal_otp_ssz_key_rd_nsc
+
+#define hal_user_otp_get hal_user_otp_get_nsc
+#define hal_user_otp_set hal_user_otp_set_nsc
+#define hal_otp_sb_key_get hal_otp_sb_key_get_nsc
+#define hal_otp_sb_key_write hal_otp_sb_key_write_nsc
+#define hal_otp_s_jtag_key_write hal_otp_s_jtag_key_write_nsc
+#define hal_otp_ns_jtag_key_write hal_otp_ns_jtag_key_write_nsc
+#define hal_otp_crypto_key_get hal_otp_crypto_key_get_nsc
+#define hal_otp_crypto_key_write hal_otp_crypto_key_write_nsc
+#define hal_otp_ecdsa_key_get hal_otp_ecdsa_key_get_nsc
+#define hal_otp_ecdsa_key_write hal_otp_ecdsa_key_write_nsc
+#define hal_otp_ssz_lock hal_otp_ssz_lock_nsc
 
 #endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
 

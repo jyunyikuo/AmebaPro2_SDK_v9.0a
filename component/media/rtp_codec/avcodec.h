@@ -31,8 +31,8 @@ struct codec_info {
 #define AV_CODEC_ID_OPUS 7
 #define AV_CODEC_ID_PCM_RAW 8
 #define AV_CODEC_ID_RGB888 9
-#define AV_CODEC_ID_PCM_RAW 10
-#define AV_CODEC_ID_BMP24   11
+#define AV_CODEC_ID_BMP   10
+#define AV_CODEC_ID_JPEG   11
 #define AV_CODEC_ID_NN_RAW  12
 #define AV_CODEC_ID_UNKNOWN -1
 
@@ -140,7 +140,7 @@ static const struct codec_info av_codec_tables[] = {
 	{AV_CODEC_ID_H265, "H265", RTP_PT_DYN_BASE, 90000, 0, 0},
 	{AV_CODEC_ID_OPUS, "opus", RTP_PT_DYN_BASE, 48000, 2, 0}
 };
-#define AVCODEC_SIZE 10
+#define AVCODEC_SIZE 13
 
 void get_codec_by_id(struct codec_info *c, int id);
 

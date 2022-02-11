@@ -31,18 +31,19 @@ extern "C" {
  *
  * \ingroup SYSTEM_MANAGER
  */
-typedef enum {
-	SYS_EVENT_UNKNOWN                               = 0x0000,
+typedef enum
+{
+    SYS_EVENT_UNKNOWN                               = 0x0000,
 
-	/**
-	 * \brief Indicate system power on \ref T_SYS_EVENT_PARAM_POWER_ON.
-	 */
-	SYS_EVENT_POWER_ON                              = 0x0100,
+    /**
+     * \brief Indicate system power on \ref T_SYS_EVENT_PARAM_POWER_ON.
+     */
+    SYS_EVENT_POWER_ON                              = 0x0100,
 
-	/**
-	 * \brief Indicate system power off \ref T_SYS_EVENT_PARAM_POWER_OFF.
-	 */
-	SYS_EVENT_POWER_OFF                             = 0x0101,
+    /**
+     * \brief Indicate system power off \ref T_SYS_EVENT_PARAM_POWER_OFF.
+     */
+    SYS_EVENT_POWER_OFF                             = 0x0101,
 } T_SYS_EVENT;
 
 /**
@@ -52,7 +53,8 @@ typedef enum {
  *
  * \ingroup SYSTEM_MANAGER
  */
-typedef struct {
+typedef struct
+{
 
 } T_SYS_EVENT_PARAM_POWER_ON;
 
@@ -63,7 +65,8 @@ typedef struct {
  *
  * \ingroup SYSTEM_MANAGER
  */
-typedef struct {
+typedef struct
+{
 
 } T_SYS_EVENT_PARAM_POWER_OFF;
 
@@ -74,9 +77,10 @@ typedef struct {
  *
  * \ingroup SYSTEM_MANAGER
  */
-typedef union {
-	T_SYS_EVENT_PARAM_POWER_ON              power_on;
-	T_SYS_EVENT_PARAM_POWER_OFF             power_off;
+typedef union
+{
+    T_SYS_EVENT_PARAM_POWER_ON              power_on;
+    T_SYS_EVENT_PARAM_POWER_OFF             power_off;
 } T_SYS_EVENT_PARAM;
 
 /**
@@ -126,11 +130,11 @@ bool sys_mgr_init(void *evt_handle);
  * \ingroup  SYSTEM_MANAGER
  */
 bool sys_mgr_version_get(char ver[],
-						 size_t ver_len,
-						 char commit[],
-						 size_t commit_len,
-						 char build_date[],
-						 size_t date_len);
+                         size_t ver_len,
+                         char commit[],
+                         size_t commit_len,
+                         char build_date[],
+                         size_t date_len);
 
 /**
  * sysm.h

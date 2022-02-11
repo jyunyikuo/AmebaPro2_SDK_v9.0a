@@ -1,0 +1,27 @@
+{
+	"flash_base" : "0x08000000",
+	"enc_remap_addr":"0x08300000",
+	"encrypt":	[
+		{
+			"ena":1,
+			"type":	"IMG_FWHS_S",
+			"bias":	"REL",
+			"algo":	"AES_256_GCM",
+			"iv":	"123456789ABCDEF0"
+		},
+		{
+			"ena":1,
+			"type":	"IMG_FWHS_S",
+			"bias":	"REL",
+			"algo":	"AES_256_GCM",
+			"iv":	"123456789ABCDEF0"
+		},
+		{
+			"ena":1,
+			"type":	"IMG_FWHS_NS",
+			"bias":	"REL",
+			"algo":	"AES_256_GCM",
+			"iv":	"123456789ABCDEF0"
+		}
+	]
+}

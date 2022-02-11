@@ -4,7 +4,7 @@
  *           for secure boot.
  *
  * @version  V1.00
- * @date     2021-08-03
+ * @date     2021-11-15
  *
  * @note
  *
@@ -31,14 +31,174 @@
 #ifndef _FW_IMG_TLV_H_
 #define _FW_IMG_TLV_H_
 
+#include "otp_boot_cfg.h"
+
 #ifdef  __cplusplus
 extern "C"
 {
 #endif
 
+/*
+   Boot Fail/Error number
+*/
+
+/* Normal boot ROM */
+#define _ERRNO_BOOT_UNKNOWN_BOOT_MODE                                   (0x10)
+#define _ERRNO_BOOT_INVALID_RAM_IMG_SIGN_OR_START_FUNC_ADDR             (0x11)
+#define _ERRNO_BOOT_INVALID_RAM_START_FUNC_ADDR                         (0x12)
+#define _ERRNO_BOOT_IMG_SEL_IDX_FAIL                                    (0x13)
+#define _ERRNO_BOOT_SEL_IMG_INVALID_TO_LOAD                             (0x14)
+#define _ERRNO_BOOT_SEL_IMG_WRONG_TYPE_ID                               (0x15)
+#define _ERRNO_BOOT_NULL_POINTER                                        (0x16)
+#define _ERRNO_BOOT_MSGLEN_IS_NULL                                      (0x17)
+#define _ERRNO_BOOT_INVALID_MANI_LABEL                                  (0x18)
+#define _ERRNO_BOOT_INVALID_MANI_IE_TOTAL_SIZE                          (0x19)
+#define _ERRNO_BOOT_MANI_UNPT_AREA_CRC_VRF_FAIL                         (0x1A)
+#define _ERRNO_BOOT_GET_WRONG_TYPE_ID_FAIL                              (0x1B)
+#define _ERRNO_BOOT_SET_SJTAG_NFIXED_INVALID_SJTAG_OBJ                  (0x1C)
+#define _ERRNO_BOOT_SET_SJTAG_NFIXED_KSKN_CNTENT_NULL                   (0x1D)
+#define _ERRNO_BOOT_UNSUPPORT_VRF_ALG                                   (0x1E)
+
+/* Secure boot */
+#define _ERRNO_BOOT_SB_IMG_PBK_HASH_VRF_FAIL                            (0x30)
+#define _ERRNO_BOOT_SB_HKDF_SECURE_INIT_FAIL                            (0x31)
+#define _ERRNO_BOOT_SB_HKDF_EXTRACT_SEC_ALL_FAIL                        (0x32)
+#define _ERRNO_BOOT_SB_HKDF_EXPAND_SEC_ALL_FAIL                         (0x33)
+#define _ERRNO_BOOT_SB_IMG_HASH_INIT_FAIL                               (0x34)
+#define _ERRNO_BOOT_SB_IMG_HASH_UPDATE_FAIL                             (0x35)
+#define _ERRNO_BOOT_SB_IMG_HASH_FINAL_FAIL                              (0x36)
+#define _ERRNO_BOOT_SB_IMG_HASH_CORE_F_FAIL                             (0x37)
+#define _ERRNO_BOOT_SB_INVALID_ENC_RMP_BASE_ADDR                        (0x38)
+#define _ERRNO_BOOT_SB_NO_AVAILABLE_SEC_RMP_CFG_RGN                     (0x39)
+#define _ERRNO_BOOT_SB_NO_AVAILABLE_SEC_RMP_CFG_IDX                     (0x3A)
+#define _ERRNO_BOOT_SB_SET_SEC_RMP_FAIL                                 (0x3B)
+#define _ERRNO_BOOT_SB_SEC_ENC_RECORD_INFO_FAIL                         (0x3C)
+#define _ERRNO_BOOT_SB_BOOT_IMG_NON_SUPPORT_XIP_IMG_LOAD                (0x3D)
+#define _ERRNO_BOOT_SB_SET_SEC_AES_GCM_MULTIPLE_FAIL                    (0x3E)
+#define _ERRNO_BOOT_SB_CAL_TAG_BASE_FAIL                                (0x3F)
+#define _ERRNO_BOOT_SB_NO_AVAILABLE_SEC_DEC_CFG_RGN                     (0x40)
+#define _ERRNO_BOOT_SB_NO_AVAILABLE_SEC_DEC_CFG_IDX                     (0x41)
+#define _ERRNO_BOOT_SB_SET_SEC_DEFAULT_DEC_INIT_FAIL                    (0x42)
+#define _ERRNO_BOOT_SB_SET_SEC_DEC_RGN_INIT_FAIL                        (0x43)
+#define _ERRNO_BOOT_SB_SET_SEC_DEC_CIPHER_ALG_UNKNOWN                   (0x44)
+#define _ERRNO_BOOT_SB_SET_SEC_DEC_RGN_ENABLE_FAIL                      (0x45)
+#define _ERRNO_BOOT_SB_IMG_SECT_LD_HASH_CHK_FAIL                        (0x46)
+#define _ERRNO_BOOT_SB_CRYPTO_INIT_FAIL                                 (0x47)
+#define _ERRNO_BOOT_SB_NOT_ALLOW_IMG_LOAD_AFTER_XIP_IMG_SET             (0x48)
+#define _ERRNO_BOOT_SB_GCM_TAG_CMP_FAIL                                 (0x49)
+#define _ERRNO_BOOT_SB_FLASH_SEC_CRYPTO_GET_SK_CFG_FAIL                 (0x4A)
+#define _ERRNO_BOOT_SB_FLASH_SEC_CRYPTO_AES_GCM_TAG_NOT_MATCH           (0x4B)
+#define _ERRNO_BOOT_SB_FLASH_SEC_CRYPTO_AES_INVALID_IVLEN               (0x4C)
+#define _ERRNO_BOOT_SB_FLASH_SEC_CRYPTO_AES_INVALID_KEYLEN              (0x4D)
+#define _ERRNO_BOOT_SB_FLASH_SEC_CRYPTO_AES_INVALID_CACHE_LINE_SIZE     (0x4E)
+
+
+/* UART Boot */
+#define _ERRNO_BOOT_UART_BOOT_FW_DOWNLOAD_SIZE_NULL                     (0x50)
+
+/* NAND Boot */
+#define _ERRNO_BOOT_NAND_BOOT_NONSUPPORT_NTLV_FORMAT                    (0x60)
+#define _ERRNO_BOOT_SNAFC_INIT_FAIL                                     (0x61)
+#define _ERRNO_BOOT_SNAFC_DEINIT_FAIL                                   (0x62)
+#define _ERRNO_BOOT_SNAFC_MEMCPY_FAIL                                   (0x63)
+#define _ERRNO_BOOT_SNAFC_OFFSET_FAIL                                   (0x64)
+#define _ERRNO_BOOT_NAND_NO_VALID_CTRL_BLK                              (0x65)
+#define _ERRNO_BOOT_NAND_INVALID_CTRL                                   (0x66)
+#define _ERRNO_BOOT_NAND_NO_VALID_PART_BLK                              (0x67)
+#define _ERRNO_BOOT_NAND_NO_VALID_ISP_IDX                               (0x68)
+#define _ERRNO_BOOT_NAND_NO_VALID_BL_IDX                                (0x69)
+
+#define _ERRNO_BOOT_NAND_NO_SUPPORT_TB                                  (0x70)
+
+#define _ERRNO_BOOT_MSG_SIZE_OUT_OF_RANGE                               (0xA0)
+#define _ERRNO_BOOT_INVALID_STR_SIGN_VAL                                (0xA1)
+#define _ERRNO_BOOT_IDX_OUT_OF_RANGE                                    (0xA2)
+
+
+// Byte
+#define EACH_IV_DATA_SIZE           (4)
+
+#define AES_GCM_IV_DATA_SIZE        (12)
+#define AES_BLOCK_SIZE              (16)
+
+#define AES_GCM_TAG_SIZE_RATIO      (CACHE_LINE_SIZE_32_BYTE / AES_GCM_TAG_SIZE_4_BYTE)
+
+enum {
+	CACHE_LINE_SIZE_16_BYTE  = FLASH_SEC_CACHE_16,
+	CACHE_LINE_SIZE_32_BYTE  = FLASH_SEC_CACHE_32,
+	CACHE_LINE_SIZE_64_BYTE  = FLASH_SEC_CACHE_64,
+	CACHE_LINE_SIZE_128_BYTE = FLASH_SEC_CACHE_128
+
+};
+
+enum {
+	AES_GCM_TAG_SIZE_4_BYTE = FLASH_SEC_TAG_4,
+	AES_GCM_TAG_SIZE_8_BYTE = FLASH_SEC_TAG_8,
+	AES_GCM_TAG_SIZE_16_BYTE = FLASH_SEC_TAG_16
+};
+
+enum {
+	CIPHER_AES_KEY_256_BITS = FLASH_SEC_KEY_256
+};
+
+// enum only for arg input
+enum {
+	CIPHER_AES_256_CTR      = 0,
+	CIPHER_AES_256_GCM      = 1,
+	CIPHER_AES_256_ECB_MIX  = 2,
+};
+
+typedef struct Flash_SEC_IV_Data_s {
+	uint8_t iv_high[EACH_IV_DATA_SIZE];
+	uint8_t iv_low[EACH_IV_DATA_SIZE];
+	uint8_t iv_flash_addr[EACH_IV_DATA_SIZE];
+	uint8_t iv_f_addr_cnt[EACH_IV_DATA_SIZE];
+
+} Flash_SEC_IV_Data_t;
+
+
+typedef struct Flash_SEC_IV_s {
+	uint32_t iv_size;
+	Flash_SEC_IV_Data_t iv_data __attribute__((aligned(32)));
+} Flash_SEC_IV_t;
+
+typedef struct Flash_SEC_KEY_Data_s {
+	uint8_t ex_key[32];
+	uint8_t ex_mix_ecb_key[32];
+
+} Flash_SEC_KEY_Data_t;
+
+typedef struct Flash_SEC_KEY_s {
+	uint8_t key_idx;
+	uint8_t resv[3];
+	uint32_t key_size;
+	Flash_SEC_KEY_Data_t key_data __attribute__((aligned(32)));
+
+} Flash_SEC_KEY_t;
+
+typedef struct Flash_SEC_CTRL_s {
+	uint8_t sec_cipher_mode;
+	uint8_t cache_line_size;
+
+} Flash_SEC_CTRL_t;
+
+typedef struct Flash_SEC_CRYPTO_DEC_INFO_s {
+	uint32_t flash_addr;
+	uint32_t key_size;
+	uint8_t cache_line_size;
+	uint8_t sk_idx;
+} Flash_SEC_CRYPTO_DEC_INFO_t;
+
+
+/*
+   IMG TLV Format define
+*/
 #define IMG_VRF_PBK_MAX_SIZE                        (384)
 #define IMG_VRF_SIGNDATA_MAX_SIZE                   (384)
 #define IMG_HASH_CHK_DIGEST_MAX_SIZE                (64)
+// 4K bytes-aligned offset from Manifest start to IMG HDR start
+// FIXME use IMG_HDR_START_ALIGN_SIZE
+#define IMG_HDR_START_OFFSET                        (((sizeof(img_manifest_t) >> IMG_HDR_START_ALIGN_SHIFT) + 1) << IMG_HDR_START_ALIGN_SHIFT)
 #define IMG_HDR_START_ALIGN_SHIFT                   (12)
 #define IMG_HDR_START_ALIGN_SIZE                    (0x1 << IMG_HDR_START_ALIGN_SHIFT)
 #define IMG_HDR_START_ALIGN_MASK                    (IMG_HDR_START_ALIGN_SIZE - 0x1)
@@ -113,14 +273,20 @@ extern "C"
 #define FW_HDR_RESV6_SIZE                           (16)
 #define FW_HDR_RESV7_SIZE                           (16)
 #define FW_HDR_NXTOFFSET_NULL                       (0xFFFFFFFF)
+#define FW_LD_VALID_IMG_TYPE_ID_MAX_SIZE            (10)
 
 #define SECT_HDR_RESV2_SIZE                         (4)
 #define SECT_HDR_RESV3_SIZE                         (4)
 #define SECT_HDR_RESV4_SIZE                         (4)
 #define SECT_HDR_RESV5_SIZE                         (16)
 #define SECT_HDR_RESV6_SIZE                         (16)
-#define SECT_HDR_SEC_INFO_SIZE                      (32)
 #define SECT_HDR_NXTOFFSET_NULL                     (0xFFFFFFFF)
+#define SECT_HDR_LD_VRF_HASH_MAX_SIZE               (64)
+
+#define MULTI_SENSOR_SET_INVALID_PTN1               (0xFFFFFFFF)
+#define MULTI_SENSOR_SET_INVALID_PTN2               (0xFEFEFEFE)
+
+
 //#define BL_SECT_SECLEN                              (50319)
 
 enum {
@@ -193,11 +359,16 @@ typedef enum {
 	IE_NAN_ID       = 0xFF,
 } IE_ID_T;
 
+typedef enum {
+	SENSOR_ID        = 0x01
+} ISP_UNPT_IE_ID_T;
+
 
 #define    IE_TLV_TYPE_ID_SIZE     (1)
 #define    IE_TLV_SIZE_SIZE        (3)
 #define    IE_TLV_TL_TOTAL_SIZE    (4)
 
+#define    ISP_UNPT_IE_SENSOR_ID_MAX_SIZE           (1)
 
 enum {
 	IE_DATA_PADDING_ONEBYTE =   0x1,
@@ -241,6 +412,16 @@ enum {
 	IMG_SEC_ENC_ALG_AES256_GCM     =   0x1,
 	IMG_SEC_ENC_ALG_AES256_CTR     =   0x2,
 	IMG_SEC_ENC_ALG_AES256_ECB_MIX =   0x3,
+};
+
+enum {
+	MANIFEST_HSH_QUICK_CHK_INVALID_PTN0 = 0x0,
+	MANIFEST_HSH_QUICK_CHK_INVALID_PTN1 = 0xFF0,
+};
+
+enum {
+	KEY_CERTI_SJTAG_NFIX_QUICK_CHK_INVALID_PTN0 = 0x0,
+	KEY_CERTI_SJTAG_NFIX_QUICK_CHK_INVALID_PTN1 = 0xFF0,
 };
 
 typedef enum {
@@ -431,7 +612,11 @@ typedef struct part_fst_info_s {
 	uint8_t iq_idx;
 	uint8_t nn_m_idx;
 	uint8_t mp_idx;
-	uint8_t resv1[8];
+	// For NAND Flash boot
+	uint8_t keycert1_idx;
+	uint8_t keycert2_idx;
+
+	uint8_t resv1[6];
 	gpio_pwr_on_trap_pin_t ota_trap;
 	gpio_pwr_on_trap_pin_t mp_trap;
 	uint32_t udl;
@@ -492,10 +677,9 @@ typedef struct sec_ctrl_s {
 	uint32_t ctrl_val;
 } sec_ctrl_t, *psec_ctrl_t;
 
-typedef struct sec_info_s {
-	uint8_t sec_info1[32];
-	uint8_t sec_info2[32];
-} sec_info_t, *psec_info_t;
+typedef struct ld_vrf_hash_s {
+	uint8_t data[SECT_HDR_LD_VRF_HASH_MAX_SIZE];
+} ld_vrf_hash_t, *pld_vrf_hash_t;
 
 typedef struct sect_hdr_s {
 	uint32_t    seclen;
@@ -507,10 +691,29 @@ typedef struct sect_hdr_s {
 	uint32_t    dest;
 	uint8_t     resv3[4];
 	uint8_t     resv4[4];
-	sec_info_t  sec_info;
+	ld_vrf_hash_t  ld_vrf_hash;
 	uint8_t     resv5[16];
 	uint8_t     resv6[16];
 } sect_hdr_t, *psect_hdr_t;
+
+typedef struct fw_img_tlv_export_info_type_s {
+	uint32_t fw1_start_offset;                  // the NOR flash offset of FW1 image start
+	uint32_t fw2_start_offset;                  // the NOR flash offset of FW2 image start
+	uint16_t fw1_vblk[48];                      // the NAND flash vblk of FW1 image
+	uint16_t fw2_vblk[48];                      // the NAND flash vblk of FW2 image
+	uint32_t fw1_version;                       // the FW1 IEs info(version)
+	uint32_t fw2_version;                       // the FW2 IEs info(version)
+	uint32_t fw1_timest;                        // the FW1 IEs info(timestamp)
+	uint32_t fw2_timest;                        // the FW2 IEs info(version)
+	uint8_t fw1_label_valid;                    // is FW1 label valid (OTA signature valid)
+	uint8_t fw2_label_valid;                    // is FW2 label valid (OTA signature valid)
+	uint8_t fw1_valid;                          // is FW1 type_id valid (OTA load object valid)
+	uint8_t fw2_valid;                          // is FW2 type_id valid (OTA load object valid)
+	int fw_record_idx;                          // the loaded (to RAM) FW record index of partition table
+	uint16_t fw_ld_type_id;                     // the loaded (to RAM) FW typed id of partition table
+	uint8_t  resv1[2];
+	uint32_t resv2[7];
+} fw_img_tlv_export_info_type_t, *pfw_img_tlv_export_info_type_t;
 
 typedef struct img_pkhsh_info_s {
 	key_certi_hsh_tbl_t key_hsh_tbl;
@@ -534,20 +737,26 @@ typedef struct sec_boot_keycerti_s {
 
 typedef struct tb_img_sign_vrf_info_s {
 	uint8_t vrf_alg;
+	uint8_t resv1[3];
+
 	uint8_t *p_pbk;
 	uint8_t *p_sign;
 	uint8_t *p_msg;
 	uint32_t msglen;
+	uint32_t resv2[3];
 } tb_img_sign_vrf_info_t, *ptb_img_sign_vrf_info_t;
 
 typedef struct tb_img_hash_chk_info_s {
 	uint8_t hash_alg;
+	uint8_t resv1[3];
+
 	uint8_t *p_key_huk;
 	uint8_t *p_key_salt;
 	uint8_t *p_key_nonce;
 	uint8_t *p_msg;
 	uint8_t *p_digest;
 	uint32_t msglen;
+	uint32_t resv2;
 } tb_img_hash_chk_info_t, *ptb_img_hash_chk_info_t;
 
 typedef struct sb_sec_enc_info_s {
@@ -558,6 +767,20 @@ typedef struct sb_sec_enc_info_s {
 	//uint32_t msglen;
 	manif_sec_enc_record_t sec_enc_record[MAX_SEC_ENC_RECORD];
 } sb_sec_enc_info_t, *psb_sec_enc_info_t;
+
+typedef struct sb_crypto_enc_info_s {
+	uint8_t encalg_sel;
+	uint8_t sk_idx;
+	uint8_t resv1[2];
+	uint8_t *p_ivptn;
+	uint8_t *p_key;
+	uint32_t key_len;
+	uint32_t iv_len;
+	uint32_t base_offset;
+	uint32_t dec_base;
+	uint32_t dec_size;
+	uint32_t tag_base;
+} sb_crypto_enc_info_t, *psb_crypto_enc_info_t;
 
 /**
   \brief  The data structure for a SEC remap configuration of a XIP memory block.
@@ -639,7 +862,8 @@ typedef struct sec_boot_info_s {
 	hal_sec_region_cfg_t *psec_region_ctrl;
 	tb_img_sign_vrf_info_t img_sign_vrf_info;
 	tb_img_hash_chk_info_t img_hash_chk_info;
-
+	sb_crypto_enc_info_t *pimg_crypto_enc_info;
+	uint32_t resv[3];
 } sec_boot_info_t, *psec_boot_info_t;
 
 typedef enum {
@@ -682,6 +906,12 @@ enum {
 	SEC_KEY_IDX1    =   0x1,
 	SEC_KEY_IDX2    =   0x2,
 	SEC_KEY_RMA_IDX =   0x3
+};
+
+enum {
+	RMA_INFO_ROTPK_HSH    =   0x0,
+	RMA_INFO_HUK          =   0x1,
+	RMA_INFO_SEC_KEY      =   0x2
 };
 
 enum {
@@ -739,13 +969,12 @@ typedef struct hal_flash_boot_tlv_stubs_s {
 	int (*img_get_update_sel_idx)(const uint8_t img_obj, img_manifest_ld_sel_t *pld_sel_info1, img_manifest_ld_sel_t *pld_sel_info2, uint8_t img1_idx,
 								  uint8_t img2_idx);
 	int (*img_sel_op_idx)(void *p_tbl_info, const uint8_t img_obj, const uint8_t img_sel_op);
-	uint32_t reserved[15];  // reserved space for next ROM code version function table extending.
+	void *penc_sec_info;
+	void (*clear_export_enc_sec_info)(void);
+	void (*flash_sec_crypto_gen_iv)(uint32_t flash_addr, uint32_t cahce_line_size, Flash_SEC_IV_Data_t *p_sec_iv, uint32_t iv_len);
+	void (*flash_sec_crypto_xor_data)(unsigned char *buf1, unsigned char *buf2, uint32_t len, unsigned char *result);
+	uint32_t reserved[11];  // reserved space for next ROM code version function table extending.
 } hal_flash_boot_tlv_stubs_t;
-
-int verify_manif_f(const uint8_t *img_offset, const uint8_t info_type, sec_boot_info_t *p_sb_info); //TOdo info_type may not use
-hal_status_t fw_spic_init(phal_spic_adaptor_t phal_spic_adaptor, u8 spic_bit_mode, u8 io_pin_sel);
-hal_status_t fw_spic_deinit(phal_spic_adaptor_t phal_spic_adaptor);
-
 
 #ifdef  __cplusplus
 }

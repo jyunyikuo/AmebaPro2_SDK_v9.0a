@@ -134,32 +134,32 @@ int vipnn_handle(void *p, void *input, void *output)
 	/*------------------------------------------------------*/
 
 	if (ctx->module_out_en) {
-		VIPNN_OUT_BUFFER out_next;
-		out_next.vipnn_out_tensor_num = ctx->output_count;
+		VIPNN_OUT_BUFFER tensor_out_next;
+		tensor_out_next.vipnn_out_tensor_num = ctx->output_count;
 		for (int i = 0; i < ctx->output_count; i++) {
-			out_next.vipnn_out_tensor[i] = out_tensor[i];
-			out_next.vipnn_out_tensor_size[i] = 1;
+			tensor_out_next.vipnn_out_tensor[i] = out_tensor[i];
+			tensor_out_next.vipnn_out_tensor_size[i] = 1;
 			for (int k = 0; k < ctx->params.model->output_param.dim[i].num; k++) {
-				out_next.vipnn_out_tensor_size[i] = out_next.vipnn_out_tensor_size[i] * ctx->params.model->output_param.dim[i].size[k];
+				tensor_out_next.vipnn_out_tensor_size[i] = tensor_out_next.vipnn_out_tensor_size[i] * ctx->params.model->output_param.dim[i].size[k];
 			}
 			switch (ctx->vip_param_out[i].quant_format) {
 			case VIP_BUFFER_QUANTIZE_DYNAMIC_FIXED_POINT:
-				out_next.quant_format[i] = VIP_BUFFER_QUANTIZE_DYNAMIC_FIXED_POINT;
-				out_next.quant_data[i].dfp.fixed_point_pos = ctx->vip_param_out[i].quant_data.dfp.fixed_point_pos;
+				tensor_out_next.quant_format[i] = VIP_BUFFER_QUANTIZE_DYNAMIC_FIXED_POINT;
+				tensor_out_next.quant_data[i].dfp.fixed_point_pos = ctx->vip_param_out[i].quant_data.dfp.fixed_point_pos;
 				break;
 			case VIP_BUFFER_QUANTIZE_TF_ASYMM:
-				out_next.quant_format[i] = VIP_BUFFER_QUANTIZE_TF_ASYMM;
-				out_next.quant_data[i].affine.scale = ctx->vip_param_out[i].quant_data.affine.scale;
-				out_next.quant_data[i].affine.zeroPoint = ctx->vip_param_out[i].quant_data.affine.zeroPoint;
+				tensor_out_next.quant_format[i] = VIP_BUFFER_QUANTIZE_TF_ASYMM;
+				tensor_out_next.quant_data[i].affine.scale = ctx->vip_param_out[i].quant_data.affine.scale;
+				tensor_out_next.quant_data[i].affine.zeroPoint = ctx->vip_param_out[i].quant_data.affine.zeroPoint;
 				break;
 			default:
 				printf(", none-quant\n\r");
 			}
 		}
-		memcpy(&out_next.vipnn_res, post_res, sizeof(vipnn_res_t));
+		memcpy(&tensor_out_next.vipnn_res, post_res, sizeof(vipnn_res_t));
 
-		output_item->size = sizeof(out_next);
-		memcpy(output_item->data_addr, &out_next, output_item->size);
+		output_item->size = sizeof(tensor_out_next);
+		memcpy(output_item->data_addr, &tensor_out_next, output_item->size);
 		output_item->timestamp = input_item->timestamp;
 		output_item->type = AV_CODEC_ID_NN_RAW;
 
@@ -179,45 +179,17 @@ int vipnn_control(void *p, int cmd, int arg)
 	case CMD_VIPNN_SET_MODEL:
 		ctx->params.model = (nnmodel_t *)arg;
 		break;
-	case CMD_VIPNN_SET_MODEL_FILE:
-		ctx->params.model_type = VIPNN_MODEL_FILE;
-		strncpy(ctx->params.model_file, (char *)arg, 63);
-		break;
-	case CMD_VIPNN_SET_MODEL_MEM:
-		ctx->params.model_type = VIPNN_MODEL_MEM;
-		ctx->params.model_mem = (uint8_t *)arg;
-		break;
-	case CMD_VIPNN_SET_MODEL_MEM_SZ:
-		ctx->params.model_size = (uint32_t)arg;
-		break;
-	case CMD_VIPNN_SET_PARAMS:
-		memcpy(&ctx->params, (vipnn_params_t *)arg, sizeof(vipnn_params_t));
-		break;
 	case CMD_VIPNN_SET_IN_PARAMS:
 		ctx->params.in_param = (nn_data_param_t *)arg;
-		break;
-	case CMD_VIPNN_GET_PARAMS:
-
-		break;
-	case CMD_VIPNN_SET_WIDTH:
-
-		break;
-	case CMD_VIPNN_SET_HEIGHT:
-
 		break;
 	case CMD_VIPNN_SET_DISPPOST:
 		ctx->disp_postproc = (disp_postprcess_t *)arg;
 		break;
-	case CMD_VIPNN_SET_FPS:
-		ctx->params.fps = arg;
+	case CMD_VIPNN_SET_CONFIDENCE_THRES:
+		ctx->params.model->set_confidence_thresh((void *)arg);
 		break;
-	case CMD_VIPNN_SET_PREPROC:
-		ctx->pre_process = (vipnn_preproc_t)arg;
-		break;
-	case CMD_VIPNN_SET_POSTPROC:
-		ctx->post_process = (vipnn_postproc_t)arg;
-		break;
-	case CMD_VIPNN_GET_HWVER:
+	case CMD_VIPNN_SET_NMS_THRES:
+		ctx->params.model->set_nms_thresh((void *)arg);
 		break;
 	case CMD_VIPNN_SET_OUTPUT:
 		ctx->module_out_en = (bool)arg;
@@ -442,7 +414,13 @@ int vipnn_deoply_network(void *p)
 	else if(ctx->params.model_type == VIPNN_MODEL_FILE)
 		status = vip_create_network(ctx->params.model_file, 0, VIP_CREATE_NETWORK_FROM_FILE, &ctx->network);
 	*/
-	status = vip_create_network(ctx->params.model->nb(), ctx->params.model->nb_size(), VIP_CREATE_NETWORK_FROM_MEMORY, &ctx->network);
+	if (ctx->params.model->model_src == MODEL_SRC_MEM) {
+		void *nn_model = ctx->params.model->nb();
+		status = vip_create_network(nn_model, ctx->params.model->nb_size(), VIP_CREATE_NETWORK_FROM_MEMORY, &ctx->network);
+		ctx->params.model->freemodel(nn_model);
+	} else if (ctx->params.model->model_src == MODEL_SRC_FILE) {
+		status = vip_create_network(ctx->params.model->nb(), 0, VIP_CREATE_NETWORK_FROM_FILE, &ctx->network);
+	}
 	ONERROR(status, "error: vip_create_network.", vipnn_depoly_error);
 
 	if (init_io_buffers(ctx) < 0) {
@@ -530,10 +508,6 @@ void *vipnn_create(void *parent)
 	ONERROR(status, "VIP Init failed.", vipnn_error);
 
 	ctx->params.fps = 1;
-
-	//ctx->pre_process = vipnn_preprocess;
-	//ctx->post_process = vipnn_postprocess_ssd;
-	//ctx->post_process = vipnn_postprocess_yolov3tiny;
 
 	NN_MEASURE_INIT(0);
 	NN_MEASURE_INIT(1);

@@ -2,7 +2,7 @@
  * @file     partition_rtl8735b.h
  * @brief    CMSIS-CORE Initial Setup for Secure / Non-Secure Zones for rtl8735b
  * @version  1.00
- * @date     2021-04-22
+ * @date     2021-11-25
  *
  ******************************************************************************
  *
@@ -181,7 +181,7 @@
 /*
 //     <o>End Address <0x1F-0xFFFFFFFF>
 */
-#define SAU_INIT_END4       0x20165FFF      /* end address of SAU region 4 */
+#define SAU_INIT_END4       0x2016C2FF      /* end address of SAU region 4 */
 
 /*
 //     <o>Region is

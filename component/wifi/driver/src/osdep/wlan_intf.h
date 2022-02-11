@@ -54,7 +54,7 @@ int rltk_wlan_init(int idx_wlan, rtw_mode_t mode);				//return 0: success. -1:fa
 void rltk_wlan_deinit(void);
 void rltk_wlan_deinit_fastly(void);
 int rltk_wlan_start(int idx_wlan);
-void rltk_wlan_statistic(unsigned char idx, rtw_sw_statistics_t *sw_statistics);
+int rltk_wlan_statistic(unsigned char idx, rtw_sw_statistics_t *sw_statistics);
 unsigned char rltk_wlan_running(unsigned char idx);		// interface is up. 0: interface is down
 int rltk_wlan_handshake_done(void);
 int rltk_wlan_wireless_mode(unsigned char mode);
@@ -68,9 +68,11 @@ int rltk_wlan_change_channel_plan(unsigned char channel_plan);
 int rltk_del_station(unsigned char wlan_idx, unsigned char *hwaddr);
 int rltk_get_auto_chl(unsigned char wlan_idx, unsigned char *channel_set, unsigned char channel_num);
 int rltk_wlan_get_disconn_reason_code(unsigned short *reason);
+int rltk_change_mac_address_from_ram(int idx, unsigned char *mac);
 
 void rltk_psk_info_set(struct psk_info *psk_data);
 void rltk_psk_info_get(struct psk_info *psk_data);
+__u8 rltk_wlan_is_mp(void);
 
 #ifdef CONFIG_WLAN_SWITCH_MODE
 int rltk_wlan_reinit_drv_sw(const char *ifname, rtw_mode_t mode);
@@ -94,6 +96,13 @@ int rltk_set_hidden_ssid(const char *ifname, unsigned char value);
 unsigned char rltk_get_band_type(void);
 unsigned int rltk_wlan_get_tsf(unsigned char port_id);
 int rltk_wlan_get_ccmp_key(unsigned char *uncst_key, unsigned char *group_key);
+int rltk_wlan_set_tx_rate_by_ToS(unsigned char enable, unsigned char ToS_precedence, unsigned char tx_rate);
+int rltk_wlan_set_EDCA_param(unsigned int AC_param);
+int rltk_wlan_set_TX_CCA(unsigned char enable);
+int rltk_wlan_ap_switch_chl_and_inform_sta(unsigned char new_chl, unsigned char chl_switch_cnt, ap_channel_switch_callback_t callback);
+int rltk_wlan_set_cts2self_dur_and_send(unsigned char wlan_idx, unsigned short duration);
+int rltk_wlan_get_sta_max_data_rate(unsigned char *inidata_rate);
+void rltk_wlan_set_no_beacon_timeout(unsigned char timeout_sec);
 
 //add temporarily
 extern int rtw_wx_get_essid(unsigned char wlan_idx, __u8 *ssid);
@@ -133,13 +142,16 @@ extern int rtw_pm_set(rtw_pm_option_t type, __u8 *param);
 extern int rtw_wx_set_autoreconnect(__u8 mode, __u8 retry_times, __u16 timeout);
 extern int rtw_wx_get_autoreconnect(__u8 *mode);
 #endif
-extern int rtw_ex_get_channel_plan(const char *ifname, __u8 *channel_plan);
+extern int rtw_ex_get_channel_plan(__u8 idx, __u8 *channel_plan);
 #ifdef CONFIG_WOWLAN
 extern int rtw_wowlan_ctrl(const char *ifname, rtw_wowlan_option_t type, void *param);
 #endif
 extern int rtw_wx_set_custome_ie(const char *ifname, void *cus_ie, int ie_num);
 extern int rtw_wx_update_custome_ie(const char *ifname, void *cus_ie, int ie_index);
 extern int rtw_wx_del_custome_ie(const char *ifname);
+
+int rltk_coex_set_ble_scan_duty(__u8 duty);
+
 #ifdef CONFIG_RTK_MESH
 extern int rtw_ex_set_mesh(const char *ifname, __u8 enable);
 extern int rtw_ex_set_mesh_id(const char *ifname, void *mesh_id, int id_len);
@@ -153,6 +165,18 @@ extern int rtw_ex_get_client_list(unsigned char wlan_idx, rtw_maclist_t *client_
 extern int rtw_ex_get_antenna_info(unsigned char wlan_idx, unsigned char *antenna);
 #endif
 extern int rtw_iwpriv_command(const char *ifname, char *cmd, int show_msg);
+//promisc related
+extern int promisc_filter_retransmit_pkt(unsigned char enable, unsigned char filter_interval_ms);
+extern int promisc_set(rtw_rcr_level_t enabled, void (*callback)(unsigned char *, unsigned int, void *), unsigned char len_used);
+extern unsigned char is_promisc_enabled(void);
+extern int promisc_get_fixed_channel(void *fixed_bssid, unsigned char *ssid, int *ssid_length);
+extern void promisc_filter_by_ap_and_phone_mac(unsigned char enable, void *ap_mac, void *phone_mac);
+extern int promisc_set_mgntframe(unsigned char enable);
+extern int promisc_get_chnl_by_bssid(unsigned char *bssid);
+extern void promisc_update_candi_ap_rssi_avg(signed char rssi, unsigned char cnt);
+extern void promisc_issue_probersp(unsigned char *da);
+extern void promisc_stop_tx_beacn(void);
+extern void promisc_resume_tx_beacn(void);
 
 #ifdef	__cplusplus
 }

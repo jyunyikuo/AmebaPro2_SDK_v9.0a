@@ -776,41 +776,44 @@ extern "C"
   */
 
 /** @brief LE bond parameter types */
-typedef enum {
+typedef enum
+{
 #if F_BT_LE_SMP_OOB_SUPPORT
-	GAP_PARAM_BOND_OOB_DATA             = 0x210,//!< OOB Data. Read/Write. size uint8_t[16]. Default is all 0's.
+    GAP_PARAM_BOND_OOB_DATA             = 0x210,//!< OOB Data. Read/Write. size uint8_t[16]. Default is all 0's.
 #endif
-	GAP_PARAM_BOND_FIXED_PASSKEY        = 0x211,//!< The fix passcode for MITM protection. Read/Write. size is uint32_t. Range is 0 - 999,999. Default is 0.
-	GAP_PARAM_BOND_FIXED_PASSKEY_ENABLE = 0x212,//!< The fix passcode available for pairing. Read/Write. size is uint8_t. Default is 0(disabled).
-	GAP_PARAM_BOND_SEC_REQ_ENABLE       = 0x213,//!< Send smp security request when connected. Read/Write. size is uint8_t. Default is 0(disabled).
-	GAP_PARAM_BOND_SEC_REQ_REQUIREMENT  = 0x214,//!< Security request requirements. Read/Write. size is uint8_t. Default is GAP_AUTHEN_BIT_BONDING_FLAG (@ref BOND_MITM_DEFINES)
-	GAP_PARAM_BOND_MIN_KEY_SIZE         = 0x215,//!< Minium LTK size required. Read/Write. size is uint8_t.
+    GAP_PARAM_BOND_FIXED_PASSKEY        = 0x211,//!< The fix passcode for MITM protection. Read/Write. size is uint32_t. Range is 0 - 999,999. Default is 0.
+    GAP_PARAM_BOND_FIXED_PASSKEY_ENABLE = 0x212,//!< The fix passcode available for pairing. Read/Write. size is uint8_t. Default is 0(disabled).
+    GAP_PARAM_BOND_SEC_REQ_ENABLE       = 0x213,//!< Send smp security request when connected. Read/Write. size is uint8_t. Default is 0(disabled).
+    GAP_PARAM_BOND_SEC_REQ_REQUIREMENT  = 0x214,//!< Security request requirements. Read/Write. size is uint8_t. Default is GAP_AUTHEN_BIT_BONDING_FLAG (@ref BOND_MITM_DEFINES)
+    GAP_PARAM_BOND_MIN_KEY_SIZE         = 0x215,//!< Minium LTK size required. Read/Write. size is uint8_t.
 #if F_BT_LE_LOCAL_IRK_SETTING_SUPPORT
-	GAP_PARAM_BOND_GEN_LOCAL_IRK_AUTO   = 0x216,//!< Auto generate local IRK. Write only. size is uint8_t. Default is 0(disabled).
-	GAP_PARAM_BOND_SET_LOCAL_IRK        = 0x217,//!< Set local IRK. Write only. size is uint8_t. Default is all zero.
+    GAP_PARAM_BOND_GEN_LOCAL_IRK_AUTO   = 0x216,//!< Auto generate local IRK. Write only. size is uint8_t. Default is 0(disabled).
+    GAP_PARAM_BOND_SET_LOCAL_IRK        = 0x217,//!< Set local IRK. Write only. size is uint8_t. Default is all zero.
 #endif
-	GAP_PARAM_BOND_KEY_MANAGER          = 0x218,//!< Key manager. Write only. size is uint8_t. Default is 0(disabled).
-	GAP_PARAM_BOND_SIGN_KEY_FLAG        = 0x219,//!< Sign key flag configure. Write only. size is uint8_t. Default is 0(disabled).
-	GAP_PARAM_BOND_CCCD_STORAGE         = 0x21A,//!< Whether to store cccd information. Write only. size is uint8_t. Default is true.
+    GAP_PARAM_BOND_KEY_MANAGER          = 0x218,//!< Key manager. Write only. size is uint8_t. Default is 0(disabled).
+    GAP_PARAM_BOND_SIGN_KEY_FLAG        = 0x219,//!< Sign key flag configure. Write only. size is uint8_t. Default is 0(disabled).
+    GAP_PARAM_BOND_CCCD_STORAGE         = 0x21A,//!< Whether to store cccd information. Write only. size is uint8_t. Default is true.
 } T_LE_BOND_PARAM_TYPE;
 
 #if F_BT_LE_4_2_SC_OOB_SUPPORT
 /** @brief LE local out of bond data */
-typedef struct {
-	uint8_t     present;
-	uint8_t     rand[16];
-	uint8_t     confirm[16];
-	uint8_t     bd_addr_to[6];
-	uint8_t     local_sk[32];
-	uint8_t     local_pk[64];
+typedef struct
+{
+    uint8_t     present;
+    uint8_t     rand[16];
+    uint8_t     confirm[16];
+    uint8_t     bd_addr_to[6];
+    uint8_t     local_sk[32];
+    uint8_t     local_pk[64];
 } T_GAP_LE_LOCAL_OOB_DATA;
 
 /** @brief LE peer out of bond data */
-typedef struct {
-	uint8_t     present;
-	uint8_t     rand[16];
-	uint8_t     confirm[16];
-	uint8_t     bd_addr_from[6];
+typedef struct
+{
+    uint8_t     present;
+    uint8_t     rand[16];
+    uint8_t     confirm[16];
+    uint8_t     bd_addr_from[6];
 } T_GAP_LE_PEER_OOB_DATA;
 #endif
 
@@ -1027,7 +1030,7 @@ T_GAP_CAUSE le_bond_get_display_key(uint8_t conn_id, uint32_t *p_key);
  * \endcode
  */
 T_GAP_CAUSE le_bond_passkey_input_confirm(uint8_t conn_id, uint32_t passcode,
-		T_GAP_CFM_CAUSE cause);
+                                          T_GAP_CFM_CAUSE cause);
 
 #if F_BT_LE_SMP_OOB_SUPPORT
 /**
@@ -1301,7 +1304,7 @@ T_GAP_CAUSE le_bond_cfg_local_key_distribute(uint8_t init_dist, uint8_t rsp_dist
  * \endcode
  */
 T_GAP_CAUSE le_bond_sc_local_oob_init(uint64_t *p_ecc_rand_in, uint8_t *local_rand,
-									  T_GAP_LE_LOCAL_OOB_DATA *p_local_oob_data);
+                                      T_GAP_LE_LOCAL_OOB_DATA *p_local_oob_data);
 
 /**
  * @brief   Initialize peer out of bond data
@@ -1551,21 +1554,9 @@ T_GAP_CAUSE le_bond_delete_by_bd(uint8_t *bd_addr, T_GAP_REMOTE_ADDR_TYPE bd_typ
  */
 T_GAP_CAUSE le_bond_get_sec_level(uint8_t conn_id, T_GAP_SEC_LEVEL *p_type);
 
-#if F_BT_LE_APP_KEY_MANAGER
-T_GAP_CAUSE le_bond_authen_result_confirm(uint8_t *bd_addr, T_GAP_REMOTE_ADDR_TYPE remote_addr_type,
-		T_GAP_KEY_TYPE key_type, T_GAP_CFM_CAUSE cause);
-
-T_GAP_CAUSE le_bond_authen_key_req_confirm(uint8_t *bd_addr,
-		T_GAP_REMOTE_ADDR_TYPE remote_addr_type,
-		uint8_t key_len, uint8_t *p_key, T_GAP_KEY_TYPE key_type,
-		T_GAP_CFM_CAUSE cause);
-T_GAP_CAUSE le_bond_gatt_server_store_confirm(T_GATT_STORE_OPCODE op, uint8_t *bd_addr,
-		T_GAP_REMOTE_ADDR_TYPE remote_addr_type,
-		uint8_t data_len, uint8_t *data, T_GAP_CFM_CAUSE cause);
-#endif
-
 #if F_BT_LE_GATT_CCCD_DATA_PENDING
 bool le_bond_set_cccd_data_pending(T_LE_KEY_ENTRY *p_entry, uint16_t handle, bool data_pending);
+bool gap_bond_set_cccd_data_pending(uint16_t conn_handle, uint16_t handle, bool data_pending);
 #endif
 
 /** End of GAP_LE_BONDMGR_Exported_Functions

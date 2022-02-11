@@ -37,6 +37,15 @@ all:
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_gc2053.bin $(OBJCOPYDIR)/sensor_gc2053.o;
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_fixp.bin $(OBJCOPYDIR)/sensor_fixp.o;
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_sc2310.bin $(OBJCOPYDIR)/sensor_sc2310.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_fixp2K.bin $(OBJCOPYDIR)/sensor_fixp2K.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_fixp5M.bin $(OBJCOPYDIR)/sensor_fixp5M.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_fixp4M169.bin $(OBJCOPYDIR)/sensor_fixp4M169.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_rs0551c.bin $(OBJCOPYDIR)/sensor_rs0551c.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_rs0551c2K.bin $(OBJCOPYDIR)/sensor_rs0551c2K.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_gc4653.bin $(OBJCOPYDIR)/sensor_gc4653.o;	
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_ps5258.bin $(OBJCOPYDIR)/sensor_ps5258.o;	
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_imx307.bin $(OBJCOPYDIR)/sensor_imx307.o;
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm sensor_imx307hdr.bin $(OBJCOPYDIR)/sensor_imx307hdr.o;				
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm iq.bin $(OBJCOPYDIR)/iq.o;
 
 	

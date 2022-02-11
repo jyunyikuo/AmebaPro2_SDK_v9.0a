@@ -22,7 +22,7 @@ static mm_context_t *mp4_ctx            = NULL;
 static mm_siso_t *siso_array_mp4       = NULL;
 
 //#define H265_ARRAY_ENABLE
-array_params_t h264_array_params = {
+static array_params_t h264_array_params = {
 	.type = AVMEDIA_TYPE_VIDEO,
 	.codec_id = AV_CODEC_ID_H264,
 	.mode = ARRAY_MODE_LOOP,
@@ -34,7 +34,7 @@ array_params_t h264_array_params = {
 	}
 };
 
-array_params_t h265_array_params = {
+static array_params_t h265_array_params = {
 	.type = AVMEDIA_TYPE_VIDEO,
 	.codec_id = AV_CODEC_ID_H265,
 	.mode = ARRAY_MODE_LOOP,
@@ -46,7 +46,7 @@ array_params_t h265_array_params = {
 	}
 };
 
-mp4_params_t mp4_v1_params = {
+static mp4_params_t mp4_v1_params = {
 	.width          = 0,
 	.height         = 0,
 	.fps            = 0,

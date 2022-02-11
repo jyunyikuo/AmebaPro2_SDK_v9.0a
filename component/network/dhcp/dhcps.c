@@ -2,6 +2,7 @@
 #include "dhcps.h"
 #include "tcpip.h"
 #include "wifi_constants.h"
+#include "lwip_netconf.h"
 extern rtw_mode_t wifi_mode;
 //static struct dhcp_server_state dhcp_server_state_machine;
 static uint8_t dhcp_server_state_machine = DHCP_SERVER_STATE_IDLE;
@@ -551,7 +552,7 @@ static void dhcps_send_offer(struct pbuf *packet_buffer)
 	}
 #if LWIP_VERSION_MAJOR >= 2
 	printf("\n\r[%d]DHCP assign ip = %d.%d.%d.%d, hwaddr 0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n", \
-		   xTaskGetTickCount(), ip4_addr1(ip_2_ip4(&dhcps_network_id)), \
+		   (int)xTaskGetTickCount(), ip4_addr1(ip_2_ip4(&dhcps_network_id)), \
 		   ip4_addr2(ip_2_ip4(&dhcps_network_id)), \
 		   ip4_addr3(ip_2_ip4(&dhcps_network_id)), temp_ip, \
 		   client_addr[0], client_addr[1], client_addr[2], \

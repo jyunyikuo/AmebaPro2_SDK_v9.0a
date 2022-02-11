@@ -58,8 +58,9 @@ void LwIP_Init(void);
 void LwIP_ReleaseIP(uint8_t idx);
 uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state);
 void LwIP_DHCP_stop(uint8_t idx);
-void LwIP_etharp_find_addr(uint8_t idx, const ip4_addr_t *ipaddr,
+s8_t LwIP_etharp_find_addr(uint8_t idx, const ip4_addr_t *ipaddr,
 						   struct eth_addr **eth_ret, const ip4_addr_t **ip_ret);
+void LwIP_etharp_request(uint8_t idx, const ip4_addr_t *ipaddr);
 void LwIP_netif_set_up(uint8_t idx);
 void LwIP_netif_set_down(uint8_t idx);
 void LwIP_netif_set_link_up(uint8_t idx);
@@ -86,6 +87,9 @@ void LwIP_AUTOIP_IPv6(struct netif *pnetif);
 #endif
 uint32_t LWIP_Get_Dynamic_Sleep_Interval(void);
 int netif_get_idx(struct netif *pnetif);
+uint32_t LwIP_GetXID(uint8_t idx);
+uint32_t LwIP_GetLEASETIME(uint8_t idx);
+uint32_t LwIP_GetRENEWTIME(uint8_t idx);
 #ifdef __cplusplus
 }
 #endif

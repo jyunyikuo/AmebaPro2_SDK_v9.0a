@@ -16,9 +16,15 @@
 *****************************************************************************/
 
 #define V3_CHANNEL 2
+#if USE_SENSOR == SENSOR_GC4653
+#define V3_RESOLUTION VIDEO_FHD //max resolution: FHD
+#define V3_FPS 15
+#define V3_GOP 15
+#else
 #define V3_RESOLUTION VIDEO_FHD
 #define V3_FPS 30
 #define V3_GOP 30
+#endif
 #define V3_BPS 2*1024*1024
 #define V3_RCMODE 2 // 1: CBR, 2: VBR
 
@@ -44,6 +50,7 @@ static video_params_t video_v3_params = {
 	.width = V3_WIDTH,
 	.height = V3_HEIGHT,
 	.fps = V3_FPS,
+	.use_static_addr = 1
 };
 
 
@@ -61,8 +68,8 @@ static rtsp2_params_t rtsp2_v3_params = {
 void mmf2_video_example_v3_init(void)
 {
 	int voe_heap_size = video_voe_presetting(0, 0, 0, 0, 0,
-						0, 0, 0, 0,
-						1, V3_WIDTH, V3_HEIGHT, V3_BPS,
+						0, 0, 0, 0, 0,
+						1, V3_WIDTH, V3_HEIGHT, V3_BPS, 0,
 						0, 0, 0);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);

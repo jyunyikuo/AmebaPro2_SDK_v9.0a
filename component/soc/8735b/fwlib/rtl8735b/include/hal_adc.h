@@ -294,6 +294,7 @@ int32_t hal_adc_calc_offset_mole(int16_t ideal_co_0, int16_t ideal_co_1, int16_t
 void hal_adc_read_cali_param(uint16_t addr, uint8_t *param_addr, uint8_t param_len);
 void hal_adc_write_cali_param(uint16_t addr, uint8_t *param_addr, uint8_t param_len);
 uint16_t hal_adc_single_read_rtl8195bhp_patch(hal_adc_adapter_t *phal_adc_adapter, uint8_t ch_no);
+void hal_adc_reinit(hal_adc_adapter_t *phal_adc_adapter);
 /** @} */ /* End of group ls_hal_adc */
 
 #ifdef  __cplusplus

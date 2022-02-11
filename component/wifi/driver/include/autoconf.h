@@ -24,7 +24,7 @@
 
 #define CONFIG_LITTLE_ENDIAN
 
-#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #ifndef CONFIG_PLATFORM_AMEBA_X
 #define CONFIG_PLATFORM_AMEBA_X 1
 #endif
@@ -128,6 +128,9 @@
 #elif defined(CONFIG_PLATFORM_AMEBAD2)
 /******************************* AmebaD2 (8730A) ******************************/
 #include "autoconf_8730a.h"
+#elif defined(CONFIG_PLATFORM_AMEBALITE)
+/***************************** AmebaLite (8720E) *****************************/
+#include "autoconf_8720e.h"
 #endif
 /****************************** Ameba Series End ******************************/
 #else /* (CONFIG_PLATFORM_AMEBA_X != 1) */

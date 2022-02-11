@@ -19,6 +19,10 @@ typedef struct _header {
 #define H264_TYPE 0x00
 #define H265_TYPE 0x01
 
+#define AUDIO_AAC  0X00
+#define AUDIO_ULAW 0X01
+#define AUDIO_ALAW 0X02
+
 typedef struct _mp4_demux {
 	FATFS       m_fs;
 	int         drv_num;
@@ -56,6 +60,7 @@ typedef struct _mp4_demux {
 	unsigned int info_offset;
 	unsigned int info_size;
 	unsigned int info_moov_offset;
+	unsigned int audio_format_type;
 } mp4_demux;
 
 int get_video_frame(mp4_demux *mp4_demuxer, unsigned char *buf, int index, unsigned char *key_frame, unsigned int *duration_time, unsigned int *timestamp);

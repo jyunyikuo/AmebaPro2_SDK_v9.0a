@@ -79,16 +79,17 @@ extern "C" {
  *
  * \ingroup BT_HFP
  */
-typedef enum t_bt_hfp_call_status {
-	BT_HFP_CALL_IDLE                              = 0x00,
-	BT_HFP_VOICE_ACTIVATION_ONGOING               = 0x01,
-	BT_HFP_INCOMING_CALL_ONGOING                  = 0x02,
-	BT_HFP_OUTGOING_CALL_ONGOING                  = 0x03,
-	BT_HFP_CALL_ACTIVE                            = 0x04,
-	BT_HFP_CALL_ACTIVE_WITH_CALL_WAITING          = 0x05,
-	BT_HFP_CALL_ACTIVE_WITH_CALL_HOLD             = 0x06,
-	BT_HFP_MULTILINK_CALL_ACTIVE_WITH_CALL_WAIT   = 0x07,
-	BT_HFP_MULTILINK_CALL_ACTIVE_WITH_CALL_HOLD   = 0x08,
+typedef enum t_bt_hfp_call_status
+{
+    BT_HFP_CALL_IDLE                              = 0x00,
+    BT_HFP_VOICE_ACTIVATION_ONGOING               = 0x01,
+    BT_HFP_INCOMING_CALL_ONGOING                  = 0x02,
+    BT_HFP_OUTGOING_CALL_ONGOING                  = 0x03,
+    BT_HFP_CALL_ACTIVE                            = 0x04,
+    BT_HFP_CALL_ACTIVE_WITH_CALL_WAITING          = 0x05,
+    BT_HFP_CALL_ACTIVE_WITH_CALL_HOLD             = 0x06,
+    BT_HFP_MULTILINK_CALL_ACTIVE_WITH_CALL_WAIT   = 0x07,
+    BT_HFP_MULTILINK_CALL_ACTIVE_WITH_CALL_HOLD   = 0x08,
 } T_BT_HFP_CALL_STATUS;
 
 /**
@@ -108,9 +109,9 @@ typedef enum t_bt_hfp_call_status {
  * \ingroup BT_HFP
  */
 bool bt_hfp_init(uint8_t link_num,
-				 uint8_t rfc_hfp_chann_num,
-				 uint8_t rfc_hsp_chann_num,
-				 uint16_t hf_supported_features);
+                 uint8_t rfc_hfp_chann_num,
+                 uint8_t rfc_hsp_chann_num,
+                 uint16_t hf_supported_features);
 
 /**
  * bt_hfp.h

@@ -4,7 +4,7 @@ INCLUDE "romsym_is.so"
 MEMORY
 {
 
-  ITCM_RAM (rx) 		: ORIGIN = 0x00010000, LENGTH = 0x00030000 - 0x00010000  /* 128KB */
+  ITCM_RAM (wrx) 		: ORIGIN = 0x00010000, LENGTH = 0x00018000 - 0x00010000  /* 32KB */
   
   DTCM_RAM (wrx) 		: ORIGIN = 0x20000000, LENGTH = 0x20004000 - 0x20000000  /*  16KB */
 
@@ -14,16 +14,15 @@ MEMORY
   RAM_FUN_TABLE (rwx)   : ORIGIN = 0x20100A00, LENGTH = 0x20100AF0 - 0x20100A00  /* 240B */
   RAM_IMG_SIGN (rwx)    : ORIGIN = 0x20100AF0, LENGTH = 0x20100B00 - 0x20100AF0  /*  16B */
   RAM (rwx)             : ORIGIN = 0x20100B00, LENGTH = 0x20177B00 - 0x20100B00  /* 476KB */
-  RAM_NC (rwx)          : ORIGIN = 0x20177B00, LENGTH = 0x2017BB00 - 0x20177B00  /*  16KB*/
+  RAM_NC (rwx)          : ORIGIN = 0x20177B00, LENGTH = 0x20179800 - 0x20177B00  /*  7KB*/
   /* Jump cross 0x2017BB00 ~ 0x20180000 for S ROM code used*/
   
 /* DDR memory */
-						/* Raymond  workaround for JIRA-537 issue 0x70000000 --> 0x70000040 */
 						  
-  DDR (rwx) 		    : ORIGIN = 0x70000040, LENGTH = 0x72C00000 - 0x70000040 /* 44MB */
-  DDR_NC (rwx)	        : ORIGIN = 0x72C00000, LENGTH = 0x72E00000 - 0x72C00000	/*  2MB */ 
-  VOE        (rwx)      : ORIGIN = 0x72E00000, LENGTH = 0x73000000 - 0x72E00000	/*  2MB */
-  NN         (rwx)      : ORIGIN = 0x73000000, LENGTH = 0x74000000 - 0x73000000	/* 16MB */
+  VOE    (rwx)          : ORIGIN = 0x70000000, LENGTH = 0x70100000 - 0x70000000	/*  1MB */
+  DDR    (rwx) 		    : ORIGIN = 0x70100000, LENGTH = 0x72F00000 - 0x70100000 /* 46MB */
+  DDR_NC (rwx)	        : ORIGIN = 0x72F00000, LENGTH = 0x73000000 - 0x72F00000	/*  1MB */ 
+  NN     (rwx)          : ORIGIN = 0x73000000, LENGTH = 0x74000000 - 0x73000000	/* 16MB */
   
 }
 
@@ -142,41 +141,19 @@ SECTIONS
 		__ram_code_text_start__ = .;
 		*ram_start.o(.text*)
 		*app_start.o(.text*)
-
-		*cmsis_os.o(.text*)
-		*freertos_cb.o(.text*)
-		*event_groups.o(.text*)
-		*heap_4_2.o(.text*)
-		*timers.o(.text*)
-		*tasks.o(.text*)
-		*queue.o(.text*)
-		*port.o(.text*)
-		*list.o(.text*)
-		*mpu_config.o(.text*)
-		
+		*mpu_config.o(.text*)		
 		*libc_wrap.o(.text*)	
-		*cmd_shell.o(.text*)
-
 		*hal_sys_ctrl.o(.text*)
-		*hal_dram_init.o(.text*)
-		*hal_sgpio.o(.text*)
+		*hal_dram*.o(.text*)
 		*hal_gdma.o(.text*)
 		*hal_gpio.o(.text*)
 		*hal_flash.o(.text*)
 		*hal_timer.o(.text*)
 		*hal_uart.o(.text*)
 		*hal_wdt.o(.text*)
-		
-		*timer_api.o(.text*)
-		*sgpio_api.o(.text*)
-		*dram_init.o(.text*)
-		*main.o(.text*)
-		*verify_example.o(.text*)
-		*verify_gpio.o(.text*)
-		*verify_timer.o(.text*)
-		*verify_sgpio.o(.text*)
-		*verify_uart.o(.text*)
-		*verify_uart_irq_ram.o(.text*)
+		*hal_pinmux.o(.text*)
+		*hal_spic.o(.text*)
+		*(.ram.hal_pmc.text*)
 		*lib_a*(.text*)
 			
 		. = ALIGN(4);
@@ -194,6 +171,7 @@ SECTIONS
 */
 		*lib_a*(.data*)
 		*hal_sys_ctrl.o(.data*)
+		*hal_dram*.o(.data*)
 		
 		. = ALIGN(4);
 		/* preinit data */
@@ -217,6 +195,7 @@ SECTIONS
 		PROVIDE_HIDDEN (__fini_array_end = .);
 
 		KEEP(*(.jcr*))
+		*(.ram.hal_pmc.data*)
 		. = ALIGN(4);
 		/* All data end */
 		__data_end__ = .;
@@ -227,10 +206,16 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__ram_code_rodata_start__ = .;
+		*ram_start.o(.rodata*)
+		*app_start.o(.rodata*)
 		*lib_a*(.rodata*)
 		*hal_sys_ctrl.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
+		*hal_dram*.o(.rodata*)
 		*hal_flash.o(.rodata*)
+		*hal_spic.o(.rodata*)
+		*hal_uart.o(.rodata*)
+		*hal_pinmux.o(.rodata*)
+		*(.ram.hal_pmc.rodata*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > RAM
@@ -240,11 +225,15 @@ SECTIONS
 		. = ALIGN(4);
 		__bss_start__ = .;
 		*lib_a*(.bss*)
-		*(.bss*)
-		*(COMMON)
 		*hal_sys_ctrl.o(.bss*)
-		*hal_dram_init.o(.bss*)
+		*hal_dram*.o(.bss*)
 		*hal_flash.o(.bss*)
+        *ram_start.o(.bss*)
+		*hal_spic.o(.bss*)
+		*(.ram.*.bss*)
+		*(.ram.hal_pmc.bss*)
+        *ram_start.o(COMMON)
+
 	} > RAM
 
 	.non_secure.bss :
@@ -331,6 +320,8 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__eram_bss_start__ = .;	
+		*(.bss*)
+		*(COMMON)
 		__eram_bss_end__ = .;
 		__eram_heap_start__ = .;
 		

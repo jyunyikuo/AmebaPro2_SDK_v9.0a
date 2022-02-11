@@ -8,7 +8,7 @@
 
 //TODO: remove section when combine BD and BF
 //8710C uses the linker symbol to determine the SRAM region and PSRAM region
-#if ((defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B) || (defined CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2))
+#if ((defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B) || (defined CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE))
 #include "section_config.h"
 SRAM_BF_DATA_SECTION
 static unsigned char ucHeap[ configTOTAL_HEAP_SIZE ];
@@ -127,7 +127,7 @@ HeapRegion_t xHeapRegions[] = {
 	{ NULL, 0 } 					// Terminates the array.
 };
 
-#elif (defined CONFIG_PLATFORM_AMEBAD2)
+#elif (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 
 HeapRegion_t xHeapRegions[] = {
 	{ ucHeap, sizeof(ucHeap) }, 	// Defines a block from ucHeap

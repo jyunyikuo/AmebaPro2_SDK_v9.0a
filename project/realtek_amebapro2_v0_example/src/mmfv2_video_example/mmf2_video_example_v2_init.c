@@ -16,9 +16,15 @@
 *****************************************************************************/
 
 #define V2_CHANNEL 1
-#define V2_RESOLUTION VIDEO_FHD
+#if USE_SENSOR == SENSOR_GC4653
+#define V2_RESOLUTION VIDEO_FHD //max resolution: FHD
+#define V2_FPS 15
+#define V2_GOP 15
+#else
+#define V2_RESOLUTION VIDEO_HD
 #define V2_FPS 30
 #define V2_GOP 30
+#endif
 #define V2_BPS 2*1024*1024
 #define V2_RCMODE 2 // 1: CBR, 2: VBR
 
@@ -78,8 +84,8 @@ static rtsp2_params_t rtsp2_v2_params = {
 void mmf2_video_example_v2_init(void)
 {
 	int voe_heap_size = video_voe_presetting(0, 0, 0, 0, 0,
-						1, V2_WIDTH, V2_HEIGHT, V2_BPS,
-						0, 0, 0, 0,
+						1, V2_WIDTH, V2_HEIGHT, V2_BPS, 0,
+						0, 0, 0, 0, 0,
 						0, 0, 0);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
@@ -88,7 +94,7 @@ void mmf2_video_example_v2_init(void)
 	if (video_v2_ctx) {
 		mm_module_ctrl(video_v2_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
 		mm_module_ctrl(video_v2_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v2_params);
-		mm_module_ctrl(video_v2_ctx, MM_CMD_SET_QUEUE_LEN, 60);
+		mm_module_ctrl(video_v2_ctx, MM_CMD_SET_QUEUE_LEN, V2_FPS);
 		mm_module_ctrl(video_v2_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
 		mm_module_ctrl(video_v2_ctx, CMD_VIDEO_APPLY, V2_CHANNEL);	// start channel 1
 	} else {

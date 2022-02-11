@@ -2,7 +2,7 @@
  * @file     rtl8195bhp_ramstart.h
  * @brief    The data type definition for RAM code entry functions.
  * @version  V1.00
- * @date     2021-01-04
+ * @date     2021-11-22
  *
  * @note
  *
@@ -33,6 +33,18 @@ extern "C"
 {
 #endif
 #include "fw_img.h"
+#include "fw_img_tlv.h"
+
+
+#define BL4FW_STR_SIGN_MAX_SIZE         16
+#define BL4VOE_STR_SIGN_MAX_SIZE        16
+#define BL4VOE_INFO_HDR_MAX_SIZE        32
+#define BL4VOE_INFO_DATA_MAX_SIZE       ((2*1024) - BL4VOE_INFO_HDR_MAX_SIZE)
+
+enum {
+	BL4VOE_SHARE      =   0x1,
+	BL4FW_SHARE       =   0x2,
+};
 
 typedef struct _RAM_START_FUNCTION_ {
 	void (*RamStartFun)(void);
@@ -49,6 +61,7 @@ typedef union {
 		uint8_t psram_inited    : 1;            /*!< [1..1] the PSRAM controller is initialed */
 		uint8_t flash_inited    : 1;            /*!< [2..2] the SPIC Flash controller is initialed */
 		uint8_t wdt_disabled    : 1;            /*!< [3..3] the VNDR WDT is disabled */
+		uint8_t xip_img_enable  : 1;            /*!< [4..4] the XIP IMG is enabled */
 	} b;                                        /*!< bit fields for flags */
 } boot_init_flags_t, *pboot_init_flags_t;
 
@@ -61,6 +74,22 @@ typedef union {
 		__IOM uint8_t : 6;
 	} bit;
 } boot_status_t, *pboot_status_t;
+
+typedef struct _BL4FW_INFO_T_ {
+	struct {
+		uint8_t str_sign[BL4FW_STR_SIGN_MAX_SIZE];
+		uint32_t resv[4];
+	} hdr;
+	fw_img_tlv_export_info_type_t data;
+} BL4FW_INFO_T;
+
+typedef struct _BL4VOE_INFO_T_ {
+	struct {
+		uint8_t str_sign[BL4VOE_STR_SIGN_MAX_SIZE];
+		uint32_t resv[4];
+	} hdr;
+	uint8_t data[BL4VOE_INFO_DATA_MAX_SIZE];
+} BL4VOE_INFO_T;
 
 /* Table for image entry, must keep the table size is 16*N for fast boot image hash calculation */
 typedef struct _RAM_FUNCTION_START_TABLE_ {
@@ -87,14 +116,14 @@ typedef struct _RAM_FUNCTION_START_TABLE_ {
 	void *phal_spic_adaptor;        // the SPI flash control adapter
 	uint32_t flash_user_data_offset;    // the address offset of user data on flash
 	uint32_t flash_user_data_len;       // the length of user data on flash
-	uint32_t reserved0;
+	void *pbl_shared_buf;
 
 	boot_init_flags_t init_flags;   // the flags to indicates the HW initialization status of boot loader
 	boot_status_t boot_status;
 	uint8_t reserved1;
 	uint8_t sys_tmr_id;             // the system timer ID which is assigned by Secure world
 
-	fw_img_export_info_type_t *pfw_image_info;      // the buffer for boot loader to pass Image2 information;
+	void *pfw_image_info;      // the buffer for boot loader to pass Image2 information;
 	///!!! Keep the table size = 16 * N !!!
 	uint32_t reserved2[3];
 } RAM_FUNCTION_START_TABLE, *PRAM_FUNCTION_START_TABLE;

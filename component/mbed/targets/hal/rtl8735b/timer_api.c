@@ -31,7 +31,7 @@
 #include "hal_timer.h"
 #include "timer_api.h"
 static hal_timer_group_adapter_t _timer_group0;
-static u8 init = 0;
+u8 init = 0, clk_sel = 0;
 /**
   * @brief  Initializes the timer device, include timer registers and interrupt.
   * @param  obj: timer object define in application software.
@@ -46,7 +46,21 @@ void gtimer_init(gtimer_t *obj, uint32_t tid)
 
 	tmr_list[0] = tid;
 	tmr_list[1] = 0xFF; // end of list
-
+	if (init == 0) {
+		if (clk_sel == 0) {
+			hal_sys_peripheral_en(TIMER0_SYS, ENABLE);   // Enable TIMER clock and power on PON
+			hal_timer_group_init(&_timer_group0, 0);  // time group 0
+			hal_osc4m_cal();
+			hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_4M);    // Group1 Sclk:4M
+			init = 1;
+		} else {
+			hal_sys_peripheral_en(TIMER0_SYS, ENABLE);   // Enable TIMER clock and power on PON
+			hal_timer_group_init(&_timer_group0, 0);  // time group 0
+			hal_osc4m_cal();
+			hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_40M);    // Group1 Sclk:40M
+			init = 1;
+		}
+	}
 	if (tid == 0xFF) {
 		located_tid = hal_timer_allocate(NULL);
 	} else {
@@ -56,12 +70,6 @@ void gtimer_init(gtimer_t *obj, uint32_t tid)
 	if (located_tid >= MaxGTimerNum) {
 		DBG_TIMER_WARN("gtimer_init: Timer%u is in use\r\n", tid);
 		return;
-	}
-	if ((located_tid < GTimer8) && (init == 0)) {
-		hal_sys_peripheral_en(TIMER0_SYS, ENABLE);	 // Enable TIMER clock and power on PON
-		hal_timer_group_init(&_timer_group0, 0);  // time group 0
-		hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_40M);	// Group1 Sclk:40M
-		init = 1;
 	}
 	ret = hal_timer_init(&obj->timer_adp, (timer_id_t)located_tid);
 	if (ret != HAL_OK) {
@@ -194,4 +202,15 @@ void gtimer_disable_alarm(gtimer_t *obj, alarmid_t almid)
 {
 	hal_timer_me_ctrl(&obj->timer_adp, (timer_match_event_t)almid, 0);
 }
+
+/**
+  * @brief To select a G-timer0 clock source.
+  * @param  clock_sel: 0:4MHz,1:40MHz
+  * @retval none
+  */
+void gtimer_clock_sel(u8 clock_sel)
+{
+	clk_sel = clock_sel;
+}
+
 

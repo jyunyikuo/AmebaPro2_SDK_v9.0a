@@ -1,6 +1,6 @@
 /**
 *********************************************************************************************************
-*               Copyright(c) 2016, Realtek Semiconductor Corporation. All rights reserved.
+*               Copyright(c) 2020, Realtek Semiconductor Corporation. All rights reserved.
 *********************************************************************************************************
 * @file      gap_aox_conn.h
 * @brief    Head file for GAP AoA/AoD connection
@@ -43,7 +43,7 @@ extern "C"
   * @{
   */
 
-/** @addtogroup GAP_LE_AOX_CONN GAP LE AoA/AoD Module
+/** @addtogroup GAP_LE_AOX_CONN GAP LE AoA/AoD Connection Module
   * @{
   */
 
@@ -51,7 +51,7 @@ extern "C"
 /*============================================================================*
  *                         Macros
  *============================================================================*/
-/** @defgroup GAP_LE_AOX_CONN_Exported_Macros GAP LE AoX Exported Macros
+/** @defgroup GAP_LE_AOX_CONN_Exported_Macros GAP LE AoA/AoD Connection Exported Macros
   * @{
   */
 
@@ -61,10 +61,9 @@ extern "C"
 #define GAP_AOX_CONN_CTE_TYPES_AOA_BIT       0x01     /**< Allow AoA Constant Tone Extension Response. */
 #define GAP_AOX_CONN_CTE_TYPES_AOD_1US_BIT   0x02     /**< Allow AoD Constant Tone Extension Response with 1 us slots. */
 #define GAP_AOX_CONN_CTE_TYPES_AOD_2US_BIT   0x04     /**< Allow AoD Constant Tone Extension Response with 2 us slots. */
-/**
+/** End of GAP_AOX_CONN_CTE_TYPES_BITS
   * @}
   */
-
 /** End of GAP_LE_AOX_CONN_Exported_Macros
   * @}
   */
@@ -72,25 +71,27 @@ extern "C"
 /*============================================================================*
  *                         Types
  *============================================================================*/
-/** @defgroup GAP_LE_AOX_CONN_Exported_Types GAP LE AoA/AoD Exported Types
+/** @defgroup GAP_LE_AOX_CONN_Exported_Types GAP LE AoA/AoD Connection Exported Types
   * @brief
   * @{
   */
-typedef enum {
-	GAP_AOX_SAMPLING_DISABLE = 0x00,     /**< Connection IQ sampling is disabled (default). */
-	GAP_AOX_SAMPLING_ENABLE = 0x01,      /**< Connection IQ sampling is enabled. */
+typedef enum
+{
+    GAP_AOX_SAMPLING_DISABLE = 0x00,     /**< Connection IQ sampling is disabled (default). */
+    GAP_AOX_SAMPLING_ENABLE = 0x01,      /**< Connection IQ sampling is enabled. */
 } T_GAP_AOX_SAMPLING_ENABLE_TYPE;
 
-typedef enum {
-	GAP_AOX_CTE_REQUEST_DISABLE = 0x00,     /**< Disable Constant Tone Extension Request for the connection (default). */
-	GAP_AOX_CTE_REQUEST_ENABLE = 0x01,      /**< Enable Constant Tone Extension Request for the connection. */
+typedef enum
+{
+    GAP_AOX_CTE_REQUEST_DISABLE = 0x00,     /**< Disable Constant Tone Extension Request for the connection (default). */
+    GAP_AOX_CTE_REQUEST_ENABLE = 0x01,      /**< Enable Constant Tone Extension Request for the connection. */
 } T_GAP_AOX_CTE_REQUEST_ENABLE_TYPE;
 
-typedef enum {
-	GAP_AOX_CTE_RESPONSE_DISABLE = 0x00,     /**< Disable Constant Tone Extension Response for the connection (default). */
-	GAP_AOX_CTE_RESPONSE_ENABLE = 0x01,      /**< Enable Constant Tone Extension Response for the connection. */
+typedef enum
+{
+    GAP_AOX_CTE_RESPONSE_DISABLE = 0x00,     /**< Disable Constant Tone Extension Response for the connection (default). */
+    GAP_AOX_CTE_RESPONSE_ENABLE = 0x01,      /**< Enable Constant Tone Extension Response for the connection. */
 } T_GAP_AOX_CTE_RESPONSE_ENABLE_TYPE;
-
 /** End of GAP_LE_AOX_CONN_Exported_Types
   * @}
   */
@@ -98,8 +99,7 @@ typedef enum {
 /*============================================================================*
  *                         Functions
  *============================================================================*/
-
-/** @defgroup GAP_LE_AOA_AOD_CONN_Exported_Functions GAP LE AoA/AoD Exported Functions
+/** @defgroup GAP_LE_AOX_CONN_Exported_Functions GAP LE AoA/AoD Connection Exported Functions
   * @brief
   * @{
   */
@@ -111,8 +111,8 @@ typedef enum {
  * @param[in] sampling_enable  Enable/disable Connection IQ sampling: @ref T_GAP_AOX_SAMPLING_ENABLE_TYPE.
  * @param[in] slot_durations  Switching and sampling slots: @ref T_GAP_SLOT_DUATIONS_TYPE.
  * @param[in] switching_pattern_length  The number of Antenna IDs in the pattern.
-                                        Range: 0x02 to max_switching_pattern_length supported by controller
-                                               max_switching_pattern_length shall be less than or equal to 0x4B.
+ *                                      Range: 0x02 to max_switching_pattern_length supported by controller returned by
+ *                                             @ref le_aox_read_antenna_information.
  * @param[in] p_antenna_ids  Antenna ID in the pattern.
  * @return  Result of sending request.
  * @retval  GAP_CAUSE_SUCCESS: Send request success.
@@ -130,7 +130,7 @@ typedef enum {
         uint8_t switching_pattern_length = 2;
         uint8_t p_antenna_ids[2] = {0, 1};
 
-        le_aox_set_conn_cte_receive_params(conn_id, sampling_enable, slot_durations,
+        T_GAP_CAUSE cause = le_aox_set_conn_cte_receive_params(conn_id, sampling_enable, slot_durations,
                                            switching_pattern_length, p_antenna_ids);
    }
 
@@ -154,10 +154,10 @@ typedef enum {
  * \endcode
  */
 T_GAP_CAUSE le_aox_set_conn_cte_receive_params(uint8_t conn_id,
-		T_GAP_AOX_SAMPLING_ENABLE_TYPE sampling_enable,
-		T_GAP_SLOT_DUATIONS_TYPE slot_durations,
-		uint8_t switching_pattern_length,
-		uint8_t *p_antenna_ids);
+                                               T_GAP_AOX_SAMPLING_ENABLE_TYPE sampling_enable,
+                                               T_GAP_SLOT_DUATIONS_TYPE slot_durations,
+                                               uint8_t switching_pattern_length,
+                                               uint8_t *p_antenna_ids);
 
 /**
  * @brief   Set Connection CTE Transmit Parameters.
@@ -167,9 +167,9 @@ T_GAP_CAUSE le_aox_set_conn_cte_receive_params(uint8_t conn_id,
  * @param[in] cte_types   A bit field that indicates the type of Constant Tone Extension that the Controller support
                           @ref GAP_AOX_CONN_CTE_TYPES_BITS.
  * @param[in] switching_pattern_length  The number of Antenna IDs in the pattern, and shall be ignored when cte_types does not
-                                        have a bit set for an AoD Constant Tone Extension.
-                                        Range: 0x02 to max_switching_pattern_length supported by controller
-                                               max_switching_pattern_length shall be less than or equal to 0x4B.
+ *                                      have a bit set for an AoD Constant Tone Extension.
+ *                                      Range: 0x02 to max_switching_pattern_length supported by controller returned by
+ *                                             @ref le_aox_read_antenna_information.
  * @param[in] p_antenna_ids  Antenna ID in the pattern, and shall be ignored when cte_types does not
                              have a bit set for an AoD Constant Tone Extension.
  * @return  Result of sending request.
@@ -187,7 +187,7 @@ T_GAP_CAUSE le_aox_set_conn_cte_receive_params(uint8_t conn_id,
         uint8_t switching_pattern_length = 2;
         uint8_t p_antenna_ids[2] = {0, 1};
 
-        le_aox_set_conn_cte_transmit_params(conn_id, cte_types, switching_pattern_length, p_antenna_ids);
+        T_GAP_CAUSE cause = le_aox_set_conn_cte_transmit_params(conn_id, cte_types, switching_pattern_length, p_antenna_ids);
    }
 
   T_APP_RESULT app_gap_aox_callback(uint8_t cb_type, void *p_cb_data)
@@ -210,8 +210,8 @@ T_GAP_CAUSE le_aox_set_conn_cte_receive_params(uint8_t conn_id,
  * \endcode
  */
 T_GAP_CAUSE le_aox_set_conn_cte_transmit_params(uint8_t conn_id, uint8_t cte_types,
-		uint8_t switching_pattern_length,
-		uint8_t *p_antenna_ids);
+                                                uint8_t switching_pattern_length,
+                                                uint8_t *p_antenna_ids);
 
 /**
  * @brief   Request the Controller to start or stop initiating the Constant Tone Extension Request procedure.
@@ -253,7 +253,7 @@ T_GAP_CAUSE le_aox_set_conn_cte_transmit_params(uint8_t conn_id, uint8_t cte_typ
         uint8_t requested_cte_length = 2;
         T_GAP_CTE_TYPE requested_cte_type = GAP_CTE_TYPE_AOA;
 
-        le_aox_conn_cte_request_enable(conn_id, enable, cte_request_interval,
+        T_GAP_CAUSE cause = le_aox_conn_cte_request_enable(conn_id, enable, cte_request_interval,
                                        requested_cte_length, requested_cte_type);
    }
 
@@ -302,9 +302,9 @@ T_GAP_CAUSE le_aox_set_conn_cte_transmit_params(uint8_t conn_id, uint8_t cte_typ
  * \endcode
  */
 T_GAP_CAUSE le_aox_conn_cte_request_enable(uint8_t conn_id,
-		T_GAP_AOX_CTE_REQUEST_ENABLE_TYPE enable,
-		uint16_t cte_request_interval, uint8_t requested_cte_length,
-		T_GAP_CTE_TYPE requested_cte_type);
+                                           T_GAP_AOX_CTE_REQUEST_ENABLE_TYPE enable,
+                                           uint16_t cte_request_interval, uint8_t requested_cte_length,
+                                           T_GAP_CTE_TYPE requested_cte_type);
 
 /**
  * @brief   Request the Controller to respond to Constant Tone Extension Request.
@@ -325,7 +325,7 @@ T_GAP_CAUSE le_aox_conn_cte_request_enable(uint8_t conn_id,
         uint8_t conn_id = 0;
         T_GAP_AOX_CTE_RESPONSE_ENABLE_TYPE enable = GAP_AOX_CTE_RESPONSE_ENABLE;
 
-        le_aox_conn_cte_response_enable(conn_id, enable);
+        T_GAP_CAUSE cause = le_aox_conn_cte_response_enable(conn_id, enable);
    }
 
   T_APP_RESULT app_gap_aox_callback(uint8_t cb_type, void *p_cb_data)
@@ -348,13 +348,13 @@ T_GAP_CAUSE le_aox_conn_cte_request_enable(uint8_t conn_id,
  * \endcode
  */
 T_GAP_CAUSE le_aox_conn_cte_response_enable(uint8_t conn_id,
-		T_GAP_AOX_CTE_RESPONSE_ENABLE_TYPE enable);
+                                            T_GAP_AOX_CTE_RESPONSE_ENABLE_TYPE enable);
 
-/** End of GAP_LE_AOA_AOD_CONN_Exported_Functions
+/** End of GAP_LE_AOX_CONN_Exported_Functions
   * @}
   */
 
-/** End of GAP_LE_AOA_AOD
+/** End of GAP_LE_AOX_CONN
   * @}
   */
 

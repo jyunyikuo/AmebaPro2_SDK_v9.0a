@@ -36,8 +36,8 @@ int mp4_handle(void *p, void *input, void *output)
 	mp4_ctx_t *ctx = (mp4_ctx_t *)p;
 	mm_queue_item_t *input_item = (mm_queue_item_t *)input;
 	struct _mp4_context *mp4_muxer = (struct _mp4_context *)ctx->mp4_muxer;
-
-	if ((input_item->type == AV_CODEC_ID_H264) || (input_item->type == AV_CODEC_ID_MP4A_LATM) || (input_item->type == AV_CODEC_ID_H265)) {
+	if ((input_item->type == AV_CODEC_ID_H264) || (input_item->type == AV_CODEC_ID_MP4A_LATM) || (input_item->type == AV_CODEC_ID_H265) ||
+		(input_item->type == AV_CODEC_ID_PCMU) || (input_item->type == AV_CODEC_ID_PCMA)) {
 		mp4_muxer_handle(mp4_muxer, (uint8_t *)input_item->data_addr, input_item->size, input_item->type, input_item->timestamp);
 	}
 	return ret;
@@ -66,6 +66,8 @@ int mp4_control(void *p, int cmd, int arg)
 		strncpy(mp4_muxer->filename, ctx->params.record_file_name, sizeof(mp4_muxer->filename));
 		mp4_muxer->fatfs_buf_size = ctx->params.fatfs_buf_size;
 		mp4_muxer->mp4_user_callback = ctx->params.mp4_user_callback;
+		mp4_muxer->audio_format = ctx->params.mp4_audio_format;
+		mp4_muxer->audio_duration = ctx->params.mp4_audio_duration;
 		break;
 	case CMD_MP4_GET_PARAMS:
 		memcpy(((mp4_params_t *)arg), &ctx->params, sizeof(mp4_params_t));

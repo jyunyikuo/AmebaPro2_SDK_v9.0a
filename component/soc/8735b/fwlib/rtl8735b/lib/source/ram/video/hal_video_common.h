@@ -32,8 +32,6 @@
 
 #define IS_HEVC(a)  (a==VCENC_VIDEO_CODEC_HEVC)
 #define IS_H264(a)  (a==VCENC_VIDEO_CODEC_H264)
-//#define IS_HEVC(a)  ((a&CODEC_HEVC)>0)
-//#define IS_H264(a)  ((a&CODEC_H264)>0)
 
 #define MAX(a, b) ((a) > (b) ?  (a) : (b))
 #define CLIP3(x, y, z)  ((z) < (x) ? (x) : ((z) > (y) ? (y) : (z)))
@@ -157,31 +155,7 @@ typedef enum {
 	VCENC_BGR444 = 10,                         /* 12-bit RGB 16bpp         */
 	VCENC_RGB888 = 11,                         /* 24-bit RGB 32bpp         */
 	VCENC_BGR888 = 12,                         /* 24-bit RGB 32bpp         */
-#if 0
-	VCENC_RGB101010 = 13,                      /* 30-bit RGB 32bpp         */
-	VCENC_BGR101010 = 14,                       /* 30-bit RGB 32bpp         */
-	VCENC_YUV420_PLANAR_10BIT_I010 = 15,         /* YYYY... UUUU... VVVV...  */
-	VCENC_YUV420_PLANAR_10BIT_P010 = 16,         /* YYYY... UUUU... VVVV...  */
-	VCENC_YUV420_PLANAR_10BIT_PACKED_PLANAR = 17,/* YYYY... UUUU... VVVV...  */
-	VCENC_YUV420_10BIT_PACKED_Y0L2 = 18,         /* Y0U0Y1a0a1Y2V0Y3a2a3Y4U1Y5a4a5Y6V1Y7a6a7... */
-	VCENC_YUV420_PLANAR_8BIT_DAHUA_HEVC = 19,
-	VCENC_YUV420_PLANAR_8BIT_DAHUA_H264 = 20,
-	VCENC_YUV420_SEMIPLANAR_8BIT_FB = 21,              /* YYYY... UVUVUV...        */
-	VCENC_YUV420_SEMIPLANAR_VU_8BIT_FB = 22,           /* YYYY... VUVUVU...        */
-	VCENC_YUV420_PLANAR_10BIT_P010_FB = 23,            /* YYYY... UVUV... */
-	VCENC_YUV420_SEMIPLANAR_101010 = 24,               /* YYYY... UVUV... */
-	VCENC_YUV420_8BIT_TILE_64_4 = 26,                  /* YYYY... VUVU... */
-	VCENC_YUV420_UV_8BIT_TILE_64_4 = 27,               /* YYYY... UVUV... */
-	VCENC_YUV420_10BIT_TILE_32_4 = 28,                  /* YYYY... UVUV... */
-	VCENC_YUV420_10BIT_TILE_48_4 = 29,                  /* YYYY... UVUV... */
-	VCENC_YUV420_VU_10BIT_TILE_48_4 = 30,               /* YYYY... VUVU... */
-	VCENC_YUV420_8BIT_TILE_128_2 = 31,                  /* YYYY... VUVU... */
-	VCENC_YUV420_UV_8BIT_TILE_128_2 = 32,               /* YYYY... UVUV... */
-	VCENC_YUV420_10BIT_TILE_96_2 = 33,                  /* YYYY... UVUV... */
-	VCENC_YUV420_VU_10BIT_TILE_96_2 = 34,               /* YYYY... VUVU... */
-	VCENC_YUV420_8BIT_TILE_8_8 = 35,                    /* YYYY... UVUV... */
-	VCENC_YUV420_10BIT_TILE_8_8 = 36,                   /* YYYY... UVUV... */
-#endif
+
 	VCENC_FORMAT_MAX
 
 } VCEncPictureType;
@@ -193,11 +167,14 @@ typedef enum {
 	VCENC_ROTATE_90L = 2,  /* Rotate 90 degrees counter-clockwise */
 	VCENC_ROTATE_180R = 3  /* Rotate 180 degrees clockwise */
 } VCEncPictureRotation;
+#if 0
 /* Picture mirror for pre-processing */
+
 typedef enum {
 	VCENC_MIRROR_NO = 0, /* no mirror */
 	VCENC_MIRROR_YES = 1 /* mirror */
 } VCEncPictureMirror;
+#endif
 
 /* Picture color space conversion (RGB input) for pre-processing */
 typedef enum {

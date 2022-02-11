@@ -282,7 +282,7 @@ void eap_wsc_server_reset(void *priv)
 
 #if CONFIG_ENABLE_WPS
 xqueue_handle_t queue_for_credential;
-char wps_pin_code[32];
+char wps_pin_code[33];
 u16 config_method;
 u8 wps_password_id;
 #if defined(CONFIG_ENABLE_WPS_AP) && CONFIG_ENABLE_WPS_AP
@@ -376,7 +376,7 @@ static void wps_config_wifi_setting(rtw_network_info_t *wifi, struct dev_credent
 		}
 	}
 
-	printf("\r\nwps_wifi.security_type = %d\n", wifi->security_type);
+	printf("\r\nwps_wifi.security_type = %d\n", (int)wifi->security_type);
 
 	//memcpy(wifi->password, dev_cred->key, dev_cred->key_len);
 	wifi->password = dev_cred->key;
@@ -393,7 +393,7 @@ static int wps_connect_to_AP_by_certificate(rtw_network_info_t *wifi)
 
 	printf("\r\n=============== wifi_certificate_info ===============\n");
 	printf("\r\nwps_wifi.ssid = %s\n", wifi->ssid.val);
-	printf("\r\nsecurity_type = %d\n", wifi->security_type);
+	printf("\r\nsecurity_type = %d\n", (int)wifi->security_type);
 	printf("\r\nwps_wifi.password = %s\n", wifi->password);
 	printf("\r\nssid_len = %d\n", wifi->ssid.len);
 	printf("\r\npassword_len = %d\n", wifi->password_len);
@@ -694,7 +694,7 @@ static rtw_result_t wps_scan_result_handler(unsigned int scanned_AP_num, void *u
 	rtw_scan_result_t *scaned_ap_info;
 	char *scan_buf = NULL;
 	int ret = RTW_SUCCESS;
-	int i = 0;
+	unsigned int i = 0;
 
 	if (scanned_AP_num == 0) {
 		ret = RTW_ERROR;
@@ -729,11 +729,11 @@ static rtw_result_t wps_scan_result_handler(unsigned int scanned_AP_num, void *u
 	}
 EXIT:
 	if (scan_buf) {
-		rtw_mfree(scan_buf, 0);
+		rtw_mfree((u8 *)scan_buf, 0);
 	}
 	printf("\r\nWPS scan done!\r\n");
 	rtw_up_sema(&wps_arg->scan_sema);
-	return RTW_SUCCESS;
+	return ret;
 }
 
 static int wps_find_out_triger_wps_AP(char *target_ssid, unsigned char *target_bssid, u16 config_method)
@@ -791,7 +791,7 @@ static u8 wps_scan_cred_ssid(struct dev_credential *dev_cred)
 
 	//set scan_param for scan
 	rtw_memset(&scan_param, 0, sizeof(rtw_scan_param_t));
-	scan_param.ssid = dev_cred->ssid;
+	scan_param.ssid = (char *)(dev_cred->ssid);
 
 	if ((scanned_ap_num = wifi_scan_networks(&scan_param, 1)) <= 0) {
 		printf("\n\rERROR: wifi scan failed");
@@ -802,8 +802,8 @@ static u8 wps_scan_cred_ssid(struct dev_credential *dev_cred)
 			ssid_found = 1;
 			return ssid_found;
 		}
-		if (wifi_get_scan_records(&scanned_ap_num, scan_buf) < 0) {
-			rtw_mfree(scan_buf, 0);
+		if (wifi_get_scan_records((unsigned int *)(&scanned_ap_num), scan_buf) < 0) {
+			rtw_mfree((u8 *)scan_buf, 0);
 			return ssid_found;
 		}
 
@@ -815,7 +815,7 @@ static u8 wps_scan_cred_ssid(struct dev_credential *dev_cred)
 			}
 		}
 
-		rtw_mfree(scan_buf, 0);
+		rtw_mfree((u8 *)scan_buf, 0);
 	}
 
 	return ssid_found;
@@ -889,7 +889,7 @@ int wps_start(u16 wps_config, char *pin, u8 channel, char *ssid)
 	if (wps_config == WPS_CONFIG_DISPLAY
 		|| wps_config == WPS_CONFIG_KEYPAD) {
 		if (pin) {
-			strncpy(wps_pin_code, pin, sizeof(wps_pin_code));
+			strncpy(wps_pin_code, pin, sizeof(wps_pin_code) - 1);
 		} else {
 			printf("\n\rWPS: PIN is NULL. Not triger WPS.\n");
 			return -1;
@@ -1170,7 +1170,7 @@ void wifi_start_ap_wps_thread(u16 config_methods, char *pin)
 int wps_judge_staion_disconnect(void)
 {
 	rtw_wifi_setting_t setting = {0};
-	unsigned char ssid[33];
+
 
 	if (wifi_get_setting(WLAN0_IDX, &setting) != 0) {
 		return -1;
@@ -1188,7 +1188,7 @@ int wps_judge_staion_disconnect(void)
 #endif
 		break;
 	case RTW_MODE_STA:		//In STA mode
-		if (os_strlen(setting.ssid) > 0) {
+		if (os_strlen((char *)setting.ssid) > 0) {
 			wifi_disconnect();
 		}
 	}

@@ -2,7 +2,7 @@
  * @file     platform_conf.h
  * @brief    The configuration for AmebaPro2 (TM9) platform.
  * @version  V1.00
- * @date     2021-08-04
+ * @date     2021-11-04
  *
  * @note
  *
@@ -43,8 +43,11 @@
 #define IS_CUT_B(chip)                      (CHIP_B_CUT == chip)
 #define IS_CUT_C(chip)                      (CHIP_C_CUT == chip)
 #define IS_AFTER_CUT_A(chip)                (CHIP_A_CUT <= chip)
+#define IS_AFTER_CUT_B(chip)                (CHIP_B_CUT <= chip)
+#define IS_AFTER_CUT_C(chip)                (CHIP_C_CUT <= chip)
 
-#define CONFIG_CHIP_VER                     CHIP_TEST_CUT
+
+#define CONFIG_CHIP_VER							CHIP_B_CUT
 
 #define CONFIG_FPGA                         0
 #define CONFIG_PXP                          0
@@ -100,11 +103,14 @@
 
 #define CONFIG_BOOT_SETMOD_EN               0
 
+#if CONFIG_FPGA
 // Default disable OTP simulation Setting value for autoload; only for FPGA
-#define CONFIG_BOOT_OTP_SIMU_AUTO_EN        0
+#define CONFIG_BOOT_OTP_SIMU_AUTO_EN            (0)
 
 // Default disable Debug port select(interface/pinmux) from otp autoload; only for FPGA
-#define CONFIG_BOOT_DBG_PORT_AUTO_SEL_EN    0
+#define CONFIG_BOOT_DBG_PORT_AUTO_SEL_EN        (0)
+#define CONFIG_SJTAG_SIMU_EN                    (0)   // SIMU SJTAG USING, Default Disable
+#endif
 
 #if CONFIG_ASIC // ASIC (Default enable cache)
 #define CONFIG_ROM_ICACHE_EN                    1
@@ -178,6 +184,10 @@
 #define LOAD_FLAH_IMG_EN                    (1)   // is enable to load the image from the flash
 #endif
 
+#if CONFIG_FPGA
+#define LOAD_NAND_FLASH_IMG_EN              (0)   // is enable to load the image from the NAND flash for FPGA OTP simu flow
+#endif
+
 #if CONFIG_ASIC  // ASIC(Default not run PXP DDR Init flow)
 #define SIMU_DDR_PXP_INIT_FLOW_EN           (0)   // is enable to run PXP DDR init flow
 #endif
@@ -187,10 +197,16 @@
 #else   // other cuts
 #define LOAD_FLAH_IMG_NEW_FORMAT            (1)   // IMG new format(TLV), Default Enable for other cuts
 #endif
-#define LOAD_FLAH_IMG_NEW_FORMAT_IMGHSH_EN  (0)   // IMG new format(TLV) IMG hash check boot, Default Disable
-#define LOAD_FLAH_IMG_NEW_FORMAT_TB_EN      (0)   // IMG new format(TLV) Trust boot, Default Disable
-#define LOAD_FLAH_IMG_NEW_FORMAT_SB_EN      (0)   // IMG new format(TLV) Secure boot, Default Disable
-#define LOAD_RMA0_PTN_EN                    (0)   // Load RMA0 PTN, Default Disable
+#define LOAD_FLAH_IMG_NEW_FORMAT_SECTLD_VRF_EN  (0)   // IMG new format(TLV) IMG sections load hash check, Default Disable
+#define LOAD_FLAH_IMG_NEW_FORMAT_IMGHSH_EN      (0)   // IMG new format(TLV) IMG hash check boot, Default Disable
+#define LOAD_FLAH_IMG_NEW_FORMAT_TB_EN          (0)   // IMG new format(TLV) Trust boot, Default Disable
+#define LOAD_FLAH_IMG_NEW_FORMAT_SB_EN          (0)   // IMG new format(TLV) Secure boot, Default Disable
+
+#if CONFIG_FPGA
+#define LOAD_RMA0_PTN_EN                        (0)   // Load RMA0 PTN, Default Disable
+#define LOAD_RMA_SIMU_EN                        (0)   // Load RMA SIMU, Default Disable
+#endif
+
 
 #define CONFIG_FLASH_XIP_EN                 (0)   // is enable the Flash XIP (eXecute In Place)
 #define CONFIG_EXRAM_LPDDR_EN               (1)   // is DDR memory present on this platform
@@ -223,9 +239,11 @@
 
 // Application layer related configuration
 
-#define CONFIG_SDHOST_FATFS_EN               0       // is enable FAT32 file system for SD host
+#define CONFIG_SDHOST_FATFS_EN               1       // is enable FAT32 file system for SD host
 #define CONFIG_SEMIHOST_EN                   1       // SEGGER semihosting enable
 #define CONFIG_DHRYSTONE_EN                  1       // SEGGER Dhryston enable
+
+#define CONFIG_PMC_LIB_EN                    1       // Use power management libray
 
 #include "verify_conf.h"
 

@@ -109,14 +109,15 @@ extern "C" {
  *
  * \ingroup BT_A2DP
  */
-typedef struct {
-	uint8_t sampling_frequency_mask;
-	uint8_t channel_mode_mask;
-	uint8_t block_length_mask;
-	uint8_t subbands_mask;
-	uint8_t allocation_method_mask;
-	uint8_t min_bitpool;
-	uint8_t max_bitpool;
+typedef struct
+{
+    uint8_t sampling_frequency_mask;
+    uint8_t channel_mode_mask;
+    uint8_t block_length_mask;
+    uint8_t subbands_mask;
+    uint8_t allocation_method_mask;
+    uint8_t min_bitpool;
+    uint8_t max_bitpool;
 } T_BT_A2DP_MEDIA_CODEC_SBC;
 
 /**
@@ -126,12 +127,13 @@ typedef struct {
  *
  * \ingroup BT_A2DP
  */
-typedef struct {
-	uint8_t  object_type_mask;
-	uint16_t sampling_frequency_mask;
-	uint8_t  channel_number_mask;
-	bool     vbr_supported;
-	uint32_t bit_rate;
+typedef struct
+{
+    uint8_t  object_type_mask;
+    uint16_t sampling_frequency_mask;
+    uint8_t  channel_number_mask;
+    bool     vbr_supported;
+    uint32_t bit_rate;
 } T_BT_A2DP_MEDIA_CODEC_AAC;
 
 /**
@@ -141,12 +143,14 @@ typedef struct {
  *
  * \ingroup BT_A2DP
  */
-typedef struct {
-	uint8_t codec_type;
-	union {
-		T_BT_A2DP_MEDIA_CODEC_SBC codec_sbc;
-		T_BT_A2DP_MEDIA_CODEC_AAC codec_aac;
-	} u;
+typedef struct
+{
+    uint8_t codec_type;
+    union
+    {
+        T_BT_A2DP_MEDIA_CODEC_SBC codec_sbc;
+        T_BT_A2DP_MEDIA_CODEC_AAC codec_aac;
+    } u;
 } T_BT_A2DP_STREAM_END_POINT;
 
 /**
@@ -156,17 +160,19 @@ typedef struct {
  *
  * \ingroup BT_A2DP
  */
-typedef enum t_bt_a2dp_role {
-	BT_A2DP_ROLE_SNK = 0x00,
-	BT_A2DP_ROLE_SRC = 0x01,
+typedef enum t_bt_a2dp_role
+{
+    BT_A2DP_ROLE_SNK = 0x00,
+    BT_A2DP_ROLE_SRC = 0x01,
 } T_BT_A2DP_ROLE;
 
-typedef struct t_bt_a2dp_stream_data_ind {
-	uint32_t    bt_clock;
-	uint16_t    seq_num;
-	uint8_t     frame_num;
-	uint16_t    len;
-	uint8_t    *payload;
+typedef struct t_bt_a2dp_stream_data_ind
+{
+    uint32_t    bt_clock;
+    uint16_t    seq_num;
+    uint8_t     frame_num;
+    uint16_t    len;
+    uint8_t    *payload;
 } T_BT_A2DP_STREAM_DATA_IND;
 
 /**

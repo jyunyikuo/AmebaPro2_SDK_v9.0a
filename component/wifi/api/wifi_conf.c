@@ -16,7 +16,7 @@
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD)
 #include "atcmd_wifi.h"
 #endif
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #include "platform_opts_bt.h"
 #endif
 #if defined(CONFIG_ENABLE_WPS_AP) && CONFIG_ENABLE_WPS_AP
@@ -110,7 +110,8 @@ static void _wifi_join_status_indicate(rtw_join_status_t join_status)
 #if CONFIG_LWIP_LAYER
 		LwIP_DHCP_stop(0);
 #if LWIP_AUTOIP
-		LwIP_AUTOIP_STOP(0);
+		/*delete auto ip process for conflict with dhcp*/
+		//LwIP_AUTOIP_STOP(0);
 #endif
 		LwIP_netif_set_link_down(0);
 #endif
@@ -268,13 +269,9 @@ void wifi_set_user_config(void)
 	 */
 	wifi_user_config.rtw_adaptivity_mode = 0;
 	//trp
-#ifdef CONFIG_MP_INCLUDED
 	wifi_user_config.rtw_tx_pwr_lmt_enable = 2;	// 0: disable, 1: enable, 2: Depend on efuse(flash)
-#else
-	wifi_user_config.rtw_tx_pwr_lmt_enable = 1;	// 0: disable, 1: enable, 2: Depend on efuse(flash)
-#endif
 	wifi_user_config.rtw_tx_pwr_by_rate	= 2;	// 0: disable, 1: enable, 2: Depend on efuse(flash)
-	wifi_user_config.rtw_trp_tis_cert_en = 0;
+	wifi_user_config.rtw_trp_tis_cert_en = RTW_TRP_TIS_DISABLE;
 
 	wifi_user_config.rtw_powersave_en = 1;
 
@@ -689,7 +686,7 @@ int wifi_start_ap(rtw_softap_info_t *softAP_config)
 	}
 
 	if (is_promisc_enabled()) {
-		promisc_set(0, NULL, 0);
+		wifi_set_promisc(0, NULL, 0);
 	}
 
 	ret = rtw_wx_set_mode(wlan_idx, RTW_MODE_MASTER);

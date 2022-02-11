@@ -10,36 +10,27 @@
 /* Headers for video */
 #include "avcodec.h"
 
-#if ENABLE_AUDIO_TRACK
-#include "audio_api.h"
-#include "faac.h"
-#include "faac_api.h"
-#endif /* ENABLE_AUDIO_TRACK */
-
 /* Headers for KVS */
 #include "kvs/port.h"
 #include "kvs/nalu.h"
 #include "kvs/restapi.h"
 #include "kvs/stream.h"
 
+#include "mbedtls/config.h"
+
 #define ERRNO_NONE      0
 #define ERRNO_FAIL      __LINE__
 
-#define VIDEO_OUTPUT_BUFFER_SIZE    ( 1920 * 1080 / 4 )
-
 static int kvsProducerModule_video_H;
 static int kvsProducerModule_video_W;
+static int start_recording = 0, initCamera_done = 0, initAudio_done = 0;
+static Kvs_t xKvs = {0};
 
 typedef struct {
 	uint8_t *output_buffer;
 	uint32_t output_buffer_size;
 	uint32_t output_size;
 } VIDEO_BUFFER;
-
-static void sleepInMs(uint32_t ms)
-{
-	vTaskDelay(ms / portTICK_PERIOD_MS);
-}
 
 int KvsVideoInitTrackInfo(VIDEO_BUFFER *pVideoBuf, Kvs_t *pKvs)
 {
@@ -126,9 +117,17 @@ int KvsAudioInitTrackInfo(Kvs_t *pKvs)
 	pKvs->pAudioTrackInfo->uFrequency = AUDIO_SAMPLING_RATE;
 	pKvs->pAudioTrackInfo->uChannelNumber = AUDIO_CHANNEL_NUMBER;
 
-	if (Mkv_generateAacCodecPrivateData(AAC_LC, AUDIO_SAMPLING_RATE, AUDIO_CHANNEL_NUMBER, &pCodecPrivateData, &uCodecPrivateDataLen) == 0) {
+#if USE_AUDIO_AAC
+	res = Mkv_generateAacCodecPrivateData(AUDIO_MPEG_OBJECT_TYPE, AUDIO_SAMPLING_RATE, AUDIO_CHANNEL_NUMBER, &pCodecPrivateData, &uCodecPrivateDataLen);
+#endif
+#if USE_AUDIO_G711
+	res = Mkv_generatePcmCodecPrivateData(AUDIO_PCM_OBJECT_TYPE, AUDIO_SAMPLING_RATE, AUDIO_CHANNEL_NUMBER, &pCodecPrivateData, &uCodecPrivateDataLen);
+#endif
+	if (res == ERRNO_NONE) {
 		pKvs->pAudioTrackInfo->pCodecPrivate = pCodecPrivateData;
 		pKvs->pAudioTrackInfo->uCodecPrivateLen = (uint32_t)uCodecPrivateDataLen;
+	} else {
+		printf("Failed to generate codec private data\r\n");
 	}
 }
 #endif
@@ -340,8 +339,6 @@ static int putMedia(Kvs_t *pKvs)
 	return res;
 }
 
-u8 initCamera_done = 0;
-
 static int initCamera(Kvs_t *pKvs)
 {
 	int res = ERRNO_NONE;
@@ -355,8 +352,6 @@ static int initCamera(Kvs_t *pKvs)
 }
 
 #if ENABLE_AUDIO_TRACK
-u8 initAudio_done = 0;
-
 static int initAudio(Kvs_t *pKvs)
 {
 	int res = ERRNO_NONE;
@@ -403,7 +398,8 @@ void Kvs_run(Kvs_t *pKvs)
 			Iot_credentialTerminate(pToken);
 			if ((pToken = Iot_getCredential(&(pKvs->xIotCredentialReq))) == NULL) {
 				printf("Failed to get Iot credential\r\n");
-				break;
+				sleepInMs(100);
+				continue; //break;
 			} else {
 				pKvs->xServicePara.pcAccessKey = pToken->pAccessKeyId;
 				pKvs->xServicePara.pcSecretKey = pToken->pSecretAccessKey;
@@ -423,6 +419,10 @@ void Kvs_run(Kvs_t *pKvs)
 
 static void ameba_platform_init(void)
 {
+#if defined(MBEDTLS_PLATFORM_C)
+	mbedtls_platform_set_calloc_free(calloc, free);
+#endif
+
 	while (wifi_is_running(WLAN0_IDX) != 1) {
 		vTaskDelay(200 / portTICK_PERIOD_MS);
 	}
@@ -434,8 +434,6 @@ static void ameba_platform_init(void)
 		printf("waiting get epoch timer\r\n");
 	}
 }
-
-Kvs_t xKvs = {0};
 
 static void kvs_producer_thread(void *param)
 {
@@ -452,8 +450,6 @@ static void kvs_producer_thread(void *param)
 	vTaskDelete(NULL);
 }
 
-u8 start_recording = 0;
-
 int kvs_producer_handle(void *p, void *input, void *output)
 {
 	kvs_producer_ctx_t *ctx = (kvs_producer_ctx_t *)p;
@@ -464,9 +460,9 @@ int kvs_producer_handle(void *p, void *input, void *output)
 
 	if (input_item->type == AV_CODEC_ID_H264) {
 		if (initCamera_done) {
-			video_buf.output_buffer_size = VIDEO_OUTPUT_BUFFER_SIZE;
 			video_buf.output_size = input_item->size;
-			video_buf.output_buffer = malloc(VIDEO_OUTPUT_BUFFER_SIZE);
+			video_buf.output_buffer_size = video_buf.output_size;
+			video_buf.output_buffer = malloc(video_buf.output_size);
 			memcpy(video_buf.output_buffer, (uint8_t *)input_item->data_addr, video_buf.output_size);
 
 			if (start_recording) {
@@ -487,11 +483,11 @@ int kvs_producer_handle(void *p, void *input, void *output)
 		}
 	}
 #if ENABLE_AUDIO_TRACK
-	else if (input_item->type == AV_CODEC_ID_MP4A_LATM) {
+	else if (input_item->type == AV_CODEC_ID_MP4A_LATM || input_item->type == AV_CODEC_ID_PCMU || input_item->type == AV_CODEC_ID_PCMA) {
 		if (initAudio_done) {
-			uint8_t *pAacFrame = NULL;
-			pAacFrame = (uint8_t *)malloc(input_item->size);
-			memcpy(pAacFrame, (uint8_t *)input_item->data_addr, input_item->size);
+			uint8_t *pAudioFrame = NULL;
+			pAudioFrame = (uint8_t *)malloc(input_item->size);
+			memcpy(pAudioFrame, (uint8_t *)input_item->data_addr, input_item->size);
 
 			DataFrameIn_t xDataFrameIn = {0};
 			memset(&xDataFrameIn, 0, sizeof(DataFrameIn_t));
@@ -501,7 +497,7 @@ int kvs_producer_handle(void *p, void *input, void *output)
 
 			xDataFrameIn.xClusterType = MKV_SIMPLE_BLOCK;
 
-			xDataFrameIn.pData = (char *)pAacFrame;
+			xDataFrameIn.pData = (char *)pAudioFrame;
 			xDataFrameIn.uDataLen = input_item->size;
 
 			size_t uMemTotal = 0;
@@ -526,7 +522,7 @@ int kvs_producer_control(void *p, int cmd, int arg)
 	switch (cmd) {
 
 	case CMD_KVS_PRODUCER_SET_APPLY:
-		if (xTaskCreate(kvs_producer_thread, ((const char *)"kvs_producer_thread"), 4096, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS) {
+		if (xTaskCreate(kvs_producer_thread, ((const char *)"kvs_producer_thread"), 4096, NULL, tskIDLE_PRIORITY + 1, &ctx->kvs_producer_module_task) != pdPASS) {
 			printf("\n\r%s xTaskCreate(kvs_producer_thread) failed", __FUNCTION__);
 		}
 		break;
@@ -547,6 +543,12 @@ void *kvs_producer_destroy(void *p)
 	if (ctx) {
 		free(ctx);
 	}
+	if (ctx && ctx->kvs_producer_module_task) {
+		vTaskDelete(ctx->kvs_producer_module_task);
+	}
+	start_recording = 0;
+	initCamera_done = 0;
+	initAudio_done = 0;
 
 	return NULL;
 }

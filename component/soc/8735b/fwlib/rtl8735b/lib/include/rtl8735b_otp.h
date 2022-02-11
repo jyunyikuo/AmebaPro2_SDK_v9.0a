@@ -3,7 +3,7 @@
  * @brief    The HAL related definition and macros for the OTP device.
  *           Includes Registers and data type definition.
  * @version  V1.00
- * @date     2020-03-10
+ * @date     2021-08-05
  *
  * @note
  *
@@ -40,6 +40,7 @@ extern "C" {
 
 
 #define AON_BASE_REG        ((volatile AON_TypeDef *)(0))
+#define PON_BASE_REG        ((volatile PON_TypeDef *)(0))
 #define SYSON_BASE_REG      ((volatile SYSON_TypeDef *)(0))
 #define SYSON_S_BASE_REG    ((volatile SYSON_S_TypeDef *)(0))
 
@@ -115,8 +116,20 @@ extern "C" {
 #define OTP_COMP_DAT_LEN        8
 #define OTP_ADC_DAT_LEN         24
 #define OTP_WLRF_DAT_LEN        80
+#define OTP_RMA_ZERO_B_LEN      8
+#define OTP_RMA_MG_NUM_LEN      8
+#define OTP_SZ_RSVD2_LEN        16
+#define OTP_SZ_RSVD1_LEN        32
+
+#define OTP_SZ_KEY_LK_LEN           4
+#define OTP_SZ_RMA_DAT_LK_LEN       1
+#define OTP_SZ_RSVD1_LK_LEN         4
+#define OTP_SZ_RSVD2_LK_LEN         2
 
 #define OTP_SC_DAT_ADDR             0x0
+#define OTP_S_KEY_ROTPK_HSH_ADDR    0x1D0
+#define OTP_S_KEY_SEC_RMA_ADDR      0x1F0
+
 #define OTP_S_KEY_DAT_ADDR          0x250
 #define OTP_SS_KEY_DAT_ADDR         0x370
 #define OTP_UID_DAT_ADDR            0x490
@@ -124,6 +137,9 @@ extern "C" {
 #define OTP_COMP_DAT_ADDR           0x4A0
 #define OTP_ADC_DAT_ADDR            0x4A8
 #define OTP_WLRF_DAT_ADDR           0x4C0
+#define OTP_SZ_LK_ADDR              0x350
+#define OTP_SSZ_LK_ADDR             0x49F
+#define OTP_SZ_LK_VAL               0X00
 
 #if IS_CUT_TEST(CONFIG_CHIP_VER)
 #define OTP_SC_DAT_PRCT_IDX_ADDR        0x5F0
@@ -265,6 +281,44 @@ enum otp_cmp_rslt_e {
 };
 
 
+enum high_val_sz_wlock_offset_e {
+	SZ_WLOCK_ROTPK1_HSH_OFFSET          = 0x0,
+	SZ_WLOCK_ROTPK2_HSH_OFFSET          = 0x4,
+	SZ_WLOCK_IPSEC_CIPHER1_OFFSET       = 0x8,
+	SZ_WLOCK_IPSEC_CIPHER2_OFFSET       = 0xC,
+	SZ_WLOCK_ECDSA_PRIV1_OFFSET         = 0x10,
+	SZ_WLOCK_ECDSA_PRIV2_OFFSET         = 0x14,
+	SZ_WLOCK_RESV1_OFFSET               = 0x18,
+	SZ_WLOCK_RMA_ZERO_OFFSET            = 0x1C,
+	SZ_WLOCK_RMA_MGN_OFFSET             = 0x1D,
+	SZ_WLOCK_RESV2_OFFSET               = 0x1E,
+};
+
+enum high_val_sz_wlock_obj_e {
+	SZ_WLOCK_ROTPK1_HSH                 = 0x0,
+	SZ_WLOCK_ROTPK2_HSH                 = 0x1,
+	SZ_WLOCK_IPSEC_CIPHER1              = 0x2,
+	SZ_WLOCK_IPSEC_CIPHER2              = 0x3,
+	SZ_WLOCK_ECDSA_PRIV1                = 0x4,
+	SZ_WLOCK_ECDSA_PRIV2                = 0x5,
+	SZ_WLOCK_RESV1                      = 0x6,
+	SZ_WLOCK_RMA_ZERO                   = 0x7,
+	SZ_WLOCK_RMA_MGN                    = 0x8,
+	SZ_WLOCK_RESV2                      = 0x9,
+};
+
+enum high_val_ssz_rwlock_obj_e {
+	SSZ_RWLOCK_HUK1                     = 0x0,
+	SSZ_RWLOCK_HUK2                     = 0x1,
+	SSZ_RWLOCK_SJTAG_S1                 = 0x2,
+	SSZ_RWLOCK_SJTAG_S2                 = 0x3,
+	SSZ_RWLOCK_SJTAG_NS1                = 0x4,
+	SSZ_RWLOCK_SJTAG_NS2                = 0x5,
+	SSZ_RWLOCK_SEC_KEY1                 = 0x6,
+	SSZ_RWLOCK_SEC_KEY2                 = 0x7,
+	SSZ_RWLOCK_RMA_HUK                  = 0x8,
+};
+
 /**
   \brief  The data structure for an OTP port HAL operations.
 */
@@ -343,7 +397,13 @@ typedef struct hal_otp_func_stubs_s {
 	uint8_t (*hal_otp_rp_chk_syss)(void);
 	uint8_t (*hal_otp_rp_pg_syss)(void);
 	void (*hal_otp_set_aon_vol)(uint8_t aon_vol);
-	uint32_t reserved[8];  // reserved space for next ROM code version function table extending.
+
+	uint32_t (*hal_otp_sz_key_wr)(uint8_t sz_key_idx, uint8_t *wr_data);
+	uint32_t (*hal_otp_sz_key_rd)(uint8_t sz_key_idx, uint8_t *rd_data);
+	uint32_t (*hal_otp_sz_key_lock)(uint8_t sz_key_idx);
+	uint32_t (*hal_otp_ssz_key_wr)(uint8_t ssz_key_idx, uint8_t *wr_data);
+	uint32_t (*hal_otp_ssz_key_rd)(uint8_t ssz_key_idx, uint8_t *rd_data);
+	uint32_t reserved[3];  // reserved space for next ROM code version function table extending.
 } hal_otp_func_stubs_t;
 
 void hal_rtl_otp_init(void);
@@ -413,6 +473,14 @@ uint8_t hal_rtl_otp_rp_mar_rd_syss(uint8_t auto_en);
 uint8_t hal_rtl_otp_rp_chk_syss(void);
 uint8_t hal_rtl_otp_rp_pg_syss(void);
 void hal_rtl_otp_set_aon_vol(uint8_t aon_vol);
+
+uint32_t hal_rtl_otp_sz_key_wr(uint8_t sz_key_idx, uint8_t *wr_data);
+uint32_t hal_rtl_otp_sz_key_rd(uint8_t sz_key_idx, uint8_t *rd_data);
+uint32_t hal_rtl_otp_sz_key_lock(uint8_t sz_key_idx);
+uint32_t hal_rtl_otp_ssz_key_wr(uint8_t ssz_key_idx, uint8_t *wr_data);
+uint32_t hal_rtl_otp_ssz_key_rd(uint8_t ssz_key_idx, uint8_t *rd_data);
+
+
 
 #ifdef __cplusplus
 }

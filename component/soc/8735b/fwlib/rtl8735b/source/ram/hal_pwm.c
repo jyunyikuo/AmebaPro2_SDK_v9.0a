@@ -333,7 +333,51 @@ hal_status_t hal_pwm_set_duty(hal_pwm_adapter_t *ppwm_adp, u32 period_us,
 hal_status_t hal_pwm_set_duty_ns(hal_pwm_adapter_t *ppwm_adp, u32 period_ns,
 								 u32 duty_ns, u32 start_offset_ns)
 {
-	return hal_pwm_stubs.hal_pwm_set_duty_ns(ppwm_adp, period_ns, duty_ns, start_offset_ns);
+	u32 ticks_25ns; // how many 0.5us of 1 tick
+	u8 pwm_enabled;
+	//pwm_ctrl_t pwm_ctrl;
+	ticks_25ns = 25;
+	if ((HAL_READ32(0x40009800, 0x2C) & 0xC0000) == 0x80000) {
+		if (period_ns > 102375) {
+			DBG_PWM_ERR("hal_rtl_pwm_set_duty_ns: The period_ns can't be larger than 102375ns\r\n");
+			return HAL_NOT_READY;
+		} else if (period_ns < 50) {
+			DBG_PWM_ERR("hal_rtl_pwm_set_duty_ns: The period_ns can't be less than 50ns\r\n");
+			return HAL_NOT_READY;
+		} else {
+			hal_pwm_set_clk_sel(ppwm_adp, 8);  // Assign SCLK
+			PWM_TypeDef *PWM_OBJ = (PWM_TypeDef *)(ppwm_adp->base_addr);
+			u32 PWM_CTRL;
+			PWM_CTRL = PWM_OBJ->PWM_CTRL;
+			//pwm_ctrl.w = ppwm_adp->base_addr->ctrl;
+			pwm_enabled = hal_pwm_enable_sts(ppwm_adp);
+			if (pwm_enabled) {
+				hal_pwm_wait_ctrl_ready(ppwm_adp);
+			}
+			hal_pwm_set_period(ppwm_adp, (((period_ns) / ticks_25ns) - 1));
+			hal_pwm_set_onduty_start(ppwm_adp, ((start_offset_ns) / ticks_25ns));
+			PWM_CTRL &= (~PWM_MASK_DUTY);
+			PWM_CTRL |= (duty_ns) / ticks_25ns;
+			//pwm_ctrl.b.duty = (duty_ns) / ticks_50ns;
+			//DBG_PWM_ERR ("Duty: %d\r\n",pwm_ctrl.b.duty);
+
+			if (pwm_enabled) {
+				PWM_CTRL |= (PWM_BIT_CTRL_SET);
+				//pwm_ctrl.b.ctrl_set = 1;
+			}
+			ppwm_adp->tick_p5us = ticks_25ns / 5000;
+			PWM_OBJ->PWM_CTRL = PWM_CTRL;
+			//ppwm_adp->base_addr->ctrl = pwm_ctrl.w;
+			ppwm_adp->period_us = period_ns / 1000;
+			ppwm_adp->duty_us = duty_ns / 1000;
+		}
+	} else {
+		DBG_PWM_ERR("hal_rtl_pwm_set_duty_ns: The timer group1 should be set 40MHz\r\n");
+		return HAL_NOT_READY;
+	}
+
+	return HAL_OK;
+	//return hal_pwm_stubs.hal_pwm_set_duty_ns(ppwm_adp, period_ns, duty_ns, start_offset_ns);
 }
 
 /**
@@ -516,7 +560,13 @@ void hal_pwm_set_autoadj_loop_int(hal_pwm_adapter_t *ppwm_adp, pwm_lo_callback_t
 hal_status_t hal_pwm_auto_duty_inc(hal_pwm_adapter_t *ppwm_adp, u32 max_duty_us,
 								   u32 step_sz_us, u32 step_period_cnt)
 {
-	return hal_pwm_stubs.hal_pwm_auto_duty_inc(ppwm_adp, max_duty_us, step_sz_us, step_period_cnt);
+	PWM_TypeDef *PWM_OBJ = (PWM_TypeDef *)(ppwm_adp->base_addr);
+	u32 PWM_ADJ_LIM, PWM_ADJ_CTRL;
+	hal_pwm_stubs.hal_pwm_auto_duty_inc(ppwm_adp, max_duty_us, step_sz_us, step_period_cnt);
+	PWM_ADJ_LIM = PWM_ADJ_LIM | (PWM_MASK_DUTY_ADJ_UP_LIM & (((max_duty_us << 1) / ppwm_adp->tick_p5us) << PWM_SHIFT_DUTY_ADJ_UP_LIM));
+	PWM_OBJ->PWM_AUTO_ADJ_LIMIT = PWM_ADJ_LIM;
+
+	return HAL_OK;
 }
 
 /**
@@ -674,7 +724,7 @@ hal_status_t hal_pwm_dma_send(hal_pwm_adapter_t *ppwm_adp, uint8_t *ptx_buf, uin
 	uint32_t block_size;
 
 	if (pgdma_chnl == NULL) {
-		DBG_PWM_ERR("hal_uart_dma_send: No GDMA Chnl\r\n");
+		DBG_PWM_ERR("hal_pwm_dma_send: No GDMA Chnl\r\n");
 		return HAL_NO_RESOURCE;
 	}
 
@@ -687,7 +737,7 @@ hal_status_t hal_pwm_dma_send(hal_pwm_adapter_t *ppwm_adp, uint8_t *ptx_buf, uin
 
 	if (block_size > MAX_DMA_BLOCK_SIZE) {
 		{
-			DBG_PWM_ERR("hal_uart_dma_send: Err: TX length too big(%lu)\r\n", len);
+			DBG_PWM_ERR("hal_pwm_dma_send: Err: TX length too big(%lu)\r\n", len);
 			return HAL_ERR_PARA;
 		}
 	}

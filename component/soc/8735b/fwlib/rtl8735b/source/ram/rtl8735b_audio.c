@@ -30,6 +30,7 @@
 #include "cmsis.h"
 #include "rtl8735b_audio.h"
 #include "hal_sys_ctrl.h"
+#include "hal_sys_ctrl_nsc.h"
 #include "hal_timer.h"
 
 #if !defined(CONFIG_BUILD_NONSECURE)

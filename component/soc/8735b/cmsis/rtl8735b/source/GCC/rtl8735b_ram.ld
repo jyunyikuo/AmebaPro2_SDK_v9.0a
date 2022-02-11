@@ -18,12 +18,15 @@ MEMORY
   /* Jump cross 0x2017BB00 ~ 0x20180000 for S ROM code used*/
   
 /* DDR memory */
-						/* Raymond  workaround for JIRA-537 issue 0x70000000 --> 0x70000040 */
 						  
-  DDR (rwx) 		    : ORIGIN = 0x70000040, LENGTH = 0x72C00000 - 0x70000040 /* 44MB */
-  DDR_NC (rwx)	        : ORIGIN = 0x72C00000, LENGTH = 0x72E00000 - 0x72C00000	/*  2MB */ 
-  VOE        (rwx)      : ORIGIN = 0x72E00000, LENGTH = 0x73000000 - 0x72E00000	/*  2MB */
-  NN         (rwx)      : ORIGIN = 0x73000000, LENGTH = 0x74000000 - 0x73000000	/* 16MB */
+  VOE    (rwx)          : ORIGIN = 0x70000000, LENGTH = 0x70100000 - 0x70000000	/*  1MB */
+  DDR    (rwx) 		    : ORIGIN = 0x70100000, LENGTH = 0x72F00000 - 0x70100000 /* 46MB */
+  DDR_NC (rwx)	        : ORIGIN = 0x72F00000, LENGTH = 0x73000000 - 0x72F00000	/*  1MB */ 
+  NN     (rwx)          : ORIGIN = 0x73000000, LENGTH = 0x74000000 - 0x73000000	/* 16MB */
+  
+  /* XIP Chiper section: TEXT/RODATA in this section can be encrypted (decrypt by SEC) */
+  XIP_FLASH  (rx) 		: ORIGIN = 0x08300000, LENGTH = 0x08380000 - 0x08300000 /* 512KB */
+  XIP_RO_FLASH  (rx) 	: ORIGIN = 0x08380000, LENGTH = 0x08390000 - 0x08380000 /* 64KB */
   
 }
 
@@ -145,7 +148,7 @@ SECTIONS
 		*mpu_config.o(.text*)		
 		*libc_wrap.o(.text*)	
 		*hal_sys_ctrl.o(.text*)
-		*hal_dram_init.o(.text*)
+		*hal_dram*.o(.text*)
 		*hal_gdma.o(.text*)
 		*hal_gpio.o(.text*)
 		*hal_flash.o(.text*)
@@ -154,9 +157,9 @@ SECTIONS
 		*hal_wdt.o(.text*)
 		*hal_pinmux.o(.text*)
 		*hal_spic.o(.text*)
-		
+		*(.ram.hal_pmc.text*)
 		*lib_a*(.text*)
-			
+
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
 	} > RAM
@@ -167,11 +170,18 @@ SECTIONS
 		__fw_img_start__ = .;
 	    __etext = .; 
 		__data_start__ = .;
+		__bl4fw_data_start__ = .;
+        KEEP(*(.bl4fw.ram.data))
+        __bl4fw_data_end__ = .;
+		__bl4voe_data_start__ = .;
+        KEEP(*(.bl4voe.ram.data))
+        __bl4voe_data_end__ = .;
 		*(vtable)
 /*
 */
 		*lib_a*(.data*)
 		*hal_sys_ctrl.o(.data*)
+		*hal_dram*.o(.data*)
 		
 		. = ALIGN(4);
 		/* preinit data */
@@ -195,6 +205,7 @@ SECTIONS
 		PROVIDE_HIDDEN (__fini_array_end = .);
 
 		KEEP(*(.jcr*))
+		*(.ram.hal_pmc.data*)
 		. = ALIGN(4);
 		/* All data end */
 		__data_end__ = .;
@@ -209,29 +220,72 @@ SECTIONS
 		*app_start.o(.rodata*)
 		*lib_a*(.rodata*)
 		*hal_sys_ctrl.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
+		*hal_dram*.o(.rodata*)
 		*hal_flash.o(.rodata*)
 		*hal_spic.o(.rodata*)
 		*hal_uart.o(.rodata*)
 		*hal_pinmux.o(.rodata*)
+		*(.ram.hal_pmc.rodata*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > RAM
 
+	.xip_reserved :
+	{
+		/* XIP image section must start with 4K aligned address, reserve 0x100 for image & section header */
+		. += 0x100;
+	} > XIP_FLASH
+	
+	.xip.code :
+	{
+		/* For xip encrypted section ram image signature */
+		KEEP(*(.xip.ram.sign.s))
+		/* code and RO data in this section will be encrypted */
+		. = ALIGN(16);
+		__xip_code_text_start__ = .;
+
+		*(.xip.text*)							
+
+		. = ALIGN(4);
+		__xip_code_text_end__ = .;
+	} > XIP_FLASH
+	
+	.xip_rodata_reserved :
+	{
+		/* XIP image section must start with 4K aligned address, reserve 0x100 for image & section header */
+		. += 0x100;
+	} > XIP_RO_FLASH
+	
+	.xip.rodata :
+	{
+		/* For xip encrypted section ram image signature */
+		KEEP(*(.xip.ram.sign.s))
+		/* code and RO data in this section will be encrypted */
+		. = ALIGN(16);		
+		
+		/* code and RO data in this section will NOT be encrypted */
+		/* put DMA RO data here */
+		__xip_code_rodata_start__ = .;
+
+		*(.xip.rodata*)
+		
+		. = ALIGN(4);
+		__xip_code_rodata_end__ = .;
+	} > XIP_RO_FLASH
+	
 	.ram.bss :
 	{
 		. = ALIGN(4);
 		__bss_start__ = .;
 		*lib_a*(.bss*)
 		*hal_sys_ctrl.o(.bss*)
-		*hal_dram_init.o(.bss*)
+		*hal_dram*.o(.bss*)
 		*hal_flash.o(.bss*)
         *ram_start.o(.bss*)
 		*hal_spic.o(.bss*)
 		*(.ram.*.bss*)
-
+		*(.ram.hal_pmc.bss*)
         *ram_start.o(COMMON)
-
 	} > RAM
 
 	.non_secure.bss :
@@ -331,6 +385,22 @@ SECTIONS
 		__voe_code_start__ = .;
 		
 	} > VOE	
+	
+	/DISCARD/ :
+    {
+        /* Stabs debugging sections.  */
+        *(.comment)
+        *(.stabstr)
+		*(.ARM.exidx)
+        /*
+        *(.pdr)
+        *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) *(.gnu.attributes)
+        *(.reginfo)
+        *(.rel.dyn)
+        *(.MIPS.abiflags)
+        *(.note.gnu.build-id)
+         */
+    }
 	
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */

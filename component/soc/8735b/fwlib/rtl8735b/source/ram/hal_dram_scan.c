@@ -38,9 +38,9 @@ uint8_t dram_normal_patterns(uint32_t dram_start, uint32_t dram_size, uint32_t a
 			write_start++;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		//check data in reverse order
 		for (access_idx = 0; access_idx < dram_size; access_idx += 4) {
@@ -87,9 +87,9 @@ uint8_t dram_addr_rot(uint32_t dram_start, uint32_t dram_size, uint32_t area_siz
 			read_start_addr = read_start_addr + 4;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		read_start_addr = ((uint32_t) read_start);
 		/*check data reversing order*/
@@ -152,9 +152,9 @@ uint8_t dram_com_addr_rot(uint32_t dram_start, uint32_t dram_size, uint32_t area
 			read_start_addr = read_start_addr + 4;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		read_start_addr = ((uint32_t) read_start);
 		/*check data reversing order*/
@@ -222,9 +222,9 @@ uint8_t dram_byte_access(uint32_t dram_start, uint32_t dram_size, uint32_t area_
 			start_b += 4;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		/* read word and check data */
 		for (offset = 0; offset < dram_size; offset = offset + 4) {
@@ -267,9 +267,9 @@ uint8_t dram_half_word_access(uint32_t dram_start, uint32_t dram_size, uint32_t 
 			start_h += 2;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		/*read work and check data*/
 		for (offset = 0; offset < dram_size; offset = offset + 4) {
@@ -311,9 +311,9 @@ uint8_t dram_walking_of_1(uint32_t dram_start, uint32_t dram_size, uint32_t area
 			start++;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		/*check data*/
 		for (offset = 0; offset < dram_size; offset = offset + 4) {
@@ -356,9 +356,9 @@ uint8_t dram_walking_of_0(uint32_t dram_start, uint32_t dram_size, uint32_t area
 			start++;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
-		dcache_invalidate_by_addr(test_start, dram_size);
+		dcache_invalidate_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		/*check data*/
 		for (offset = 0; offset < dram_size; offset = offset + 4) {
@@ -399,12 +399,12 @@ uint8_t memcpy_test(uint32_t dram_start, uint32_t dram_size, uint32_t area_size)
 			start++;
 		}
 
-		dcache_clean_by_addr(test_start, dram_size);
+		dcache_clean_by_addr((uint32_t *)test_start, (int32_t)dram_size);
 
 		memcpy((uint8_t *)(dram_start + dram_size), (uint8_t *)(test_start), dram_size);
 
-		dcache_clean_by_addr(dram_start + dram_size, dram_size);
-		dcache_invalidate_by_addr(dram_start + dram_size, dram_size);
+		dcache_clean_by_addr((uint32_t *)(dram_start + dram_size), (int32_t)dram_size);
+		dcache_invalidate_by_addr((uint32_t *)(dram_start + dram_size), (int32_t)dram_size);
 
 		/*check uncached data*/
 #if 1
@@ -432,7 +432,7 @@ uint8_t dram_access_long_run_test(void)
 	uint32_t start_addr = DRAM_MEM_BASE + 0x0;
 
 	//uint32_t test_size = 0x10000;
-	uint32_t test_size = 0x4000000;
+	uint32_t test_size = 0x8000000;
 	u32 loop = 0;
 	u32 start, end;
 	dbg_printf("DRAM long run testing ...\r\n");
@@ -614,7 +614,7 @@ void dram_scan_wr_dly(u32 reg_index, u32 shift_index)
 	*addr = 0x88888888;
 }
 
-void dram_calibration_dck_map(void)
+void dram_calibration_dck_hold_map(void)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
 	u32 dck_pi = 0;
@@ -645,7 +645,7 @@ void dram_calibration_dck_map(void)
 	dpi_dev_map->DPI_DPI_CTRL_1 |= (DPI_BIT_FW_SET_RD_DLY | DPI_BIT_WRITE_EN_1);
 
 	dck_pi += 64;
-#if 1
+
 	/*Scan dck hold time window*/
 	while (count_hold < 64) {
 		cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, dck_pi << DPI_SHIFT_POST_PI_SEL0, DPI_MASK_POST_PI_SEL0);
@@ -680,7 +680,43 @@ void dram_calibration_dck_map(void)
 	}
 
 	dbg_printf("dck hold window = %d ~ %d \r\n", (dck_pi % 32), (dck_pi % 32) + count_hold - 1);
-#else
+
+	/*Update when no read*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x0 << DPI_SHIFT_FW_SET_MODE, DPI_MASK_FW_SET_MODE);
+}
+
+void dram_calibration_dck_setup_map(void)
+{
+	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
+	u32 dck_pi = 0;
+	u32 dck_dqs0, dck_dqs1, dck_dq0, dck_dq1;
+	u32 count_hold = 0;
+	u32 count_setup = 0;
+
+	//dbg_printf("dpi_dev_map->DPI_PLL_PI0 = %x\r\n", dpi_dev_map->DPI_PLL_PI0);
+	//dbg_printf("dpi_dev_map->DPI_PLL_PI1 = %x\r\n", dpi_dev_map->DPI_PLL_PI1);
+	//dbg_printf("dpi_dev_map->DPI_PLL_PI2 = %x\r\n", dpi_dev_map->DPI_PLL_PI2);
+
+	dck_pi = dpi_dev_map->DPI_PLL_PI0 & DPI_MASK_POST_PI_SEL0;
+
+	/*Update immediately*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x2 << DPI_SHIFT_FW_SET_MODE, DPI_MASK_FW_SET_MODE);
+
+	dck_dqs0 = dck_pi - ((dpi_dev_map->DPI_PLL_PI0 & DPI_MASK_POST_PI_SEL2) >> DPI_SHIFT_POST_PI_SEL2);
+	dck_dqs1 = dck_pi - ((dpi_dev_map->DPI_PLL_PI0 & DPI_MASK_POST_PI_SEL3) >> DPI_SHIFT_POST_PI_SEL3);
+	dck_dq0 = dck_pi - ((dpi_dev_map->DPI_PLL_PI1 & DPI_MASK_POST_PI_SEL6) >> DPI_SHIFT_POST_PI_SEL6);
+	dck_dq1 = dck_pi - ((dpi_dev_map->DPI_PLL_PI2 & DPI_MASK_POST_PI_SEL7) >> DPI_SHIFT_POST_PI_SEL7);
+	dbg_printf("dck_dqs0 = %d, dck_dqs1 = %d, dck_dq0 = %d, dck_dq1 = %d\r\n", dck_dqs0, dck_dqs1, dck_dq0, dck_dq1);
+
+	dram_odt_alwayson();
+
+	/*FW set write delay chain of data slice*/
+	dpi_dev_map->DPI_DPI_CTRL_1 |= (DPI_BIT_FW_SET_WR_DLY | DPI_BIT_WRITE_EN_0);
+	/*FW set read delay chain of data slice*/
+	dpi_dev_map->DPI_DPI_CTRL_1 |= (DPI_BIT_FW_SET_RD_DLY | DPI_BIT_WRITE_EN_1);
+
+	dck_pi += 64;
+
 	/*Scan dck setup time window*/
 	while (count_setup < 64) {
 		cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, dck_pi << DPI_SHIFT_POST_PI_SEL0, DPI_MASK_POST_PI_SEL0);
@@ -711,13 +747,12 @@ void dram_calibration_dck_map(void)
 	}
 
 	dbg_printf("dck setup window = %d ~ %d \r\n", (dck_pi % 32) - count_setup + 1, (dck_pi % 32));
-#endif
 
 	/*Update when no read*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x0 << DPI_SHIFT_FW_SET_MODE, DPI_MASK_FW_SET_MODE);
 }
 
-void dram_calibration_dcs_map(void)
+void dram_calibration_dcs_hold_map(void)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
 	u32 dcs_pi;
@@ -726,7 +761,6 @@ void dram_calibration_dcs_map(void)
 
 	dcs_pi = (dpi_dev_map->DPI_PLL_PI2 & DPI_MASK_POST_PI_SEL10) >> DPI_SHIFT_POST_PI_SEL10;
 
-#if 1
 	/*Scan dck hold time window*/
 	while (count_hold < 32) {
 		cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI2, dcs_pi << DPI_SHIFT_POST_PI_SEL10, DPI_MASK_POST_PI_SEL10);
@@ -752,7 +786,20 @@ void dram_calibration_dcs_map(void)
 	}
 
 	dbg_printf("dcs_pi hold window = %d ~ %d \r\n", dcs_pi, dcs_pi + count_hold - 1);
-#else
+
+	/*Update when no read*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x0 << DPI_SHIFT_FW_SET_MODE, DPI_MASK_FW_SET_MODE);
+}
+
+void dram_calibration_dcs_setup_map(void)
+{
+	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
+	u32 dcs_pi;
+	u32 count_hold = 0;
+	u32 count_setup = 0;
+
+	dcs_pi = (dpi_dev_map->DPI_PLL_PI2 & DPI_MASK_POST_PI_SEL10) >> DPI_SHIFT_POST_PI_SEL10;
+
 	/*Scan dck setup time window*/
 	while (count_setup < 32) {
 		cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI2, dcs_pi << DPI_SHIFT_POST_PI_SEL10, DPI_MASK_POST_PI_SEL10);
@@ -778,7 +825,6 @@ void dram_calibration_dcs_map(void)
 	}
 
 	dbg_printf("dcs_pi setup window = %d ~ %d \r\n", dcs_pi - count_setup + 1, dcs_pi);
-#endif
 
 	/*Update when no read*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x0 << DPI_SHIFT_FW_SET_MODE, DPI_MASK_FW_SET_MODE);
@@ -1303,10 +1349,13 @@ void dram_r480_calibration(u8 dram_type)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
 
-	DBG_DRAM_INFO("R480 K.\r\n");
+	DBG_DRAM_WARN("R480 K.\r\n");
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
 	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) | (BIT19 | BIT22));
-
+#else
+	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) | (BIT18 | BIT19 | BIT22));
+#endif
 	dpi_dev_map->DPI_PAD_BUS_0 = 0x901B0000;
 
 	if (dram_type == DDR_2) {
@@ -1317,7 +1366,7 @@ void dram_r480_calibration(u8 dram_type)
 		cpu_read_modify_write(&dpi_dev_map->DPI_PAD_BUS_2, (0x37 << DPI_SHIFT_VREF_S_0) | DPI_BIT_VREF_RANGE_0, 0xFF);
 	}
 
-	//dbg_printf("dpi_dev_map->DPI_PAD_BUS_2 = %x\r\n",dpi_dev_map->DPI_PAD_BUS_2);
+	DBG_DRAM_WARN("dpi_dev_map->DPI_PAD_BUS_2 = %x\r\n", dpi_dev_map->DPI_PAD_BUS_2);
 
 	/*zq_ena_nocd2 = 0*/
 	dpi_dev_map->DPI_ZQ_NOCD2 = 0x0;
@@ -1338,8 +1387,8 @@ void dram_r480_calibration(u8 dram_type)
 	/*Wait Calibration done*/
 	while (!(dpi_dev_map->DPI_PAD_RZCTRL_STATUS & 0x1));
 
-	DBG_DRAM_INFO("PAD_ZCTRL_STATUS = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_STATUS);
-	DBG_DRAM_INFO("DPI_PAD_RZCTRL_STATUS = %x\r\n", dpi_dev_map->DPI_PAD_RZCTRL_STATUS);
+	DBG_DRAM_WARN("PAD_ZCTRL_STATUS = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_STATUS);
+	DBG_DRAM_WARN("DPI_PAD_RZCTRL_STATUS = %x\r\n", dpi_dev_map->DPI_PAD_RZCTRL_STATUS);
 
 	/*R480 Calibration disable*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG = 0x3000C99;
@@ -1349,11 +1398,14 @@ void dram_zq_calibration(u8 dram_type)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
 
-	DBG_DRAM_INFO("ZQ K.\r\n");
+	DBG_DRAM_WARN("ZQ K.\r\n");
 
 	/*Enable IBX current*/
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
 	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) | (BIT19 | BIT22));
-
+#else
+	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) | (BIT18 | BIT19 | BIT22));
+#endif
 	dpi_dev_map->DPI_PAD_BUS_0 = 0x901B0000;
 
 	if (dram_type == DDR_2) {
@@ -1393,7 +1445,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set0 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set0 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set1*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x10000000, 0x70000000);
@@ -1410,7 +1462,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set1 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set1 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set2*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x20000000, 0x70000000);
@@ -1427,7 +1479,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set2 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set2 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set3*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x30000000, 0x70000000);
@@ -1444,7 +1496,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set3 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set3 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set4*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x40000000, 0x70000000);
@@ -1461,7 +1513,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set4 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set4 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set5*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x50000000, 0x70000000);
@@ -1478,7 +1530,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set5 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set5 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	/*Enable auto update OCD/ODT set6*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PAD_CTRL_PROG, 0x60000000, 0x70000000);
@@ -1495,7 +1547,7 @@ void dram_zq_calibration(u8 dram_type)
 
 	/*Disable Calibration*/
 	dpi_dev_map->DPI_PAD_CTRL_PROG &= ~DPI_BIT_ZCTRL_START;
-	DBG_DRAM_INFO("set6 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
+	DBG_DRAM_WARN("set6 PAD_ZCTRL_RESULT = %x\r\n", dpi_dev_map->DPI_PAD_ZCTRL_RESULT);
 
 	dpi_dev_map->DPI_ODT_TTCP1_SET0 &= ~DPI_MASK_ODT_TTCP_SET_7_PRE;
 	dpi_dev_map->DPI_ODT_TTCN1_SET0 &= ~DPI_MASK_ODT_TTCP_SET_7_PRE;
@@ -1512,13 +1564,27 @@ void dram_zq_calibration(u8 dram_type)
 	dpi_dev_map->DPI_PAD_BUS_0 |= BIT18;
 
 	/*Disable IBX current*/
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
 	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) & ~(BIT19 | BIT22));
+#else
+	HAL_WRITE32(SYSON_S_BASE, 0x120, HAL_READ32(SYSON_S_BASE, 0x120) & ~(BIT18 | BIT19 | BIT22));
+#endif
 }
 
-void dram_set_pll_frequency(const unsigned short *pll_table)
+void dram_set_pll_frequency(u32 ddr_freq, unsigned short *pll_table)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
 	u32 pll_ctl3_reg = 0;
+
+	if (ddr_freq >= 400) {
+		if (ddr_freq < 500) {
+			pll_table[3] = 0x1;
+		}
+
+		if (ddr_freq < 440) {
+			pll_table[0] = 0x1;
+		}
+	}
 
 	pll_ctl3_reg = ((pll_table[0] << DPI_SHIFT_CCO_BAND)
 					| (pll_table[1] << DPI_SHIFT_CCO_KVCO)
@@ -1535,9 +1601,10 @@ void dram_set_pll_frequency(const unsigned short *pll_table)
 					| (pll_table[12] << DPI_SHIFT_V11_LDO_VSEL));
 
 	dpi_dev_map->DPI_PLL_CTL3 = pll_ctl3_reg;
-	//dbg_printf("pll_ctl3_reg = %x\r\n", pll_ctl3_reg);
+	DBG_DRAM_WARN("pll_ctl3_reg = %x\r\n", pll_ctl3_reg);
 }
 
+#if 1
 void dram_init_clk_frequency(uint32_t ddr_freq)
 {
 	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
@@ -1549,21 +1616,21 @@ void dram_init_clk_frequency(uint32_t ddr_freq)
 
 	/*Disable Spread spectrum*/
 	dpi_dev_map->DPI_SSC0 &= ~DPI_BIT_EN_SSC;//Spread spectrum 533
-	//dbg_printf("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
+	DBG_DRAM_WARN("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
 
 	/*Down Spread -0.5%*/
 	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC1, (0x1CC | (0x4 << DPI_SHIFT_DOT_GRAN)), DPI_MASK_GRAN_SET | DPI_MASK_DOT_GRAN);//Spread spectrum 533
 	/*Down Spread -3%*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_SSC1, (0xAD0 | (0x4 << DPI_SHIFT_DOT_GRAN)), DPI_MASK_GRAN_SET | DPI_MASK_DOT_GRAN);//Spread spectrum 533
-	//dbg_printf("&dpi_dev_map->DPI_SSC1 = %x\r\n", dpi_dev_map->DPI_SSC1);
+	DBG_DRAM_WARN("&dpi_dev_map->DPI_SSC1 = %x\r\n", dpi_dev_map->DPI_SSC1);
 
 	/*No Spread spectrum*/
-	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (f_code | (f_code << DPI_SHIFT_F_CODE_T), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);
+	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (f_code | (f_code << DPI_SHIFT_F_CODE_T)), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);
 	/*Down Spread -0.5%*/
 	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (0x222 | (0x2AA << DPI_SHIFT_F_CODE_T)), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);//Spread spectrum 533
 	/*Down Spread -3%*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (0x777 | (0x2AA << DPI_SHIFT_F_CODE_T)), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);//Spread spectrum 533
-	//dbg_printf("&dpi_dev_map->DPI_SSC2 = %x\r\n", dpi_dev_map->DPI_SSC2);
+	DBG_DRAM_WARN("&dpi_dev_map->DPI_SSC2 = %x\r\n", dpi_dev_map->DPI_SSC2);
 
 	/*No Spread spectrum*/
 	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC3, (n_code | (n_code << DPI_SHIFT_N_CODE_T)), DPI_MASK_N_CODE | DPI_MASK_N_CODE_T);
@@ -1571,12 +1638,70 @@ void dram_init_clk_frequency(uint32_t ddr_freq)
 	//cpu_read_modify_write(&dpi_dev_map->DPI_SSC3, (0xA | (0xA << DPI_SHIFT_N_CODE_T)), DPI_MASK_N_CODE | DPI_MASK_N_CODE_T);//Spread spectrum 533
 	/*Down Spread -3%*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_SSC3, (0x9 | (0xA << DPI_SHIFT_N_CODE_T)), DPI_MASK_N_CODE | DPI_MASK_N_CODE_T);//Spread spectrum 533
-	//dbg_printf("&dpi_dev_map->DPI_SSC3 = %x\r\n", dpi_dev_map->DPI_SSC3);
+	DBG_DRAM_WARN("&dpi_dev_map->DPI_SSC3 = %x\r\n", dpi_dev_map->DPI_SSC3);
 
 	/*Enable Spread spectrum*/
 	dpi_dev_map->DPI_SSC0 |= (DPI_BIT_EN_SSC | DPI_BIT_SSC_FLAG_INIT);//Spread spectrum 533
-	//dbg_printf("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
+	DBG_DRAM_WARN("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
 
-	//dbg_printf("n_cdoe = %d, f_code = %d\r\n", n_code, f_code);
+	//DBG_DRAM_WARN("n_cdoe = %d, f_code = %d\r\n", n_code, f_code);
 }
+#else
+void dram_init_clk_frequency_dss(uint32_t ddr_freq, uint32_t down_spread_percent)
+{
+	DPI_TypeDef *dpi_dev_map = (DPI_TypeDef *) DPI_REG_BASE_ADDR;
+	u32 n_code = 0, f_code = 0, n_code_t = 0, f_code_t = 0, gran_set = 0, dot_gran = 4;
+	u32 value = 0;
+	u32 f_code_change = 0, f_code_step = 0;
+	u8 ss_en = 0;
+
+	n_code_t = (ddr_freq / DDR_PLL_REF_CLK) - 3;
+	f_code_t = ((ddr_freq * 1000 / DDR_PLL_REF_CLK) - (n_code_t + 3) * 1000) * 2048 / 1000;
+	dbg_printf("n_code_t = %d, f_code_t = %d\r\n", n_code_t, f_code_t);
+
+	if (down_spread_percent == 0) {
+		n_code = n_code_t;
+		f_code = f_code_t;
+	} else {
+		value = ((n_code_t + 3) * 2048 + f_code_t) * (1 - 0.01 * down_spread_percent);
+		dbg_printf("value = %d\r\n", value);
+		n_code  = (value / 2048) - 3;
+		f_code  = (value - (n_code + 3) * 2048);
+		dbg_printf("n_code = %d, f_code = %d\r\n", n_code, f_code);
+		f_code_change = (n_code_t * 2048 + f_code_t) - (n_code * 2048 + f_code);
+		f_code_step = (DDR_PLL_REF_CLK * 1000000 / 33000) / 2;
+		gran_set = f_code_change * 2048 / f_code_step;
+		dbg_printf("f_code_change = %d, f_code_step = %d, gran_set = %d\r\n", f_code_change, f_code_step, gran_set);
+		ss_en = 1;
+	}
+
+	if (ss_en) {
+		/*Disable Spread spectrum*/
+		dpi_dev_map->DPI_SSC0 &= ~DPI_BIT_EN_SSC;
+		dbg_printf("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
+
+		/*Set dot_gran & gran_set*/
+		cpu_read_modify_write(&dpi_dev_map->DPI_SSC1, (gran_set | (dot_gran << DPI_SHIFT_DOT_GRAN)), DPI_MASK_GRAN_SET | DPI_MASK_DOT_GRAN);
+		dbg_printf("&dpi_dev_map->DPI_SSC1 = %x\r\n", dpi_dev_map->DPI_SSC1);
+
+		/*Set f_code & f_code_t*/
+		cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (f_code | (f_code_t << DPI_SHIFT_F_CODE_T)), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);
+		dbg_printf("&dpi_dev_map->DPI_SSC2 = %x\r\n", dpi_dev_map->DPI_SSC2);
+
+		/*Set n_code & n_code_t*/
+		cpu_read_modify_write(&dpi_dev_map->DPI_SSC3, (n_code | (n_code_t << DPI_SHIFT_N_CODE_T)), DPI_MASK_N_CODE | DPI_MASK_N_CODE_T);
+		dbg_printf("&dpi_dev_map->DPI_SSC3 = %x\r\n", dpi_dev_map->DPI_SSC3);
+
+		/*Enable Spread spectrum*/
+		dpi_dev_map->DPI_SSC0 |= (DPI_BIT_EN_SSC | DPI_BIT_SSC_FLAG_INIT);
+		dbg_printf("&dpi_dev_map->DPI_SSC0 = %x\r\n", dpi_dev_map->DPI_SSC0);
+	} else {
+		/*Set f_code & f_code_t*/
+		cpu_read_modify_write(&dpi_dev_map->DPI_SSC2, (f_code | (f_code_t << DPI_SHIFT_F_CODE_T)), DPI_MASK_F_CODE | DPI_MASK_F_CODE_T);
+
+		/*Set n_code & n_code_t*/
+		cpu_read_modify_write(&dpi_dev_map->DPI_SSC3, (n_code | (n_code_t << DPI_SHIFT_N_CODE_T)), DPI_MASK_N_CODE | DPI_MASK_N_CODE_T);
+	}
+}
+#endif
 

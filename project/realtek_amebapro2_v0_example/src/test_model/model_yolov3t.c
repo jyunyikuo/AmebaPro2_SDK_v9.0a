@@ -1,5 +1,5 @@
 //------------------------------------------------------
-// yolo v3 tiny
+// Yolov3-tiny & Yolov4-tiny
 //------------------------------------------------------
 #include <math.h>
 #include <stdint.h>
@@ -9,6 +9,8 @@
 #include "module_vipnn.h"
 #include "hal_cache.h"
 
+static float yolov3t_confidence_thresh = 0.5;    // default
+static float yolov3t_nms_thresh = 0.3;      // default
 
 static float anchor_all[6][2] = {
 	{81, 82}, {135, 169}, {344, 319},		// 13x13
@@ -96,21 +98,89 @@ static float inv_sigmoid(float x)
 	return -log((1 - x) / x);
 }
 
+
+//#define NOR_MODEL_OFFSET 0x710000
 #define FLASH_ADDR(x) (0x8000000+x)
+
+#include "fwfs.h"
+static int yolov3t_model_size;
 void *yolov3t_get_network_binary(void)
 {
-	//return (void*)yolo_v3_tiny;
-	//printf("NN model @ 0x09a000000\n\r");
-	return (void *)(FLASH_ADDR(3 * 1024 * 1024) + 128);
-	// return (void*)0x0aa00000;	// acuity yolov3t
+	if (sys_get_boot_sel() == 0) { // NOR
+		// RAW
+		uint8_t *model = (uint8_t *)FLASH_ADDR(nor_pfw_get_address("NN_MDL"));
+		printf("Partition NN model addr = %x\n\r", model);
+
+		if (memcmp(model, "RTL8735B", 8) == 0) {
+			return (void *)&model[4096 + 0x80];
+		} else {
+			return (void *)&model[128];
+		}
+
+		// FW
+		//return (void *)(FLASH_ADDR(NOR_MODEL_OFFSET) + 4096 + 0x80);
+	} else if (sys_get_boot_sel() == 1) { // NAND
+		void *fp = pfw_open("NN_MDL", 0);
+		if (!fp) {
+			printf("yolov3 : cannot open filen\r");
+			return NULL;
+		}
+
+		pfw_seek(fp, 0, SEEK_END);
+		int size = pfw_tell(fp);
+		pfw_seek(fp, 0, SEEK_SET);
+
+		yolov3t_model_size = size;
+		uint8_t *nn_model = malloc(size + 128);
+		if (!nn_model) {
+			printf("yolov3 : out of memory\n\r");
+			pfw_close(fp);
+			return NULL;
+		}
+
+		pfw_read(fp, nn_model, size);
+		pfw_close(fp);
+
+		return nn_model;
+	} else {
+		printf("Cannot use flash firmware in this mode\n\t");
+		while (1);
+	}
+}
+
+void *yolov3t_free_model(void *nn_model)
+{
+	if (sys_get_boot_sel() == 1) { // NAND
+		if (nn_model) {
+			free(nn_model);
+		}
+	}
+}
+
+void *yolov3t_get_network_filename(void)
+{
+	return (void *)"NN_MDL";	// fix name for NN model binary
 }
 
 int yolov3t_get_network_size(void)
 {
-	uint32_t *model = (uint32_t *)FLASH_ADDR(3 * 1024 * 1024);
-	//return yolo_v3_tiny_length;
-	//return 0x00979800;
-	return model[0];
+	if (sys_get_boot_sel() == 0) { // NOR
+		// RAW
+		//uint32_t *model = (uint32_t *)FLASH_ADDR(NOR_MODEL_OFFSET);
+		uint8_t *model = (uint8_t *)FLASH_ADDR(nor_pfw_get_address("NN_MDL"));
+		if (memcmp(model, "RTL8735B", 8) == 0) {
+			//uint32_t *imghdr = (uint32_t*)FLASH_ADDR(NOR_MODEL_OFFSET+4096);
+			uint32_t *imghdr = (uint32_t *)&model[4096];
+			return imghdr[0];
+		} else {
+			uint32_t size = *(uint32_t *)model;
+			return size;
+		}
+	} else {
+		// yolov3t_get_network_binary will be executed before yolov3t_get_network_size
+		// yolov3t_model_size will be ready
+		return yolov3t_model_size;
+	}
 }
 
 static int yolo_in_width, yolo_in_height;
@@ -344,7 +414,7 @@ static int __decode_yolo(data_format_t *fmt, void *out, int i, int j, int n, voi
 	int classes = fmt->dim->size[2] / 3 - 5;
 
 	float p = sigmoid(yolo_get_data(out, fmt, i, j, n, 4, classes));
-	if (p < 0.5) {
+	if (p < yolov3t_confidence_thresh) {
 		return 0;
 	}
 	//int max_i = __find_max_index13(out, i, j, n, 80);
@@ -355,7 +425,7 @@ static int __decode_yolo(data_format_t *fmt, void *out, int i, int j, int n, voi
 		max_i = class_idx[ci];
 		cp = sigmoid(yolo_get_data(out, fmt, i, j, n, 5 + max_i, classes));
 
-		if (cp * p >= 0.5 && box_idx < MAX_BOX_CNT) {
+		if (cp * p >= yolov3t_confidence_thresh && box_idx < MAX_BOX_CNT) {
 
 			float tx = sigmoid(yolo_get_data(out, fmt, i, j, n, 0, classes));
 			float ty = sigmoid(yolo_get_data(out, fmt, i, j, n, 1, classes));
@@ -455,7 +525,7 @@ void *yolov3t_postprocess(void *tensor_out, nn_tensor_param_t *param)
 		}
 	}
 
-	do_nms(classes, box_idx, 0.3);
+	do_nms(classes, box_idx, yolov3t_nms_thresh);
 
 	// dump result
 	/*
@@ -484,9 +554,35 @@ void *yolov3t_postprocess(void *tensor_out, nn_tensor_param_t *param)
 	return &yolo_res;
 }
 
+void set_yolov3t_confidence_thresh(void *confidence_thresh)
+{
+	yolov3t_confidence_thresh = *(float *)confidence_thresh;
+	printf("set yolov3t confidence thresh to %f\n\r", *(float *)confidence_thresh);
+}
+
+void set_yolov3t_nms_thresh(void *nms_thresh)
+{
+	yolov3t_nms_thresh = *(float *)nms_thresh;
+	printf("set yolov3t NMS thresh to %f\n\r", *(float *)nms_thresh);
+}
+
+
 nnmodel_t yolov3_tiny = {
 	.nb 		= yolov3t_get_network_binary,
 	.nb_size 	= yolov3t_get_network_size,
 	.preprocess 	= yolov3t_preprocess,
 	.postprocess 	= yolov3t_postprocess,
+	.freemodel 		= yolov3t_free_model,
+	.model_src 		= MODEL_SRC_MEM,
+	.set_confidence_thresh   = set_yolov3t_confidence_thresh,
+	.set_nms_thresh     = set_yolov3t_nms_thresh,
+};
+
+nnmodel_t yolov3_tiny_fwfs = {
+	.nb 			= yolov3t_get_network_filename,
+	.preprocess 	= yolov3t_preprocess,
+	.postprocess 	= yolov3t_postprocess,
+	.model_src 		= MODEL_SRC_FILE,
+	.set_confidence_thresh   = set_yolov3t_confidence_thresh,
+	.set_nms_thresh     = set_yolov3t_nms_thresh,
 };

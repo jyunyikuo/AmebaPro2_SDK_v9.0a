@@ -30,7 +30,7 @@ extern "C" {
  *                    Macros
  ******************************************************/
 
-#if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE) || (defined CONFIG_PLATFORM_8735B)
 #define CONFIG_PLATFORM_AMEBA_X 1
 #else
 #define CONFIG_PLATFORM_AMEBA_X 0
@@ -48,7 +48,7 @@ extern "C" {
 #if defined ( __ICCARM__ )
 #define __inline__                      inline
 #define __inline                        inline
-#define __inline_definition			//In dialect C99, inline means that a function's definition is provided 
+#define __inline_definition			//In dialect C99, inline means that a function's definition is provided
 //only for inlining, and that there is another definition
 //(without inline) somewhere else in the program.
 //That means that this program is incomplete, because if

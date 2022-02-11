@@ -4,4 +4,5 @@
 #include "module_vipnn.h"
 
 extern nnmodel_t mbnetssd;
+extern nnmodel_t mbnetssd_fwfs;
 #endif

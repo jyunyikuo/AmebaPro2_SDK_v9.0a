@@ -27,6 +27,7 @@
  ******************************************************************************/
 #include "hal_snand.h"
 #include "hal_pinmux.h"
+#include "hal_cache.h"
 #if CONFIG_FPGA
 #include "hal_gpio.h"
 #endif
@@ -572,6 +573,84 @@ hal_snand_pio_read(
 	return retVal;
 } /* hal_snand_pio_read */
 
+uint32_t
+hal_snand_page_read(
+	hal_snafc_adaptor_t *pAdaptor,
+	void *memAddr,
+	uint32_t dataLens,
+	uint32_t blkPageAddr
+)
+{
+	uint32_t retVal = SUCCESS;
+	u32 backup_col_addr = pAdaptor->col_addr;
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+	retVal = hal_rtl_snand_pageRead(pAdaptor, memAddr, dataLens, blkPageAddr); /* ram_s/rtl8735b_snand.c instead of rom_s/rtl8735b_snand.c */
+#else
+	// Workaround dma prefix and postfix
+	if ((pAdaptor != NULL) && (pAdaptor->dma_en == 1)) {
+		pAdaptor->dma_en = 0;
+		u8 *cur_dest = memAddr;
+		u32 size_left = dataLens;
+		u32 cur_page = blkPageAddr;
+		u32 align_size, unalign_size;
+		// Workaround dma engine limit
+		// 1. start address 16 byte align
+		// 2. size 4 byte align
+		// 3. Extend: start address 32 byte align (for cache)
+		u32 unalign_start = (u32)cur_dest & (32 - 1);
+
+		if (unalign_start > 0) {
+			unalign_size = 32 - unalign_start;
+			if (unalign_size > size_left) {
+				unalign_size = size_left;
+			}
+
+			// pio_read first unalign data
+			pAdaptor->dma_en = 0;
+			retVal = hal_snand_stubs.hal_snand_pageRead(pAdaptor, cur_dest, unalign_size, cur_page);
+			if (retVal != SUCCESS) {
+				return retVal;
+			}
+
+			cur_dest += unalign_size;
+			pAdaptor->col_addr += unalign_size;
+			size_left -= unalign_size;
+		}
+
+		if (size_left > 0) {
+			pAdaptor->dma_en = 1;
+			align_size = size_left & (~0x3);
+			// Handle cache
+			dcache_clean_by_addr((u32 *)cur_dest, align_size);
+
+			retVal = hal_snand_stubs.hal_snand_pageRead(pAdaptor, cur_dest, align_size, cur_page);
+			if (retVal != SUCCESS) {
+				return retVal;
+			}
+			// Handle cache
+			dcache_invalidate_by_addr((u32 *)cur_dest, align_size);
+
+			cur_dest += align_size;
+			pAdaptor->col_addr += align_size;
+			size_left -= align_size;
+		}
+
+		if (size_left > 0) {
+			// Handle last unalign 4-byte data
+			pAdaptor->dma_en = 0;
+			retVal = hal_snand_stubs.hal_snand_pageRead(pAdaptor, cur_dest, size_left, cur_page);
+			if (retVal != SUCCESS) {
+				return retVal;
+			}
+		}
+		pAdaptor->dma_en = 1;
+	} else {
+		retVal = hal_snand_stubs.hal_snand_pageRead(pAdaptor, memAddr, dataLens, blkPageAddr);
+	}
+#endif
+	pAdaptor->col_addr = backup_col_addr;
+	return retVal;
+} /* hal_snand_pio_read */
 
 uint32_t
 hal_snand_pio_write(

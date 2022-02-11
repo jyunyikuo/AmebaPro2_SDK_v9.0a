@@ -50,6 +50,8 @@ typedef struct mp4_param_s {
 	char record_file_name[32];
 	uint32_t fatfs_buf_size;
 	uint32_t mp4_user_callback;
+	uint32_t mp4_audio_format;//0:AAC 1:PCM ULAW 2.PCM ALAW
+	uint32_t mp4_audio_duration;//duration 20ms
 } mp4_params_t;
 
 typedef struct mp4_ctx_s {

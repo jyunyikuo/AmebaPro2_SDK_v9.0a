@@ -64,7 +64,7 @@ void ping_test(void *param)
 
 	if (data_size > BUF_SIZE) {
 		printf("\n\r[ERROR] %s: data size error, can't exceed %d", __func__, BUF_SIZE);
-		return;
+		goto Exit;
 	}
 
 	//Ping size = icmp header(8 bytes) + data size
@@ -76,17 +76,32 @@ void ping_test(void *param)
 		return;
 	}
 
-	reply_buf = pvPortMalloc(ping_size);
+#if LWIP_IPV6
+	if (inet_pton(AF_INET6, host, &to_addr6.sin6_addr)) {
+		ping_addr_is_ipv6 = 1;
+		reply_size = ping_size + IP6_HLEN;
+	} else {
+		ping_addr_is_ipv6 = 0;
+#endif
+		reply_size = ping_size + IP_HLEN;
+#if LWIP_IPV6
+	}
+#endif
+
+	reply_buf = pvPortMalloc(reply_size);
 	if (NULL == reply_buf) {
 		vPortFree(ping_buf);
 		printf("\n\r[ERROR] %s: Allocate reply_buf failed", __func__);
-		return;
+		goto Exit;
 	}
 
 	printf("\n\r[%s] PING %s %d(%d) bytes of data\n", __FUNCTION__, host, data_size, sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr) + data_size);
 
 	for (i = 0; ((i < ping_count) || (infinite_loop == 1)) && (!g_ping_terminate); i ++) {
 		ping_socket = socket(AF_INET, SOCK_RAW, IP_PROTO_ICMP);
+		if (ping_socket < 0) {
+			printf("create socket failed\r\n");
+		}
 #if defined(LWIP_SO_SNDRCVTIMEO_NONSTANDARD) && (LWIP_SO_SNDRCVTIMEO_NONSTANDARD == 0)	// lwip 1.5.0
 		struct timeval timeout;
 		timeout.tv_sec = pint_timeout / 1000;
@@ -114,16 +129,17 @@ void ping_test(void *param)
 		sendto(ping_socket, ping_buf, ping_size, 0, (struct sockaddr *) &to_addr, sizeof(to_addr));
 
 		ping_time = xTaskGetTickCount();
-		if ((reply_size = recvfrom(ping_socket, reply_buf, ping_size, 0, (struct sockaddr *) &from_addr, (socklen_t *) &from_addr_len))
-			>= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr)) && (from_addr.sin_addr.s_addr == to_addr.sin_addr.s_addr)) {
+		//ret_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr, (socklen_t *) &from_addr_len);
 
+		if ((reply_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr, (socklen_t *) &from_addr_len))
+			>= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr)) && (from_addr.sin_addr.s_addr == to_addr.sin_addr.s_addr)) {
 			reply_time = xTaskGetTickCount();
 			iphdr = (struct ip_hdr *)reply_buf;
 			pecho = (struct icmp_echo_hdr *)(reply_buf + (IPH_HL(iphdr) * 4));
 
 			if ((pecho->id == PING_ID) && (pecho->seqno == htons(ping_seq))) {
-				printf("\n\r[%s] %d bytes from %s: icmp_seq=%d time=%d ms", __FUNCTION__, reply_size - sizeof(struct icmp_echo_hdr), inet_ntoa(from_addr.sin_addr),
-					   htons(pecho->seqno), (reply_time - ping_time) * portTICK_RATE_MS);
+				printf("\n\r[%s] %d bytes from %s: icmp_seq=%d time=%d ms", __FUNCTION__, data_size, inet_ntoa(from_addr.sin_addr),
+					   htons(pecho->seqno), (int)((reply_time - ping_time) * portTICK_RATE_MS));
 				ping_received_count++;
 				ping_total_time += (reply_time - ping_time) * portTICK_RATE_MS;
 				if ((reply_time - ping_time) > max_time) {
@@ -151,9 +167,20 @@ void ping_test(void *param)
 			   (ping_count - ping_received_count) * 100 / ping_count, ping_received_count ? ping_total_time / ping_received_count : 0);
 		printf("\n\r[%s] min: %d ms, max: %d ms\n\r", __FUNCTION__, min_time, max_time);
 	}
-	vPortFree(ping_buf);
-	vPortFree(reply_buf);
-	vPortFree(host);
+Exit:
+	if (ping_buf) {
+		vPortFree(ping_buf);
+		ping_buf = NULL;
+	}
+
+	if (reply_buf) {
+		vPortFree(reply_buf);
+		reply_buf = NULL;
+	}
+
+	if (host) {
+		vPortFree(host);
+	}
 
 	if (!ping_call) {
 		g_ping_task = NULL;
@@ -185,7 +212,9 @@ int get_ping_report(int *ping_lost)
 void cmd_ping(int argc, char **argv)
 {
 	int argv_count = 2;
+	int argv_count_len = 0;
 	char *host;
+
 	g_ping_terminate = 0;
 
 	if (argc < 2) {
@@ -228,9 +257,10 @@ void cmd_ping(int argc, char **argv)
 					ping_interval = 1;
 					ping_call     = 0;
 					ping_seq      = 0;
-					host = pvPortMalloc(strlen(argv[argv_count - 1]) + 1);
-					memset(host, 0, (strlen(argv[argv_count - 1]) + 1));
-					strncpy(host, argv[argv_count - 1], strlen(argv[argv_count - 1]));
+					argv_count_len = strlen(argv[argv_count - 1]);
+					host = pvPortMalloc(argv_count_len + 1);
+					memset(host, 0, (argv_count_len + 1));
+					strncpy(host, argv[argv_count - 1], argv_count_len);
 					argv_count++;
 				}
 			}

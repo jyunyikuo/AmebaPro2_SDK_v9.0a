@@ -30,14 +30,25 @@ extern uint32_t ConfigDebugMmfInfo;
 #define RTP_WARN_PREFIX        "[RTP Wrn]"
 #define RTP_INFO_PREFIX        "[RTP Inf]"
 
+#ifndef ISP_ERR_PREFIX
 #define ISP_ERR_PREFIX         "[ISP Err]"
+#endif
+#ifndef ISP_WARN_PREFIX
 #define ISP_WARN_PREFIX        "[ISP Wrn]"
+#endif
+#ifndef ISP_INFO_PREFIX
 #define ISP_INFO_PREFIX        "[ISP Inf]"
+#endif
 
+#ifndef ENCODER_ERR_PREFIX
 #define ENCODER_ERR_PREFIX         "[Enc Err]"
+#endif
+#ifndef ENCODER_WARN_PREFIX
 #define ENCODER_WARN_PREFIX        "[Enc Wrn]"
+#endif
+#ifndef ENCODER_INFO_PREFIX
 #define ENCODER_INFO_PREFIX        "[Enc Inf]"
-
+#endif
 
 #define MMF_PRINTK      printf
 

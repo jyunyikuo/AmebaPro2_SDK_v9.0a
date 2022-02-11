@@ -128,6 +128,7 @@ typedef struct MQTTClient {
 
 	Timer cmd_timer;
 	int mqttstatus;
+	int qos_limit;
 } MQTTClient;
 
 #define DefaultClient {0, 0, 0, 0, NULL, NULL, 0, 0, 0}

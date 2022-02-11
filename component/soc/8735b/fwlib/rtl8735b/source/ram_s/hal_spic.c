@@ -2,7 +2,7 @@
  * @file     hal_spic.c
  * @brief    Functions to implement the flash controller operation.
  * @version  1.00
- * @date     2021-04-28
+ * @date     2021-11-22
  *
  * @note
  *
@@ -426,7 +426,7 @@ hal_status_t spic_init(phal_spic_adaptor_t phal_spic_adaptor, u8 spic_bit_mode, 
 	/*STR TX do not have to tx calibration*/
 	if (spic_calibration(phal_spic_adaptor, default_dummy_cycle) != _TRUE) {
 		DBG_SPIF_ERR("spic_init : Calibration Fail, switch back to one bit mode!\r\n");
-		dbg_printf("spic_init : Calibration Fail, switch back to one bit mode!\r\n");
+		//dbg_printf("spic_init : Calibration Fail, switch back to one bit mode!\r\n");
 		hal_flash_return_spi(phal_spic_adaptor);
 	}
 
@@ -462,6 +462,21 @@ hal_status_t spic_deinit(phal_spic_adaptor_t phal_spic_adaptor)
 
 	/*Disable Flash clock*/
 	spic_clock_ctrl(DISABLE);
+
+	/*Necessary?*/
+	phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type].valid = 0;
+
+	return HAL_OK;
+}
+
+hal_status_t spic_deinit_for_xip_img_deinit(phal_spic_adaptor_t phal_spic_adaptor)
+{
+	u8 spic_bit_mode = phal_spic_adaptor->spic_bit_mode;
+	u8 cpu_type = spic_query_system_clk();
+
+	spic_pinmux_ctl(phal_spic_adaptor, DISABLE);
+
+	/*Not Disable NOR Flash clock, because Flash SEC setting for XIP rmp & decrypt will be reset*/
 
 	/*Necessary?*/
 	phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type].valid = 0;

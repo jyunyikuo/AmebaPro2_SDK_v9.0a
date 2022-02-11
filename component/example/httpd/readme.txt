@@ -22,6 +22,8 @@ Description
 Setup Guide
 ~~~~~~~~~~~
         In platform_opts.h, please set #define CONFIG_EXAMPLE_HTTPD  1
+		For AmebaD2 :Amebad2 Changes how example is compiled, and Removed macro controls (CONFIG_EXAMPLE_XXX)in platform_opts.h
+			GCC:use CMD "make xip EXAMPLE=httpd" to compile httpd example.
         In lwipopts.h, please set #define SO_REUSE  1
 
 Parameter Setting and Configuration
@@ -56,5 +58,5 @@ Supported List
 ~~~~~~~~~~~~~~
 [Supported List]
         Supported IC :
-                Ameba-pro, Ameba-Z, Ameba-1, Ameba-Z2, AmebaD
+                Ameba-pro, Ameba-Z, Ameba-1, Ameba-Z2, AmebaD, Ameba-D2
 

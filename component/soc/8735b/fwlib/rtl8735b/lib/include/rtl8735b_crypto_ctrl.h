@@ -927,16 +927,16 @@ typedef struct {
 #endif
 
 	void (*hal_crypto_cache)(IN phal_crypto_adapter_t pcrypto_adapter, IN void *dcache_clean_function, IN void *dcache_invalidate_function);
-
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+	uint32_t reserved[8];
+#else
 	int (*hal_crypto_auth_sk_init)(hal_crypto_adapter_t *pcrypto_adapter, IN const u32 auth_type,
 								   IN const u8 *pAuthKey, IN const u32 sk_cfg);
 	int (*hal_crypto_auth_sk_final)(hal_crypto_adapter_t *pcrypto_adapter, IN const u32 auth_type, OUT u8 *pDigest);
-#if IS_CUT_TEST(CONFIG_CHIP_VER)
-	uint32_t reserved[6];
-#else
 	void (*hal_crypto_set_sk_cfg_info)(IN u32 *psk_cfg, IN const u8 cfg, IN const u8 role);
 	void (*hal_crypto_get_sk_cfg_info)(IN const u32 sk_cfg, IN u8 *pcfg, IN const u8 role);
-	uint32_t reserved[4]; // reserved space for next ROM code version function table extending.
+	int (*hal_crypto_cipher_sk_init)(hal_crypto_adapter_t *pcrypto_adapter, IN const u32 cipher_type, IN const u32 sk_cfg, IN const u32 keylen);
+	uint32_t reserved[3]; // reserved space for next ROM code version function table extending.
 #endif
 } hal_crypto_func_stubs_t;
 
@@ -1084,6 +1084,8 @@ int hal_rtl_crypto_cipher_decrypt(hal_crypto_adapter_t *pcrypto_adapter, IN cons
 								  IN const u8 *iv, IN const u32 ivlen,
 								  IN const u8 *aad, IN const u32 aadlen,
 								  OUT u8 *pResult, OUT u8 *pTag);
+
+int hal_rtl_crypto_cipher_sk_init(hal_crypto_adapter_t *pcrypto_adapter, IN const u32 cipher_type, IN const u32 sk_cfg, IN const u32 keylen);
 
 int hal_rtl_crypto_poly1305_init(hal_crypto_adapter_t *pcrypto_adapter, const u8 *key);
 

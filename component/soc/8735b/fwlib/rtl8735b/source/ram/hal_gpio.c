@@ -219,6 +219,208 @@ hal_status_t hal_gpio_interrupt_clk_sel(gpio_type_t gpio_type, uint8_t clk_sel)
 }
 #endif
 
+/**
+ *  @brief Re-initials a GPIO pin. Excludes: Turning on respective GPIO group's clock/power; No pinmux registration.
+ *           - Maintains H/W state of GPIO pins from previous init.
+ *           - For Fast Camera Boot use only!
+ *
+ *  @param[in]  pgpio_adapter  The GPIO pin adapter.
+ *  @param[in]  pin_name  The GPIO pin.
+ *                - bit[7:5]: the GPIO port number. Each port has 32 GPIO pins.
+ *                - bit[4:0]: the pin number of the GPIO port.
+ *
+ *  @return     None
+ */
+
+void hal_gpio_reinit(phal_gpio_adapter_t pgpio_adapter, uint32_t pin_name)
+{
+
+	DBG_GPIO_INFO("Executing hal_gpio_reinit\r\n");
+
+	uint8_t port_idx = PIN_NAME_2_PORT(pin_name);
+	uint8_t pin_idx = PIN_NAME_2_PIN(pin_name);
+	uint32_t bit_mask;
+	uint32_t *port_idm_en;
+
+	// Default to 0, which safe because if GPIO pin init fails, an early return via HAL_ERR_PARA would ensue.
+	uint8_t port_array_idx = 0; // number indicator for array indices, e.g. pport_dp_sts[] based on port_idx
+
+	// 0: AON GPIO, 1: SYSON GPIO, 2: PON GPIO
+	// Default to 0, which safe because if GPIO pin init fails, an early return via HAL_ERR_PARA would ensue.
+	gpio_type_t gpio_type = 0;
+
+	// Default to 0; to store value of gpio_deb_using (struct member of respective GPIO comm adapters)
+	uint32_t deb_idx_tally = 0;
+
+	/* *** Test Chip ***
+	 * Port A: GPIO IP Port0[5:0] // ***AON*** GPIO 6 pins - GPIOA0 - A5
+	 * Port B: GPIO IP Port2[2:0] // SYSON GPIO 3 pins - GPIOB0 - B2
+	 * Port C: GPIO IP Port2[8:3] // SYSON GPIO 6 pins - GPIOC0 - C5
+	 * Port D: GPIO IP Port2[25:9] // SYSON GPIO 17 pins - GPIOD0 - D16
+	 * Port E1: GPIO IP Port2[31:26] // SYSON GPIO 6 pins - GPIOE0 - E5
+	 * Port E2: GPIO IP Port3[4:0] // SYSON GPIO 5 pins (overflow to Port 3 from Port 2) - GPIOE6 - E10
+	 * Port F: GPIO IP Port1[17:0] // ***PON*** GPIO 18 pins - GPIOF0 - F17
+	 * Port S: GPIO IP Port3[11:5] // SYSON GPIO 7 pins (overflow to Port 3 from Port 2) - GPIO
+
+	 *** MP Chip ***
+	 * Port A: GPIO IP Port0[5:0] // ***AON*** GPIO 6 pins - GPIOA0 - A5
+	 * Port B: GPIO IP Port2[2:0] // SYSON GPIO 3 pins - GPIOB0 - B2
+	 * Port C: GPIO IP Port2[8:3] // SYSON GPIO 6 pins - GPIOC0 - C5
+	 * Port D: GPIO IP Port2[29:9] // SYSON GPIO 21 pins - GPIOD0 - D20
+	 * Port E1: GPIO IP Port2[31:30] // SYSON GPIO 2 pins - GPIOE0 - E1
+	 * Port E2: GPIO IP Port3[4:0] // SYSON GPIO 5 pins (overflow to Port 3 from Port 2) - GPIOE2 - E6
+	 * Port F: GPIO IP Port1[17:0] // ***PON*** GPIO 18 pins - GPIOF0 - F17
+	 * Port S: GPIO IP Port3[11:5] // SYSON GPIO 7 pins (overflow to Port 3 from Port 2) - GPIO
+	 */
+
+	switch (port_idx) {
+	case PORT_A: // AON GPIO
+		port_array_idx = 0;
+		pin_idx += 0;
+		gpio_type = AonGPIO;
+		break;
+	case PORT_B:
+		port_array_idx = 2; // for the sake of pport_odl/odh/odt/dmd arrays; Still at Port A (SYSON GPIO)
+		pin_idx += 0;
+		gpio_type = SysonGPIO;
+		break;
+	case PORT_C:
+		port_array_idx = 2; // for the sake of pport_odl/odh/odt/dmd arrays; Still at Port A (SYSON GPIO)
+		pin_idx += 3; // pin starts at 4th position, Pin 3 (Pin 0 is the 1st pin)
+		gpio_type = SysonGPIO;
+		break;
+	case PORT_D:
+		port_array_idx = 2; // for the sake of pport_odl/odh/odt/dmd arrays; Still at Port A (SYSON GPIO)
+		pin_idx += 9; // pin starts at 10th position, Pin 9 (Pin 0 is the 1st pin)
+		gpio_type = SysonGPIO;
+		break;
+	case PORT_E:
+#if IS_CUT_TEST(CONFIG_CHIP_VER) // Test Chip
+		if (pin_idx > 5) {
+			port_array_idx = 3;
+			pin_idx -= 6; // because pin_idx = 6 will be mapped to Group B[0], pin_idx = 7 mapped to Group B[1], etc
+		} else { // means still at Port A [31:26]
+			port_array_idx = 2;
+			pin_idx += 26;
+		}
+#else // MP Chip
+		if (pin_idx > 1) {
+			port_array_idx = 3;
+			pin_idx -= 2; // because pin_idx = 2 will be mapped to Group B[0], pin_idx = 3 mapped to Group B[1], etc
+		} else { // means still at Port A [31:30]
+			port_array_idx = 2;
+			pin_idx += 30;
+		}
+#endif
+		gpio_type = SysonGPIO;
+		break;
+	case PORT_F: // PON GPIO
+		port_array_idx = 1;
+		pin_idx += 0;
+		gpio_type = PonGPIO;
+		break;
+	case PORT_S: // SYSON GPIO Group B
+		port_array_idx = 3;
+		pin_idx += 5; // pin starts at 6th position, Pin 5 (Pin 0 is the 1st pin)
+		gpio_type = SysonGPIO;
+		break;
+	}
+
+	memset((void *) pgpio_adapter, 0, sizeof(hal_gpio_adapter_t));
+
+	bit_mask = 1 << pin_idx;
+	DBG_GPIO_INFO("bit_mask:%x\r\n", bit_mask);
+
+	pgpio_adapter->pin_name = pin_name;
+	pgpio_adapter->port_idx = port_array_idx;
+	pgpio_adapter->pin_idx = pin_idx;
+	pgpio_adapter->bit_mask = 1 << pin_idx;
+
+	if (port_array_idx == 0) {
+
+		pgpio_adapter->in_port = (uint32_t *)(&(AON_GPIO->GPIO_PORT_A_DP_STS));
+		DBG_GPIO_INFO("in_port: %x\r\n", pgpio_adapter->in_port);
+
+		pgpio_adapter->out0_port = (uint32_t *)(&(AON_GPIO->GPIO_PORT_A_ODL_EN));
+		DBG_GPIO_INFO("out0_port: %x\r\n", pgpio_adapter->out0_port);
+
+		pgpio_adapter->out1_port = (uint32_t *)(&(AON_GPIO->GPIO_PORT_A_ODH_EN));
+		DBG_GPIO_INFO("out1_port: %x\r\n", pgpio_adapter->out1_port);
+
+		pgpio_adapter->outt_port = (uint32_t *)(&(AON_GPIO->GPIO_PORT_A_ODT_EN));
+		DBG_GPIO_INFO("outt_port: %x\r\n", pgpio_adapter->outt_port);
+
+		deb_idx_tally = (*(hal_gpio_stubs.ppaon_gpio_comm_adp))->gpio_deb_using;
+		DBG_GPIO_INFO("AON GPIO reinit deb_using: %x\r\n", (*(hal_gpio_stubs.ppaon_gpio_comm_adp))->gpio_deb_using);
+		for (int i = 0; i < 6; i++) {
+			if ((deb_idx_tally & (1 << i)) == 1) {
+				pgpio_adapter->debounce_idx++;
+			}
+		}
+
+	} else if (port_array_idx == 1) {
+
+		pgpio_adapter->in_port = (uint32_t *)(&(PON_GPIO->GPIO_PORT_A_DP_STS));
+		DBG_GPIO_INFO("in_port: %x\r\n", pgpio_adapter->in_port);
+
+		pgpio_adapter->out0_port = (uint32_t *)(&(PON_GPIO->GPIO_PORT_A_ODL_EN));
+		DBG_GPIO_INFO("out0_port: %x\r\n", pgpio_adapter->out0_port);
+
+		pgpio_adapter->out1_port = (uint32_t *)(&(PON_GPIO->GPIO_PORT_A_ODH_EN));
+		DBG_GPIO_INFO("out1_port: %x\r\n", pgpio_adapter->out1_port);
+
+		pgpio_adapter->outt_port = (uint32_t *)(&(PON_GPIO->GPIO_PORT_A_ODT_EN));
+		DBG_GPIO_INFO("outt_port: %x\r\n", pgpio_adapter->outt_port);
+
+		deb_idx_tally = (*(hal_gpio_stubs.pppon_gpio_comm_adp))->gpio_deb_using;
+		DBG_GPIO_INFO("PON GPIO reinit deb_using: %x\r\n", (*(hal_gpio_stubs.pppon_gpio_comm_adp))->gpio_deb_using);
+		for (int i = 0; i < 16; i++) {
+			if ((deb_idx_tally & (1 << i)) == 1) {
+				pgpio_adapter->debounce_idx++;
+			}
+		}
+
+	} else if (port_array_idx == 2) {
+
+		pgpio_adapter->in_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_A_DP_STS));
+		DBG_GPIO_INFO("in_port: %x\r\n", pgpio_adapter->in_port);
+
+		pgpio_adapter->out0_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_A_ODL_EN));
+		DBG_GPIO_INFO("out0_port: %x\r\n", pgpio_adapter->out0_port);
+
+		pgpio_adapter->out1_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_A_ODH_EN));
+		DBG_GPIO_INFO("out1_port: %x\r\n", pgpio_adapter->out1_port);
+
+		pgpio_adapter->outt_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_A_ODT_EN));
+		DBG_GPIO_INFO("outt_port: %x\r\n", pgpio_adapter->outt_port);
+
+	} else { // port_array_idx == 3
+
+		pgpio_adapter->in_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_B_DP_STS));
+		DBG_GPIO_INFO("in_port: %x\r\n", pgpio_adapter->in_port);
+
+		pgpio_adapter->out0_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_B_ODL_EN));
+		DBG_GPIO_INFO("out0_port: %x\r\n", pgpio_adapter->out0_port);
+
+		pgpio_adapter->out1_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_B_ODH_EN));
+		DBG_GPIO_INFO("out1_port: %x\r\n", pgpio_adapter->out1_port);
+
+		pgpio_adapter->outt_port = (uint32_t *)(&(SYSON_GPIO->GPIO_PORT_B_ODT_EN));
+		DBG_GPIO_INFO("outt_port: %x\r\n", pgpio_adapter->outt_port);
+	}
+
+	if (port_array_idx == 2 || port_array_idx == 3) {
+		deb_idx_tally = (*(hal_gpio_stubs.ppgpio_comm_adp))->gpio_deb_using;
+		DBG_GPIO_INFO("SYSON GPIO reinit deb_using: %x\r\n", (*(hal_gpio_stubs.ppgpio_comm_adp))->gpio_deb_using);
+		for (int i = 0; i < 16; i++) {
+			if ((deb_idx_tally & (1 << i)) == 1) {
+				pgpio_adapter->debounce_idx++;
+			}
+		}
+	}
+
+}
+
 
 /**
  *  @brief Initials a GPIO pin.

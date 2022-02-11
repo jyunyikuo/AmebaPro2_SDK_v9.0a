@@ -239,14 +239,11 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
 			printf("GAP_CONN_STATE_CONNECTED: tx_phy %d, rx_phy %d\r\n", tx_phy, rx_phy);
 		}
 #endif
-
-
 	}
 	break;
 
 	default:
 		break;
-
 	}
 }
 
@@ -1111,7 +1108,7 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
 											 p_gcs_cb_data->cb_content.read_result.p_value));
 				printf("READ VALUE: ");
 				for (int i = 0; i < p_gcs_cb_data->cb_content.read_result.value_size; i++) {
-					printf("0x%2x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
+					printf("0x%02x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
 				}
 				printf("\r\n");
 			}
@@ -1131,30 +1128,30 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
 				APP_PRINT_INFO2("INDICATION: handle 0x%x, value_size %d",
 								p_gcs_cb_data->cb_content.notif_ind.handle,
 								p_gcs_cb_data->cb_content.notif_ind.value_size);
-				APP_PRINT_INFO1("INDICATION VALUE: %b",
+				APP_PRINT_INFO1("INDICATION: value %b",
 								TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
 											 p_gcs_cb_data->cb_content.notif_ind.p_value));
 				printf("INDICATION: handle 0x%x, value_size %d\r\n",
 					   p_gcs_cb_data->cb_content.notif_ind.handle,
 					   p_gcs_cb_data->cb_content.notif_ind.value_size);
-				printf("INDICATION VALUE: ");
+				printf("INDICATION: value ");
 				for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-					printf("0x%2x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value + i));
+					printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value + i));
 				}
 				printf("\r\n");
 			} else {
 				APP_PRINT_INFO2("NOTIFICATION: handle 0x%x, value_size %d",
 								p_gcs_cb_data->cb_content.notif_ind.handle,
 								p_gcs_cb_data->cb_content.notif_ind.value_size);
-				APP_PRINT_INFO1("NOTIFICATION VALUE: %b",
+				APP_PRINT_INFO1("NOTIFICATION: value %b",
 								TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
 											 p_gcs_cb_data->cb_content.notif_ind.p_value));
 				printf("NOTIFICATION: handle 0x%x, value_size %d\r\n",
 					   p_gcs_cb_data->cb_content.notif_ind.handle,
 					   p_gcs_cb_data->cb_content.notif_ind.value_size);
-				printf("NOTIFICATION VALUE: ");
+				printf("NOTIFICATION: value ");
 				for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-					printf("0x%2x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value + i));
+					printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value + i));
 				}
 				printf("\r\n");
 			}

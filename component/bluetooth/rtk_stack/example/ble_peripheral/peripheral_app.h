@@ -25,7 +25,7 @@ extern "C" {
 #include <app_msg.h>
 #include <gap_le.h>
 #include <profile_server.h>
-
+#include <app_flags.h>
 /*============================================================================*
  *                              Variables
  *============================================================================*/
@@ -63,6 +63,10 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data);
   * @retval result @ref T_APP_RESULT
   */
 T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data);
+
+#if F_BT_GAPS_CHAR_WRITEABLE
+T_APP_RESULT gap_service_callback(T_SERVER_ID service_id, void *p_para);
+#endif
 
 #ifdef __cplusplus
 }

@@ -149,7 +149,8 @@ SECTIONS
 		*(vtable)
 		*lib_a*(.data*)
 		*hal_sys_ctrl.o(.data*)
-		
+		*hal_dram*.o(.data*)
+
 		. = ALIGN(4);
 		/* preinit data */
 		PROVIDE_HIDDEN (__preinit_array_start = .);
@@ -194,7 +195,7 @@ SECTIONS
 		*cmd_shell.o(.text*)
 
 		*hal_sys_ctrl.o(.text*)
-		*hal_dram_init.o(.text*)
+		*hal_dram*.o(.text*)
 		*hal_timer.o(.text*)
 		*hal_uart.o(.text*)
 		*hal_gdma.o(.text*)
@@ -213,7 +214,7 @@ SECTIONS
 		__ram_code_rodata_start__ = .;
 		*lib_a*(.rodata*)
 		*hal_sys_ctrl.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
+		*hal_dram*.o(.rodata*)
 		*hal_flash.o(.rodata*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
@@ -227,7 +228,7 @@ SECTIONS
 		*(.bss*)
 		*(COMMON)
 		*hal_sys_ctrl.o(.bss*)
-		*hal_dram_init.o(.bss*)
+		*hal_dram*.o(.bss*)
 		*hal_flash.o(.bss*)
 	} > RAM
 

@@ -15,6 +15,13 @@
 
 #define CONFIG_MMF_AUDIO_DEBUG 0
 #define CONFIG_MMF_AUDIO_ATAF 1
+
+
+typedef enum {
+	USE_AUDIO_AMIC = 0,
+	USE_AUDIO_DMIC = 1
+} audio_mic_type;
+
 #else
 
 #define ENABLE_SPEEX_AEC 0
@@ -72,6 +79,8 @@ typedef struct audio_param_s {
 	audio_sr        sample_rate;	// ASR_8KHZ
 	audio_wl        word_length;	// WL_16BIT
 	audio_mic_gain  mic_gain;		// MIC_40DB
+	audio_dmic_gain dmic_l_gain;    // DMIC_BOOST_24DB
+	audio_dmic_gain dmic_r_gain;    // DMIC_BOOST_24DB
 
 	int				channel;		// 1
 	int				enable_aec;		// 0: off  1: on
@@ -79,6 +88,7 @@ typedef struct audio_param_s {
 	int				enable_agc;		// 0: off, 1: output agc
 	int				enable_vad;		// 0: off  1: input vad
 	int				mix_mode;		// 0
+	uint8_t         use_mic_type;   // 0: AMIC 1: DMIC
 	//...
 } audio_params_t;
 #endif
@@ -100,6 +110,8 @@ typedef struct audio_ctx_s {
 	uint8_t			  run_ns;
 	uint8_t			  run_agc;
 	uint8_t			  run_vad;
+
+	uint8_t           dmic_pin_set;
 
 	uint32_t          sample_rate;
 	uint8_t           word_length; // Byte

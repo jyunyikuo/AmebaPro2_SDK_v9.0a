@@ -167,7 +167,7 @@ void rtsp_put_number(int number, int number_base, uint32_t *number_bitmap, _mute
 {
 	int i = number - number_base;
 	rtw_mutex_get(bitmap_lock);
-	*number_bitmap &= !(1 << i);
+	*number_bitmap &= ~(1 << i);
 	rtw_mutex_put(bitmap_lock);
 }
 

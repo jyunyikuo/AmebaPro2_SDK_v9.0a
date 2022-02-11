@@ -28,7 +28,8 @@
  ******************************************************************************/
 
 #include "rtc_api.h"
-
+#include "hal_rtc_nsc.h"
+#include "hal_rtc.h"
 #if DEVICE_RTC
 #include <time.h>
 #include "timer_api.h"      // software-RTC: use a g-timer for the tick of the RTC
@@ -37,10 +38,10 @@
 
 //static gtimer_t sw_rtc;
 static struct tm rtc_timeinfo;
-static hal_rtc_adapter_t sw_rtc;
+volatile hal_rtc_adapter_t sw_rtc;
 static hal_tm_reg_t rtc_reg;
 static hal_rtc_alarm_t rtc_alarm;
-
+volatile hal_rtc_alarm_t prtc_alarm;
 static int sw_rtc_en;
 static u32 year_now;
 volatile hal_rtc_adapter_t  rtc_veri_adpt;
@@ -57,7 +58,8 @@ static inline bool is_leap_year(unsigned int year)
 void rtc_init(void)
 {
 	// Enable RTC function
-	hal_rtc_init(&sw_rtc);
+	//hal_rtc_init(&sw_rtc);
+	hal_rtc_init(&rtc_veri_adpt);
 	sw_rtc_en = 1;
 }
 
@@ -65,7 +67,8 @@ void rtc_free(void)
 {
 	// Disable RTC function
 	sw_rtc_en = 0;
-	hal_rtc_deinit(&sw_rtc);
+	//hal_rtc_deinit(&sw_rtc);
+	hal_rtc_deinit(&rtc_veri_adpt);
 }
 
 int rtc_isenabled(void)
@@ -146,15 +149,34 @@ u32 rtc_set_alarm(alarm_t *alrm, alarm_irq_handler alarmHandler)
 	//rtc_alarm_handler = alarmHandler;
 
 	/* set alarm */
-	rtc_alarm.sec  = alrm->sec;
-	rtc_alarm.min  = alrm->min;
-	rtc_alarm.hour = alrm->hour;
-	rtc_alarm.yday = alrm->yday;
-	if (hal_rtc_set_alarm(&sw_rtc, &rtc_alarm) != HAL_OK) {
+	prtc_alarm.sec  = alrm->sec;
+	prtc_alarm.min  = alrm->min;
+	prtc_alarm.hour = alrm->hour;
+	prtc_alarm.yday = alrm->yday;
+	hal_rtc_reg_alarm_irq(&rtc_veri_adpt, (rtc_alarm_callback_t)alarmHandler, (void *)0);
+	if (hal_rtc_set_alarm(&rtc_veri_adpt, &prtc_alarm) != HAL_OK) {
 		return _FALSE;
 	}
-	hal_rtc_reg_alarm_irq(&sw_rtc, (rtc_alarm_callback_t)alarmHandler, (void *)0);
+
 	return _TRUE;
+}
+void rtc_set_alarm_time(time_t t, alarm_irq_handler alarmHandler)
+//void rtc_alarm_test(time_t t)
+{
+
+	struct tm *timeinfo = localtime(&t);
+	uint32_t i, year, mon, date;
+	uint32_t day, hour, min, sec;
+
+	prtc_alarm.sec  = timeinfo->tm_sec;
+	prtc_alarm.min  = timeinfo->tm_min;
+	prtc_alarm.hour = timeinfo->tm_hour;
+	prtc_alarm.yday = timeinfo->tm_yday + 1;
+
+	timeinfo->tm_isdst = -1;
+	hal_rtc_reg_alarm_irq(&rtc_veri_adpt, (rtc_alarm_callback_t)alarmHandler, (void *)0);
+	//hal_rtc_reg_alarm_irq(&sw_rtc, (rtc_alarm_callback_t)rtc_handler, (void *)0);
+	hal_rtc_set_alarm((hal_rtc_adapter_t *)&rtc_veri_adpt, (hal_rtc_alarm_t *)&prtc_alarm);
 }
 
 /**

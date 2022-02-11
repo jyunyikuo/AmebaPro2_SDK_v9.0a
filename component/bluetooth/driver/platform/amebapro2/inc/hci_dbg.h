@@ -19,9 +19,9 @@
 #define EFUSE_SW_RSVD2             BIT7
 
 extern uint32_t hci_cfg_sw_val;
-//#define FLASH_BT_PARA_ADDR           (SYS_DATA_FLASH_BASE + 0xFF0)
-//#define READ_SW(sw)                  (sw = HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR))
-#define CHECK_CFG_SW(x)              (hci_cfg_sw_val & x)
+//#define FLASH_BT_PARA_ADDR       (SYS_DATA_FLASH_BASE + 0xFF0)
+//#define READ_SW(sw)              (sw = HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR))
+#define CHECK_CFG_SW(x)            (hci_cfg_sw_val & x)
 
 enum hci_dbg_sw {
     HCI_TP_DEBUG_ERROR,

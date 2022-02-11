@@ -2,6 +2,9 @@
 #include "wifi_ind.h"
 #include "wifi_conf.h"
 #include "platform_stdlib.h"
+#if defined(CONFIG_INIC_IPC_DEV) && CONFIG_INIC_IPC_DEV
+#include "inic_ipc_api.h"
+#endif
 
 /******************************************************
  *                    Globals

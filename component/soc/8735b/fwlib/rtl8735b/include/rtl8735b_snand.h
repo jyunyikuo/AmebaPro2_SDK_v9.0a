@@ -268,10 +268,12 @@ typedef struct snand_bus_cfg_s {
 #define DEFAULT_W_CMD_CYCLE (3)
 #define DEFAULT_W_CMD_OP (SNAND_PROGRAM_LOAD_OP)
 #define DEFAULT_W_CMD_IOWIDTH (SNAFC_SIO_WIDTH)
+#define DEFAULT_W_ADDR_CYCLE (3)
 #define DEFAULT_W_DAT_IOWIDTH (SNAFC_SIO_WIDTH)
 #define DEFAULT_R_CMD_CYCLE (3)
 #define DEFAULT_R_CMD_OP (SNAND_NORMAL_READ_OP)
 #define DEFAULT_R_CMD_IOWIDTH (SNAFC_SIO_WIDTH)
+#define DEFAULT_R_ADDR_CYCLE (3)
 #define DEFAULT_R_DAT_IOWIDTH (SNAFC_SIO_WIDTH)
 
 /* callback function, can use default, or use customer specific wait function */

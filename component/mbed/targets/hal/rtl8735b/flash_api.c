@@ -809,4 +809,3 @@ void flash_mxic_lock_otp(void)
 	spic_tx_cmd_no_check(phal_spic_adaptor, (phal_spic_adaptor->cmd)->wrdi, 0, 0);
 }
 
-

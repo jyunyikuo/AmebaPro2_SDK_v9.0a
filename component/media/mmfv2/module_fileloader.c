@@ -41,8 +41,13 @@ void fileloader_handler(void *p)
 			char sd_fn_in[64];
 			memset(sd_fn_in, 0x00, sizeof(sd_fn_in));
 
-			if (ctx->params.codec_id == AV_CODEC_ID_BMP24) {
-				snprintf(sd_fn_in, sizeof(sd_fn_in), "%s-%04d.bmp", ctx->sd_dataset_file_path_in, load_file_count + 1);
+			if (ctx->params.codec_id == AV_CODEC_ID_BMP || ctx->params.codec_id == AV_CODEC_ID_JPEG) {
+				if (ctx->params.codec_id == AV_CODEC_ID_BMP) {
+					snprintf(sd_fn_in, sizeof(sd_fn_in), "%s-%04d.bmp", ctx->sd_dataset_file_path_in, load_file_count + 1);
+				} else if (ctx->params.codec_id == AV_CODEC_ID_JPEG) {
+					snprintf(sd_fn_in, sizeof(sd_fn_in), "%s-%04d.jpg", ctx->sd_dataset_file_path_in, load_file_count + 1);
+				}
+
 				SD_file_load_file(&test_data_addr, &test_data_len, sd_fn_in);
 
 				if (ctx->decode_in_place) {
@@ -119,7 +124,7 @@ static int SD_file_load_file(uint32_t *pFrame, uint32_t *pSize, char *frameFileP
 	res = f_open(&m_file, path_all, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
 	int file_size = f_size(&m_file);
 	printf("\r\nfile_size: %d bytes.\r\n", file_size);
-	char *file_buf = malloc(file_size);
+	char *file_buf = malloc(DEFAULT_NN_INPUT_LEN);
 	if (file_buf == NULL) {
 		printf("\r\nfile malloc fail!\r\n");
 	}
@@ -158,10 +163,6 @@ int fileloader_control(void *p, int cmd, int arg)
 	case CMD_FILELOADER_SET_TEST_FILE_PATH:
 		memset(ctx->sd_dataset_file_path_in, 0x00, sizeof(ctx->sd_dataset_file_path_in));
 		memcpy((char *)ctx->sd_dataset_file_path_in, (char *)arg, strlen((char *)arg));
-		break;
-	case CMD_FILELOADER_SET_TEST_DIR_PATH:
-		memset(ctx->sd_dataset_dir_path_in, 0x00, sizeof(ctx->sd_dataset_dir_path_in));
-		memcpy((char *)ctx->sd_dataset_dir_path_in, (char *)arg, strlen((char *)arg));
 		break;
 	case CMD_FILELOADER_SET_FILE_NUM:
 		ctx->load_file_num = (int)arg;

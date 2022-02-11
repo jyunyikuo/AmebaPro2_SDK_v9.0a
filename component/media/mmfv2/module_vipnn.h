@@ -4,29 +4,17 @@
 #include <stdint.h>
 #include <vip_lite.h>
 
-#define CMD_VIPNN_SET_MODEL_FILE   	MM_MODULE_CMD(0x00)  // set parameter
-#define CMD_VIPNN_SET_MODEL_MEM    	MM_MODULE_CMD(0x01)  // set parameter
-#define CMD_VIPNN_SET_MODEL_MEM_SZ 	MM_MODULE_CMD(0x02)  // set parameter
-#define CMD_VIPNN_SET_MODEL		 	MM_MODULE_CMD(0x03)  // set parameter
+#define CMD_VIPNN_SET_MODEL             MM_MODULE_CMD(0x00)  // set model
+#define CMD_VIPNN_SET_IN_PARAMS    	    MM_MODULE_CMD(0x01)  // set input imaage parameter
+#define CMD_VIPNN_SET_OUTPUT            MM_MODULE_CMD(0x02)  // set parameter
+#define CMD_VIPNN_SET_DISPPOST          MM_MODULE_CMD(0x03)  // set display callback
 
-#define CMD_VIPNN_SET_PARAMS     	MM_MODULE_CMD(0x04)  // set parameter
-#define CMD_VIPNN_SET_WIDTH     	MM_MODULE_CMD(0x05)
-#define CMD_VIPNN_SET_HEIGHT     	MM_MODULE_CMD(0x06)
-#define CMD_VIPNN_SET_PREPROC     	MM_MODULE_CMD(0x07)
-#define CMD_VIPNN_SET_POSTPROC     	MM_MODULE_CMD(0x08)
-#define CMD_VIPNN_SET_FPS			MM_MODULE_CMD(0x09)
-#define CMD_VIPNN_SET_IN_PARAMS		MM_MODULE_CMD(0x0A)
-#define CMD_VIPNN_SET_DISPPOST		MM_MODULE_CMD(0x0B)
-#define CMD_VIPNN_SET_SETOBJECT		MM_MODULE_CMD(0x0C)
+#define CMD_VIPNN_SET_CONFIDENCE_THRES  MM_MODULE_CMD(0x06)  // set confidence threshold for object detection 
+#define CMD_VIPNN_SET_NMS_THRES         MM_MODULE_CMD(0x07)  // set NMS threshold for object detection 
 
-#define CMD_VIPNN_SET_MODEL_ID		MM_MODULE_CMD(0x0D)
+#define CMD_VIPNN_SET_OUTPUT     	    MM_MODULE_CMD(0x15)  // enable module output
 
-#define CMD_VIPNN_GET_PARAMS     	MM_MODULE_CMD(0x10)  // get parameter
-#define CMD_VIPNN_GET_HWVER     	MM_MODULE_CMD(0x11)
-
-#define CMD_VIPNN_SET_OUTPUT     	MM_MODULE_CMD(0x15)
-
-#define CMD_VIPNN_APPLY				MM_MODULE_CMD(0x20)  // for hardware module
+#define CMD_VIPNN_APPLY				    MM_MODULE_CMD(0x20)  // for hardware module
 
 #define VIPNN_MODEL_FILE 0
 #define VIPNN_MODEL_MEM  1
@@ -78,7 +66,12 @@ typedef int (*nn_preprocess_t)(void *data_in, nn_data_param_t *data_param, void 
 typedef void *(*nn_postprocess_t)(void *tensor_out, nn_tensor_param_t *param);
 typedef void *(*nn_get_nb_t)(void);
 typedef int (*nn_get_nb_size_t)(void);
+typedef void (*nn_free_model_t)(void *);
+typedef void (*nn_set_confidence_thresh_t)(void *confidence_thresh);
+typedef void (*nn_set_nms_thresh_t)(void *nms_thresh);
 
+#define MODEL_SRC_MEM	0
+#define MODEL_SRC_FILE	1
 typedef struct nnmodel_s {
 	// user implement
 	//void *network_binary;
@@ -86,10 +79,16 @@ typedef struct nnmodel_s {
 	nn_get_nb_size_t 	nb_size;
 	nn_preprocess_t 	preprocess;
 	nn_postprocess_t 	postprocess;
+	nn_free_model_t		freemodel;
+	int					model_src;
 
 	// setup by nn modoule
 	nn_tensor_param_t input_param;
 	nn_tensor_param_t output_param;
+
+	// setup thresh in post-processing
+	nn_set_confidence_thresh_t set_confidence_thresh;
+	nn_set_nms_thresh_t set_nms_thresh;
 } nnmodel_t;
 //------------------------------------------------------------------------------
 

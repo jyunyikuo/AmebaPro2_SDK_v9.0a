@@ -60,6 +60,7 @@ typedef struct hal_isp_stream_stream {
 	uint8_t	bits_pixel;
 
 	int buf_release_cnt[MAX_SW_BUFFER];
+	int stream_running;
 
 } hal_isp_stream_t;
 
@@ -83,52 +84,52 @@ typedef struct {
 	uint32_t short_exp_line;
 
 	uint16_t fps;
-    uint8_t path;
+	uint8_t path;
 	uint8_t fixp_sensor;
 
-    uint8_t dec_format;
-    uint8_t raw_source;
-    uint8_t dec_id;
-    uint8_t ssor_clock;
+	uint8_t dec_format;
+	uint8_t raw_source;
+	uint8_t dec_id;
+	uint8_t ssor_clock;
 
-    uint32_t isp_enable;
-    uint32_t vhdr_ctrl;
-    uint32_t vhdr_ratio;
-    uint32_t mipi_buffer;
+	uint32_t isp_enable;
+	uint32_t vhdr_ctrl;
+	uint32_t vhdr_ratio;
+	uint32_t mipi_buffer;
 
-    uint32_t t_line_blk; //ns
+	uint32_t t_line_blk; //ns
 
-    uint32_t interface_clk;
-    uint32_t pixel_clk;
-    uint32_t isp_clk;
+	uint32_t interface_clk;
+	uint32_t pixel_clk;
+	uint32_t isp_clk;
 
-    uint32_t *addr3dnr;
-    uint32_t addr_md0;
-    uint32_t addr_md1;
+//    uint32_t *addr3dnr;
+	uint32_t addr_md0;
+	uint32_t addr_md1;
 
-    uint32_t addr_statics;
+	uint32_t addr_statics;
 
-    //u32 isp_start_init_time;
-    //u32 isp_start_time;
-    //u32 isp_end_time;
+	//u32 isp_start_init_time;
+	//u32 isp_start_time;
+	//u32 isp_end_time;
 
-    void *v_adapter;
+	void *v_adapter;
 
-    int isp_init_done;
-    int stream_condtion; // bit0: yuv_stream0, bit1: yuv_stream1, , bit2: yuv_stream2, bit4: rgb_stream,
-    int isp_device_probe_done;
+	int isp_init_done;
+	int stream_condtion; // bit0: yuv_stream0, bit1: yuv_stream1, , bit2: yuv_stream2, bit4: rgb_stream,
+	int isp_device_probe_done;
 
-    int *iq_addr;		// Added By Raymond for load iq.bin
+	int *iq_addr;		// Added By Raymond for load iq.bin
 
-    uint8_t fcs_ready;
+	uint8_t fcs_ready;
 
 
-    u32 isp_init_start;
-    u32 isp_init_end;
-    u32 isp_open_start;
-    u32 isp_open_end;
-    u32 isp_start_start;
-    u32 isp_start_end;
+	uint32_t isp_init_start;
+	uint32_t isp_init_end;
+	uint32_t isp_open_start;
+	uint32_t isp_open_end;
+	uint32_t isp_start_start;
+	uint32_t isp_start_end;
 
 	uint32_t set_pwr_time;
 	uint32_t set_i2c_time;
@@ -142,14 +143,18 @@ typedef struct {
 
 	uint32_t raw_fmt;
 
+//	uint32_t md_en;
+
+	uint32_t sensor_rst_pin;
+	uint32_t sensor_pwdn_pin;
+	uint32_t sensor_pwrctrl_pin;
+
+} __attribute__((aligned(32))) hal_isp_adapter_t;
 
 
-} hal_isp_adapter_t;
 
 
-
-
-void* isp_soc_start(hal_isp_adapter_t *isp_adpt);
+void *isp_soc_start(hal_isp_adapter_t *isp_adpt);
 int isp_open_stream(hal_isp_adapter_t *isp_adpt, uint8_t stream_id);
 int isp_close_stream(hal_isp_adapter_t *isp_adpt, uint8_t stream_id);
 int isp_get_stream_cnt(uint8_t stream_id);

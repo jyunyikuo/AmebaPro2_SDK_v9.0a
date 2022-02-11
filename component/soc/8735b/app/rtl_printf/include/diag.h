@@ -56,7 +56,7 @@ extern u32 ConfigDebugWarn;
 #endif
 #endif
 
-#if !defined(CONFIG_BUILD_SECURE) && !defined(CONFIG_BUILD_NONSECURE)
+#if !defined(CONFIG_BUILD_SECURE) && !defined(CONFIG_BUILD_NONSECURE) && !defined(ROM_REGION)
 #define DBG_ERR_MSG_ON(x)       do {(ConfigDebugErr |= (x)); (ConfigDebugErr_NS |= (x));} while(0)
 #define DBG_WARN_MSG_ON(x)      do {(ConfigDebugWarn |= (x)); (ConfigDebugWarn_NS |= (x));} while(0)
 #define DBG_INFO_MSG_ON(x)      do {(ConfigDebugInfo |= (x)); (ConfigDebugInfo_NS |= (x));} while(0)
@@ -64,6 +64,7 @@ extern u32 ConfigDebugWarn;
 #define DBG_ERR_MSG_OFF(x)      do {(ConfigDebugErr &= ~(x)); (ConfigDebugErr_NS &= ~(x));} while(0)
 #define DBG_WARN_MSG_OFF(x)     do {(ConfigDebugWarn &= ~(x)); (ConfigDebugWarn_NS &= ~(x));} while(0)
 #define DBG_INFO_MSG_OFF(x)     do {(ConfigDebugInfo &= ~(x)); (ConfigDebugInfo_NS &= ~(x));} while(0)
+
 #else
 #define DBG_ERR_MSG_ON(x)       (ConfigDebugErr |= (x))
 #define DBG_WARN_MSG_ON(x)      (ConfigDebugWarn |= (x))

@@ -23,6 +23,13 @@
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
 
 #if defined(CONFIG_PLATFORM_8735B)
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+#define DMIC_CLK_PIN    PE_2 //PE_0
+#define DMIC_DATA_PIN   PE_4
+#else
+#define DMIC_CLK_PIN    PD_16 //PD_14
+#define DMIC_DATA_PIN   PD_18
+#endif
 #define AUDIO_DMA_PAGE_NUM 4
 #define TX_CACHE_DEPTH	16
 #define RX_CACHE_DEPTH	(AUDIO_DMA_PAGE_NUM*2)
@@ -674,6 +681,7 @@ int audio_control(void *p, int cmd, int arg)
 		if (ctx->params.enable_aec && audio_rx_buf) {
 			xQueueReset(audio_rx_buf);
 		}
+
 		if (ctx->params.sample_rate == ASR_8KHZ || ctx->params.sample_rate == ASR_16KHZ) {
 			sample_rate = audio_get_samplerate(ctx->params.sample_rate);
 
@@ -754,23 +762,38 @@ int audio_control(void *p, int cmd, int arg)
 		audio_tx_stop(ctx->audio);
 		audio_rx_stop(ctx->audio);
 		audio_deinit(ctx->audio);
+#if defined(CONFIG_PLATFORM_8735B)
+		if (ctx->params.use_mic_type == USE_AUDIO_AMIC) {
+			audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, MIC_SINGLE_EDNED, AUDIO_CODEC_2p8V);
+			printf("Init AMIC \r\n");
+		} else if (ctx->params.use_mic_type == USE_AUDIO_DMIC) {
+			if (ctx->dmic_pin_set == 0) {
+				audio_dmic_pinmux(ctx->audio, DMIC_CLK_PIN, DMIC_DATA_PIN);
+				ctx->dmic_pin_set = 1;
+			}
+			audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, AUDIO_LEFT_DMIC, AUDIO_CODEC_2p8V); //AUDIO_LEFT_DMIC, MIC_SINGLE_EDNED
+			printf("Init DMIC \r\n");
+		} else {
+			printf("unsupported MIC type \r\n");
+		}
 
+		//audio_adc_digital_vol(ctx->audio, 0x50);
+		audio_dac_digital_vol(ctx->audio, 0xAF);
+		//audio_headphone_analog_mute(ctx->audio, 1);
+
+		audio_set_dma_buffer(ctx->audio, dma_txdata, dma_rxdata, AUDIO_DMA_PAGE_SIZE, AUDIO_DMA_PAGE_NUM);
+		//Init RX dma
+		//audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
+
+		//Init TX dma
+		//audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
+#else
 		audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, MIC_SINGLE_EDNED, AUDIO_CODEC_2p8V);
 		//audio_mic_analog_gain(ctx->audio, 1, AUDIO_MIC_40DB);
 		//audio_adc_digital_vol(ctx->audio, 0x7F);
 		audio_dac_digital_vol(ctx->audio, 0xAF);
 		//audio_headphone_analog_mute(ctx->audio, 1);
-
 		//Init RX dma
-#if defined(CONFIG_PLATFORM_8735B)
-		audio_set_dma_buffer(ctx->audio, dma_txdata, dma_rxdata, AUDIO_DMA_PAGE_SIZE, AUDIO_DMA_PAGE_NUM);
-		//audio_set_rx_dma_buffer(ctx->audio, dma_rxdata, RX_PAGE_SIZE);
-		audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
-
-		//Init TX dma
-		//audio_set_tx_dma_buffer(ctx->audio, dma_txdata, TX_PAGE_SIZE);
-		audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
-#else
 		audio_set_rx_dma_buffer(ctx->audio, dma_rxdata, RX_PAGE_SIZE);
 		audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
 
@@ -781,11 +804,83 @@ int audio_control(void *p, int cmd, int arg)
 
 		audio_set_param(ctx->audio, ctx->params.sample_rate, ctx->params.word_length);  // ASR_8KHZ, ASR_16KHZ //ASR_48KHZ
 		printf("sample rate = %d\r\n", ctx->params.sample_rate);
+
+#if defined(CONFIG_PLATFORM_8735B)
+		for (int i = 0; i < (AUDIO_DMA_PAGE_NUM - 1); i++) {
+			uint8_t *ptx_buf_reset = audio_get_tx_page_adr(ctx->audio);
+			if (ptx_buf_reset) {
+				memset(ptx_buf_reset, 0x0, TX_PAGE_SIZE);
+				audio_set_tx_page(ctx->audio, ptx_buf_reset);
+			}
+			audio_set_rx_page(ctx->audio);
+		}
+		if (ctx->params.use_mic_type == USE_AUDIO_AMIC) { // AMIC
+			audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain); // default 0DB
+		} else if (ctx->params.use_mic_type == USE_AUDIO_DMIC) { // DMIC
+			audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain);
+			audio_l_dmic_gain(ctx->audio, ctx->params.dmic_l_gain);
+			//audio_r_dmic_gain(ctx->audio, ctx->params.dmic_r_gain);
+		}
+#else
 		audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain); // default 0DB
+#endif
+
 		audio_trx_start(ctx->audio);
 		break;
 #endif
 	case CMD_AUDIO_APPLY:
+#if defined(CONFIG_PLATFORM_8735B)
+		if (ctx->params.use_mic_type == USE_AUDIO_AMIC) { // AMIC
+			printf("Init AMIC \r\n");
+			//Audio Init
+			audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, MIC_SINGLE_EDNED, AUDIO_CODEC_2p8V);
+
+			audio_set_dma_buffer(ctx->audio, dma_txdata, dma_rxdata, AUDIO_DMA_PAGE_SIZE, AUDIO_DMA_PAGE_NUM);
+		} else if (ctx->params.use_mic_type == USE_AUDIO_DMIC) { // DMIC
+			printf("Init DMIC \r\n");
+			//DMIC pinmux
+			if (ctx->dmic_pin_set == 0) {
+				audio_dmic_pinmux(ctx->audio, DMIC_CLK_PIN, DMIC_DATA_PIN);
+				ctx->dmic_pin_set = 1;
+			}
+
+			//Audio Init
+			audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, AUDIO_LEFT_DMIC, AUDIO_CODEC_2p8V); //AUDIO_LEFT_DMIC, MIC_SINGLE_EDNED
+
+			audio_set_dma_buffer(ctx->audio, dma_txdata, dma_rxdata, AUDIO_DMA_PAGE_SIZE, AUDIO_DMA_PAGE_NUM);
+		} else {
+			printf("unsupported MIC type \r\n");
+			goto audio_control_fail;
+		}
+
+		audio_adc_digital_vol(ctx->audio, 0x50);
+		audio_dac_digital_vol(ctx->audio, 0xAF);
+
+		//Init RX dma
+		audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
+
+		//Init TX dma
+		audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
+#else
+		audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, MIC_SINGLE_EDNED, AUDIO_CODEC_2p8V);
+		//audio_mic_analog_gain(ctx->audio, 1, AUDIO_MIC_40DB);
+		audio_adc_digital_vol(ctx->audio, 0x50);
+		audio_dac_digital_vol(ctx->audio, 0xAF);
+		//audio_headphone_analog_mute(ctx->audio, 1);
+
+		//Init RX dma
+		audio_set_rx_dma_buffer(ctx->audio, dma_rxdata, RX_PAGE_SIZE);
+		audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
+
+		//Init TX dma
+		audio_set_tx_dma_buffer(ctx->audio, dma_txdata, TX_PAGE_SIZE);
+		audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
+#endif
+		// Init TX Cache Queue
+		//audio_tx_pcm_queue = xQueueCreate(AUDIO_TX_PCM_QUEUE_LENGTH, AUDIO_DMA_PAGE_SIZE);
+		//if(!audio_tx_pcm_queue)
+		//	goto audio_create_fail;
+
 #if ENABLE_ASP==1
 		//if (ctx->params.sample_rate != ASR_8KHZ && ctx->params.sample_rate != ASR_16KHZ){
 		//	printf("\r\n aec error : sample rate should be 8KHz if enable AEC \n\r");
@@ -875,13 +970,21 @@ int audio_control(void *p, int cmd, int arg)
 		}
 		audio_set_param(ctx->audio, ctx->params.sample_rate, ctx->params.word_length);  // ASR_8KHZ, ASR_16KHZ //ASR_48KHZ
 		/* Use (DMA page count -1) because occur RX interrupt in first */
-		u8 *ptx_buf;
 		for (int i = 0; i < (AUDIO_DMA_PAGE_NUM - 1); i++) {
-			ptx_buf = audio_get_tx_page_adr(ctx->audio);
+			uint8_t *ptx_buf = audio_get_tx_page_adr(ctx->audio);
 			if (ptx_buf) {
+				memset(ptx_buf, 0x0, TX_PAGE_SIZE);
 				audio_set_tx_page(ctx->audio, ptx_buf);
 			}
 			audio_set_rx_page(ctx->audio);
+		}
+
+		if (ctx->params.use_mic_type == USE_AUDIO_AMIC) { // AMIC
+			audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain); // default 0DB
+		} else if (ctx->params.use_mic_type == USE_AUDIO_DMIC) { // DMIC
+			audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain);
+			audio_l_dmic_gain(ctx->audio, ctx->params.dmic_l_gain);
+			//audio_r_dmic_gain(ctx->audio, ctx->params.dmic_r_gain);
 		}
 #else
 		if (ctx->params.sample_rate == ASR_8KHZ) {
@@ -908,8 +1011,10 @@ int audio_control(void *p, int cmd, int arg)
 			ctx->word_length = 3;
 		}
 		audio_set_param(ctx->audio, ctx->params.sample_rate, ctx->params.word_length);  // ASR_8KHZ, ASR_16KHZ //ASR_48KHZ
-#endif
+
 		audio_mic_analog_gain(ctx->audio, 1, ctx->params.mic_gain); // default 0DB
+#endif
+
 		audio_trx_start(ctx->audio);
 		printf("sample rate: %d\r\n", ctx->sample_rate);
 		//audio_set_tx_page(ctx->audio, audio_get_tx_page_adr(ctx->audio));
@@ -1053,13 +1158,6 @@ void *audio_create(void *parent)
 
 #if ENABLE_ASP==1
 	memset(last_tx_buf, 0, AUDIO_DMA_PAGE_SIZE);	//MIC_SINGLE_EDNED
-#endif
-
-	audio_init(ctx->audio, OUTPUT_SINGLE_EDNED, MIC_SINGLE_EDNED, AUDIO_CODEC_2p8V);
-	//audio_mic_analog_gain(ctx->audio, 1, AUDIO_MIC_40DB);
-	audio_adc_digital_vol(ctx->audio, 0x50);
-	audio_dac_digital_vol(ctx->audio, 0xAF);
-	//audio_headphone_analog_mute(ctx->audio, 1);
 
 	//ctx->run_aec = 0;
 	ctx->run_ns = 0;
@@ -1069,28 +1167,11 @@ void *audio_create(void *parent)
 	ctx->inited_ns = 0;
 	ctx->inited_agc = 0;
 	ctx->inited_vad = 0;
-
-	//Init RX dma
-#if defined(CONFIG_PLATFORM_8735B)
-	audio_set_dma_buffer(ctx->audio, dma_txdata, dma_rxdata, AUDIO_DMA_PAGE_SIZE, AUDIO_DMA_PAGE_NUM);
-	//audio_set_rx_dma_buffer(ctx->audio, dma_rxdata, RX_PAGE_SIZE);
-	audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
-
-	//Init TX dma
-	//audio_set_tx_dma_buffer(ctx->audio, dma_txdata, TX_PAGE_SIZE);
-	audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
-#else
-	audio_set_rx_dma_buffer(ctx->audio, dma_rxdata, RX_PAGE_SIZE);
-	audio_rx_irq_handler(ctx->audio, audio_rx_complete, (uint32_t)ctx);
-
-	//Init TX dma
-	audio_set_tx_dma_buffer(ctx->audio, dma_txdata, TX_PAGE_SIZE);
-	audio_tx_irq_handler(ctx->audio, audio_tx_complete, (uint32_t)ctx);
 #endif
-	// Init TX Cache Queue
-	//audio_tx_pcm_queue = xQueueCreate(AUDIO_TX_PCM_QUEUE_LENGTH, AUDIO_DMA_PAGE_SIZE);
-	//if(!audio_tx_pcm_queue)
-	//	goto audio_create_fail;
+
+#if defined(CONFIG_PLATFORM_8735B)
+	ctx->dmic_pin_set = 0;
+#endif
 
 	return ctx;
 

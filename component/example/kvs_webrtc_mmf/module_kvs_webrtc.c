@@ -1,250 +1,94 @@
-#include "platform_opts.h"
-#if !CONFIG_EXAMPLE_KVS_WEBRTC
+/******************************************************************************
+*
+* Copyright(c) 2007 - 2018 Realtek Corporation. All rights reserved.
+*
+******************************************************************************/
 
 /* Headers for example */
-#include <com/amazonaws/kinesis/video/cproducer/Include.h>
-#include "example_kvs_webrtc.h"
-#include "Samples.h"
 #include "module_kvs_webrtc.h"
-
-#define FILE_LOGGING_BUFFER_SIZE        (100 * 1024)
-#define MAX_NUMBER_OF_LOG_FILES         5
-extern PSampleConfiguration gSampleConfiguration;
+#include "AppMain.h"
+#include "AppMediaSrc.h"
 
 /* Config for Ameba-Pro */
+#include "sample_config_webrtc.h"
 #define STACK_SIZE              20*1024
 #define KVS_QUEUE_DEPTH         20
-#define WEBRTC_AUDIO_FRAME_SIZE 160
+#define WEBRTC_AUDIO_FRAME_SIZE 256
 
 /* Network */
 #include <lwip_netconf.h>
 #include "wifi_conf.h"
 #include <sntp/sntp.h>
+#include "mbedtls/config.h"
+uint8_t webrtc_wifi_ip[16];
+uint8_t *ameba_get_ip(void)
+{
+	uint8_t *ip = LwIP_GetIP(0);
+	memset(webrtc_wifi_ip, 0, sizeof(webrtc_wifi_ip) / sizeof(webrtc_wifi_ip[0]));
+	memcpy(webrtc_wifi_ip, ip, 4);
+	return webrtc_wifi_ip;
+}
 
-/* used to monitor skb resource */
-extern int skbbuf_used_num;
-extern int skbdata_used_num;
-extern int max_local_skb_num;
-extern int max_skb_buf_num;
+/* SD */
+#include "vfs.h"
 
 /* Audio/Video */
 #include "avcodec.h"
 
-static xQueueHandle kvsWebrtcVideoQueue;
-static xQueueHandle kvsWebrtcAudioQueue;
-static xQueueHandle audio_queue_recv;
+xQueueHandle kvsWebrtcVideoSendQueue;
+xQueueHandle kvsWebrtcAudioSendQueue;
+xQueueHandle kvsWebrtcAudioRecvQueue;
 
-static int kvsWebrtcModule_video_H;
-static int kvsWebrtcModule_video_W;
-static int kvsWebrtcModule_video_bps;
-
-typedef struct {
-	uint8_t *output_buffer;
-	uint32_t output_buffer_size;
-	uint32_t output_size;
-} VIDEO_BUFFER;
-
-static int h264_is_i_frame(u8 *frame_buf)
+static int ameba_platform_init(void)
 {
-	if ((frame_buf[4] & 0x1F) == 7) {
-		return 1;
-	} else {
-		return 0;
+#if defined(MBEDTLS_PLATFORM_C)
+	mbedtls_platform_set_calloc_free(calloc, free);
+#endif
+
+	while (wifi_is_running(WLAN0_IDX) != 1) {
+		vTaskDelay(200 / portTICK_PERIOD_MS);
 	}
+	printf("wifi connected\r\n");
+
+	sntp_init();
+	while (getEpochTimestampInHundredsOfNanos(NULL) < 10000000000000000ULL) {
+		vTaskDelay(200 / portTICK_PERIOD_MS);
+		printf("waiting get epoch timer\r\n");
+	}
+
+	vfs_init(NULL);
+	vfs_user_register("sd", VFS_FATFS, VFS_INF_SD);
+
+	return 0;
 }
 
-void *sendVideoPackets(void *args)
+static void kvs_webrtc_main_thread(void *param)
 {
-	STATUS retStatus = STATUS_SUCCESS;
-	PSampleConfiguration pSampleConfiguration = (PSampleConfiguration) args;
-	RtcEncoderStats encoderStats;
-	Frame frame;
-	STATUS status;
-	uint32_t i;
-	MEMSET(&encoderStats, 0x00, SIZEOF(RtcEncoderStats));
+	printf("=== KVS Example ===\n\r");
 
-	u8 start_transfer = 0;
-
-	if (pSampleConfiguration == NULL) {
-		printf("[KVS Master] sendVideoPackets(): operation returned status code: 0x%08x \n\r", STATUS_NULL_ARG);
-		goto CleanUp;
+	// Ameba platform init
+	if (ameba_platform_init() < 0) {
+		printf("platform init fail\n\r");
+		goto platform_init_fail;
 	}
 
-	frame.presentationTs = 0;
+	WebRTCAppMain();
 
-	VIDEO_BUFFER video_buf;
+platform_init_fail:
+	vfs_user_unregister("sd", VFS_FATFS, VFS_INF_SD);
+	vfs_deinit(NULL);
 
-	while (!ATOMIC_LOAD_BOOL(&pSampleConfiguration->appTerminateFlag)) {
-		if (xQueueReceive(kvsWebrtcVideoQueue, &video_buf, portMAX_DELAY) != pdTRUE) {
-			continue;
-		}
-
-		/* Check if the frame is I frame */
-		if (!start_transfer) {
-			if (h264_is_i_frame(video_buf.output_buffer)) {
-				start_transfer = 1;
-			} else {
-				if (video_buf.output_buffer != NULL) {
-					free(video_buf.output_buffer);
-				}
-				continue;
-			}
-		}
-
-		frame.frameData = video_buf.output_buffer;
-		frame.size = video_buf.output_size;
-		frame.presentationTs = getEpochTimestampInHundredsOfNanos(NULL);
-
-		// based on bitrate of samples/h264SampleFrames/frame-*
-		encoderStats.width = kvsWebrtcModule_video_W;
-		encoderStats.height = kvsWebrtcModule_video_W;
-		encoderStats.targetBitrate = kvsWebrtcModule_video_bps;
-
-		/* wait for skb resource release */
-		if ((skbdata_used_num > (max_skb_buf_num - 5)) || (skbbuf_used_num > (max_local_skb_num - 5))) {
-			if (video_buf.output_buffer != NULL) {
-				free(video_buf.output_buffer);
-			}
-			continue; //skip this frame and wait for skb resource release.
-		}
-
-		MUTEX_LOCK(pSampleConfiguration->streamingSessionListReadLock);
-		for (i = 0; i < pSampleConfiguration->streamingSessionCount; ++i) {
-			status = writeFrame(pSampleConfiguration->sampleStreamingSessionList[i]->pVideoRtcRtpTransceiver, &frame);
-			encoderStats.encodeTimeMsec = 4; // update encode time to an arbitrary number to demonstrate stats update
-			updateEncoderStats(pSampleConfiguration->sampleStreamingSessionList[i]->pVideoRtcRtpTransceiver, &encoderStats);
-			if (status != STATUS_SRTP_NOT_READY_YET) {
-				if (status != STATUS_SUCCESS) {
-#ifdef VERBOSE
-					printf("writeFrame() failed with 0x%08x\n\r", status);
-#endif
-				}
-			}
-		}
-		MUTEX_UNLOCK(pSampleConfiguration->streamingSessionListReadLock);
-		free(video_buf.output_buffer);
-	}
-
-CleanUp:
-
-	CHK_LOG_ERR(retStatus);
-	return (void *)(uint64_t) retStatus;
-}
-
-typedef struct audio_buf_s {
-	uint8_t *data_buf;
-	uint8_t size;
-	uint32_t timestamp;
-	uint32_t type;
-} audio_buf_t;
-
-void *sendAudioPackets(void *args)
-{
-	STATUS retStatus = STATUS_SUCCESS;
-	PSampleConfiguration pSampleConfiguration = (PSampleConfiguration) args;
-	Frame frame;
-	uint32_t i;
-	STATUS status;
-
-	if (pSampleConfiguration == NULL) {
-		printf("[KVS Master] sendAudioPackets(): operation returned status code: 0x%08x \n", STATUS_NULL_ARG);
-		goto CleanUp;
-	}
-
-	frame.presentationTs = 0;
-
-	audio_buf_t audio_buf;
-
-	while (!ATOMIC_LOAD_BOOL(&pSampleConfiguration->appTerminateFlag)) {
-		if (xQueueReceive(kvsWebrtcAudioQueue, &audio_buf, portMAX_DELAY) != pdTRUE) {
-			continue;
-		}
-
-		frame.frameData = audio_buf.data_buf;
-		frame.size = audio_buf.size;
-		frame.presentationTs += SAMPLE_AUDIO_FRAME_DURATION;
-
-		// wait for skb resource release
-		if ((skbdata_used_num > (max_skb_buf_num - 5)) || (skbbuf_used_num > (max_local_skb_num - 5))) {
-			if (audio_buf.data_buf != NULL) {
-				free(audio_buf.data_buf);
-			}
-			//skip this frame and wait for skb resource release.
-			continue;
-		}
-
-		MUTEX_LOCK(pSampleConfiguration->streamingSessionListReadLock);
-		for (i = 0; i < pSampleConfiguration->streamingSessionCount; ++i) {
-			status = writeFrame(pSampleConfiguration->sampleStreamingSessionList[i]->pAudioRtcRtpTransceiver, &frame);
-			if (status != STATUS_SRTP_NOT_READY_YET) {
-				if (status != STATUS_SUCCESS) {
-#ifdef VERBOSE
-					printf("writeFrame() failed with 0x%08x\n", status);
-#endif
-				}
-			}
-		}
-		MUTEX_UNLOCK(pSampleConfiguration->streamingSessionListReadLock);
-		free(audio_buf.data_buf);
-	}
-
-CleanUp:
-
-	return (void *)(uint64_t) retStatus;
+	vTaskDelete(NULL);
 }
 
 #ifdef ENABLE_AUDIO_SENDRECV
-void *sampleReceiveAudioFrame(void *args)
-{
-	STATUS retStatus = STATUS_SUCCESS;
-	PSampleStreamingSession pSampleStreamingSession = (PSampleStreamingSession) args;
-	if (pSampleStreamingSession == NULL) {
-		printf("[KVS Master] sampleReceiveAudioFrame(): operation returned status code: 0x%08x \n", STATUS_NULL_ARG);
-		goto CleanUp;
-	}
-
-	retStatus = transceiverOnFrame(pSampleStreamingSession->pAudioRtcRtpTransceiver, (uint64_t) pSampleStreamingSession, sampleFrameHandler);
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] transceiverOnFrame(): operation returned status code: 0x%08x \n", retStatus);
-		goto CleanUp;
-	}
-
-CleanUp:
-
-	return (void *)(uint64_t) retStatus;
-}
-
-void sampleFrameHandler(uint64_t customData, PFrame pFrame)
-{
-	UNUSED_PARAM(customData);
-	DLOGV("Frame received. TrackId: %" PRIu64 ", Size: %u, Flags %u", pFrame->trackId, pFrame->size, pFrame->flags);
-
-	audio_buf_t remote_audio;
-	remote_audio.data_buf = malloc(pFrame->size);
-	memcpy(remote_audio.data_buf, pFrame->frameData, pFrame->size);
-	remote_audio.size = pFrame->size;
-	remote_audio.timestamp = pFrame->presentationTs / HUNDREDS_OF_NANOS_IN_A_MILLISECOND;
-	remote_audio.type =  AUDIO_G711_MULAW ? AV_CODEC_ID_PCMU : AV_CODEC_ID_PCMA;
-
-	if (xQueueSend(audio_queue_recv, (void *)&remote_audio, NULL) != pdTRUE) {
-		DLOGD("\n\rAudio_sound queue full.\n\r");
-	}
-
-	PSampleStreamingSession pSampleStreamingSession = (PSampleStreamingSession) customData;
-	if (pSampleStreamingSession->firstFrame) {
-		pSampleStreamingSession->firstFrame = FALSE;
-		pSampleStreamingSession->startUpLatency = (GETTIME() - pSampleStreamingSession->offerReceiveTime) / HUNDREDS_OF_NANOS_IN_A_MILLISECOND;
-		printf("Start up latency from offer to first frame: %" PRIu64 "ms\n", pSampleStreamingSession->startUpLatency);
-	}
-}
-
 static void kvs_webrtc_audio_thread(void *param)
 {
 	kvs_webrtc_ctx_t *ctx = (kvs_webrtc_ctx_t *)param;
-	audio_buf_t audio_rev_buf;
+	webrtc_audio_buf_t audio_rev_buf;
 
 	while (1) {
-		if (xQueueReceive(audio_queue_recv, &audio_rev_buf, 0xFFFFFFFF) != pdTRUE) {
+		if (xQueueReceive(kvsWebrtcAudioRecvQueue, &audio_rev_buf, 0xFFFFFFFF) != pdTRUE) {
 			continue;    // should not happen
 		}
 
@@ -262,159 +106,6 @@ static void kvs_webrtc_audio_thread(void *param)
 }
 #endif /* ENABLE_AUDIO_SENDRECV */
 
-uint8_t wifi_ip[16];
-uint8_t *ameba_get_ip(void)
-{
-	extern struct netif xnetif[NET_IF_NUM];
-	uint8_t *ip = LwIP_GetIP(&xnetif[0]);
-	memset(wifi_ip, 0, sizeof(wifi_ip) / sizeof(wifi_ip[0]));
-	memcpy(wifi_ip, ip, 4);
-	return wifi_ip;
-}
-
-static int ameba_platform_init(void)
-{
-	while (wifi_is_running(WLAN0_IDX) != 1) {
-		vTaskDelay(200 / portTICK_PERIOD_MS);
-	}
-	printf("wifi connected\r\n");
-
-	sntp_init();
-	while (getEpochTimestampInHundredsOfNanos(NULL) < 10000000000000000ULL) {
-		vTaskDelay(200 / portTICK_PERIOD_MS);
-	}
-
-	return 0;
-}
-
-static void kvs_webrtc_thread(void *param)
-{
-	printf("=== KVS Example ===\n\r");
-
-	// Ameba platform init
-	if (ameba_platform_init() < 0) {
-		printf("platform init fail\n\r");
-		goto fail;
-	}
-
-	STATUS retStatus = STATUS_SUCCESS;
-	PSampleConfiguration pSampleConfiguration = NULL;
-	SignalingClientMetrics signalingClientMetrics;
-	signalingClientMetrics.version = 0;
-
-	// do trickleIce by default
-	printf("[KVS Master] Using trickleICE by default\n\r");
-	retStatus =
-		createSampleConfiguration(KVS_WEBRTC_CHANNEL_NAME, SIGNALING_CHANNEL_ROLE_TYPE_MASTER, TRUE, TRUE, &pSampleConfiguration);
-
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] createSampleConfiguration(): operation returned status code: 0x%08x \n\r", retStatus);
-		goto CleanUp;
-	}
-	printf("[KVS Master] Created signaling channel %s\n\r", KVS_WEBRTC_CHANNEL_NAME);
-
-	if (pSampleConfiguration->enableFileLogging) {
-		retStatus = createFileLogger(FILE_LOGGING_BUFFER_SIZE, MAX_NUMBER_OF_LOG_FILES, (char *) FILE_LOGGER_LOG_FILE_DIRECTORY_PATH, TRUE, TRUE, NULL);
-		if (retStatus != STATUS_SUCCESS) {
-			printf("[KVS Master] createFileLogger(): operation returned status code: 0x%08x \n\r", retStatus);
-			pSampleConfiguration->enableFileLogging = FALSE;
-		}
-	}
-
-	// Set the video handlers
-	pSampleConfiguration->videoSource = sendVideoPackets;
-	pSampleConfiguration->audioSource = sendAudioPackets;
-#ifdef ENABLE_AUDIO_SENDRECV
-	pSampleConfiguration->receiveAudioVideoSource = sampleReceiveAudioFrame;
-#endif
-	pSampleConfiguration->mediaType = SAMPLE_STREAMING_AUDIO_VIDEO;
-
-	printf("[KVS Master] Finished setting audio and video handlers\n\r");
-
-	// Initialize KVS WebRTC. This must be done before anything else, and must only be done once.
-	retStatus = initKvsWebRtc();
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] initKvsWebRtc(): operation returned status code: 0x%08x \n\r", retStatus);
-		goto CleanUp;
-	}
-	printf("[KVS Master] KVS WebRTC initialization completed successfully\n\r");
-
-	pSampleConfiguration->signalingClientCallbacks.messageReceivedFn = signalingMessageReceived;
-
-	strcpy(pSampleConfiguration->clientInfo.clientId, SAMPLE_MASTER_CLIENT_ID);
-
-	retStatus = signalingClientCreate(&pSampleConfiguration->clientInfo, &pSampleConfiguration->channelInfo,
-									  &pSampleConfiguration->signalingClientCallbacks, pSampleConfiguration->pCredentialProvider,
-									  &pSampleConfiguration->signalingClientHandle);
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] signalingClientCreate(): operation returned status code: 0x%08x \n\r", retStatus);
-		goto CleanUp;
-	}
-	printf("[KVS Master] Signaling client created successfully\n\r");
-
-	// Enable the processing of the messages
-	retStatus = signalingClientConnect(pSampleConfiguration->signalingClientHandle);
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] signalingClientConnect(): operation returned status code: 0x%08x \n\r", retStatus);
-		goto CleanUp;
-	}
-	printf("[KVS Master] Signaling client connection to socket established\n\r");
-
-	gSampleConfiguration = pSampleConfiguration;
-
-	printf("[KVS Master] Channel %s set up done \n\r", KVS_WEBRTC_CHANNEL_NAME);
-
-	// Checking for termination
-	retStatus = sessionCleanupWait(pSampleConfiguration);
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] sessionCleanupWait(): operation returned status code: 0x%08x \n\r", retStatus);
-		goto CleanUp;
-	}
-
-	printf("[KVS Master] Streaming session terminated\n\r");
-
-
-CleanUp:
-	if (retStatus != STATUS_SUCCESS) {
-		printf("[KVS Master] Terminated with status code 0x%08x", retStatus);
-	}
-
-	printf("[KVS Master] Cleaning up....\n\r");
-	if (pSampleConfiguration != NULL) {
-		// Kick of the termination sequence
-		ATOMIC_STORE_BOOL(&pSampleConfiguration->appTerminateFlag, TRUE);
-
-		// Join the threads
-		if (pSampleConfiguration->mediaSenderTid != INVALID_TID_VALUE) {
-			THREAD_JOIN(pSampleConfiguration->mediaSenderTid, NULL);
-		}
-
-		if (pSampleConfiguration->enableFileLogging) {
-			freeFileLogger();
-		}
-		retStatus = signalingClientGetMetrics(pSampleConfiguration->signalingClientHandle, &signalingClientMetrics);
-		if (retStatus == STATUS_SUCCESS) {
-			logSignalingClientStats(&signalingClientMetrics);
-		} else {
-			printf("[KVS Master] signalingClientGetMetrics() operation returned status code: 0x%08x", retStatus);
-		}
-		retStatus = signalingClientFree(&pSampleConfiguration->signalingClientHandle);
-		if (retStatus != STATUS_SUCCESS) {
-			printf("[KVS Master] freeSignalingClient(): operation returned status code: 0x%08x", retStatus);
-		}
-
-		retStatus = freeSampleConfiguration(&pSampleConfiguration);
-		if (retStatus != STATUS_SUCCESS) {
-			printf("[KVS Master] freeSampleConfiguration(): operation returned status code: 0x%08x", retStatus);
-		}
-	}
-	printf("[KVS Master] Cleanup done\n\r");
-
-fail:
-
-	vTaskDelete(NULL);
-}
-
 int kvs_webrtc_handle(void *p, void *input, void *output)
 {
 	kvs_webrtc_ctx_t *ctx = (kvs_webrtc_ctx_t *)p;
@@ -422,29 +113,32 @@ int kvs_webrtc_handle(void *p, void *input, void *output)
 	mm_queue_item_t *input_item = (mm_queue_item_t *)input;
 
 	if (input_item->type == AV_CODEC_ID_H264) {
-		VIDEO_BUFFER video_buf;
-		video_buf.output_buffer_size = KVS_VIDEO_OUTPUT_BUFFER_SIZE;
-		video_buf.output_buffer = malloc(KVS_VIDEO_OUTPUT_BUFFER_SIZE);
+		webrtc_video_buf_t video_buf;
 
 		video_buf.output_size = input_item->size;
+		video_buf.output_buffer_size = video_buf.output_size;
+		video_buf.output_buffer = malloc(video_buf.output_size);
+
 		memcpy(video_buf.output_buffer, (uint8_t *)input_item->data_addr, video_buf.output_size);
 
-		if (uxQueueSpacesAvailable(kvsWebrtcVideoQueue) != 0) {
-			xQueueSend(kvsWebrtcVideoQueue, &video_buf, 0);
+		video_buf.timestamp = xTaskGetTickCount();
+
+		if (uxQueueSpacesAvailable(kvsWebrtcVideoSendQueue) != 0) {
+			xQueueSend(kvsWebrtcVideoSendQueue, &video_buf, 0);
 		} else {
 			free(video_buf.output_buffer);
 		}
-	} else if ((input_item->type == AV_CODEC_ID_PCMU) || (input_item->type == AV_CODEC_ID_PCMA)) {
-		audio_buf_t audio_buf;
+	} else if ((input_item->type == AV_CODEC_ID_PCMU) || (input_item->type == AV_CODEC_ID_PCMA) || (input_item->type == AV_CODEC_ID_OPUS)) {
+		webrtc_audio_buf_t audio_buf;
 		audio_buf.size = input_item->size;
 
 		audio_buf.data_buf =  malloc(audio_buf.size);
 		memcpy(audio_buf.data_buf, (uint8_t *)input_item->data_addr, audio_buf.size);
 
-		audio_buf.timestamp = xTaskGetTickCount();
+		audio_buf.timestamp = input_item->timestamp;
 
-		if (uxQueueSpacesAvailable(kvsWebrtcAudioQueue) != 0) {
-			xQueueSend(kvsWebrtcAudioQueue, &audio_buf, 0);
+		if (uxQueueSpacesAvailable(kvsWebrtcAudioSendQueue) != 0) {
+			xQueueSend(kvsWebrtcAudioSendQueue, &audio_buf, 0);
 		} else {
 			free(audio_buf.data_buf);
 		}
@@ -460,24 +154,16 @@ int kvs_webrtc_control(void *p, int cmd, int arg)
 	switch (cmd) {
 
 	case CMD_KVS_WEBRTC_SET_APPLY:
-		if (xTaskCreate(kvs_webrtc_thread, ((const char *)"kvs_webrtc_thread"), STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ctx->kvs_webrtc_module_task) != pdPASS) {
-			printf("\n\r%s xTaskCreate(kvs_webrtc_thread) failed", __FUNCTION__);
+		if (xTaskCreate(kvs_webrtc_main_thread, ((const char *)"kvs_webrtc_main_thread"), STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,
+						&ctx->kvs_webrtc_module_main_task) != pdPASS) {
+			printf("\n\r%s xTaskCreate(kvs_webrtc_main_thread) failed", __FUNCTION__);
 		}
 #ifdef ENABLE_AUDIO_SENDRECV
 		if (xTaskCreate(kvs_webrtc_audio_thread, ((const char *)"kvs_webrtc_audio_thread"), 512, (void *)ctx, tskIDLE_PRIORITY + 1,
-						&ctx->kvs_webrtc_module_audio_task) != pdPASS) {
+						&ctx->kvs_webrtc_module_audio_recv_task) != pdPASS) {
 			printf("\n\r%s xTaskCreate(kvs_webrtc_audio_thread) failed", __FUNCTION__);
 		}
 #endif
-		break;
-	case CMD_KVS_WEBRTC_SET_VIDEO_HEIGHT:
-		kvsWebrtcModule_video_H = (int)arg;
-		break;
-	case CMD_KVS_WEBRTC_SET_VIDEO_WIDTH:
-		kvsWebrtcModule_video_W = (int)arg;
-		break;
-	case CMD_KVS_WEBRTC_SET_VIDEO_BPS:
-		kvsWebrtcModule_video_bps = (int)arg;
 		break;
 	}
 	return 0;
@@ -486,15 +172,22 @@ int kvs_webrtc_control(void *p, int cmd, int arg)
 void *kvs_webrtc_destroy(void *p)
 {
 	kvs_webrtc_ctx_t *ctx = (kvs_webrtc_ctx_t *)p;
+
+	if (ctx && ctx->kvs_webrtc_module_main_task) {
+		vTaskDelete(ctx->kvs_webrtc_module_main_task);
+	}
+	if (ctx && ctx->kvs_webrtc_module_audio_recv_task) {
+		vTaskDelete(ctx->kvs_webrtc_module_audio_recv_task);
+	}
 	if (ctx) {
 		free(ctx);
 	}
-	if (ctx && ctx->kvs_webrtc_module_task) {
-		vTaskDelete(ctx->kvs_webrtc_module_task);
-	}
-	if (ctx && ctx->kvs_webrtc_module_audio_task) {
-		vTaskDelete(ctx->kvs_webrtc_module_audio_task);
-	}
+	vQueueDelete(kvsWebrtcVideoSendQueue);
+	vQueueDelete(kvsWebrtcAudioSendQueue);
+#if ( defined(ENABLE_AUDIO_SENDRECV) && ( AUDIO_G711_MULAW || AUDIO_G711_ALAW ) )
+	vQueueDelete(kvsWebrtcAudioRecvQueue);
+#endif
+
 	return NULL;
 }
 
@@ -507,16 +200,16 @@ void *kvs_webrtc_create(void *parent)
 	memset(ctx, 0, sizeof(kvs_webrtc_ctx_t));
 	ctx->parent = parent;
 
-	kvsWebrtcVideoQueue = xQueueCreate(KVS_QUEUE_DEPTH, sizeof(VIDEO_BUFFER));
-	xQueueReset(kvsWebrtcVideoQueue);
+	kvsWebrtcVideoSendQueue = xQueueCreate(KVS_QUEUE_DEPTH, sizeof(webrtc_video_buf_t));
+	xQueueReset(kvsWebrtcVideoSendQueue);
 
-	kvsWebrtcAudioQueue = xQueueCreate(KVS_QUEUE_DEPTH, sizeof(audio_buf_t));
-	xQueueReset(kvsWebrtcAudioQueue);
+	kvsWebrtcAudioSendQueue = xQueueCreate(KVS_QUEUE_DEPTH * 3, sizeof(webrtc_audio_buf_t));
+	xQueueReset(kvsWebrtcAudioSendQueue);
 
 #if ( defined(ENABLE_AUDIO_SENDRECV) && ( AUDIO_G711_MULAW || AUDIO_G711_ALAW ) )
 	//Create a queue to receive the G711 audio frame from viewer
-	audio_queue_recv = xQueueCreate(KVS_QUEUE_DEPTH, sizeof(audio_buf_t));
-	xQueueReset(audio_queue_recv);
+	kvsWebrtcAudioRecvQueue = xQueueCreate(KVS_QUEUE_DEPTH * 6, sizeof(webrtc_audio_buf_t));
+	xQueueReset(kvsWebrtcAudioRecvQueue);
 #endif
 
 	printf("kvs_webrtc_create...\r\n");
@@ -553,5 +246,3 @@ mm_module_t kvs_webrtc_module = {
 	.module_type = MM_TYPE_AVSINK,      // module type is video algorithm
 	.name = "KVS_WebRTC"
 };
-
-#endif

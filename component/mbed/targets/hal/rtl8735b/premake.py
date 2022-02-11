@@ -33,7 +33,7 @@ premake_python_name = 'premake.py'
 config_jason_name = 'config.json'
 platform_cfg_h_json_name = 'platform_cfg_h.json'
 
-target = 'rtl8195b-lp'
+target = 'rtl8735b'
 chip_ver = 'Cut-A'
 build_mod = 'All'
 root_make_path = ''

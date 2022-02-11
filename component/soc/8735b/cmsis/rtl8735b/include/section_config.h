@@ -4,7 +4,7 @@
  *           them to a specific address.
  *
  * @version  V1.00
- * @date     2016-07-20
+ * @date     2021-11-08
  *
  * @note
  *
@@ -41,6 +41,10 @@
 #define START_RAM_FUN_A_SECTION                 SECTION(".start.ram.data.a")
 
 #define START_RAM_SIGNATURE_SECTION             SECTION(".start.ram.sign")
+
+#define BL4FW_RAM_DATA_SECTION                  SECTION(".bl4fw.ram.data")
+
+#define BL4VOE_RAM_DATA_SECTION                 SECTION(".bl4voe.ram.data")
 
 #define SECTION_RAM_VECTOR_TABLE                SECTION(".ram_vector_table")
 

@@ -7,7 +7,7 @@
 #include "msc/inc/usbd_msc_config.h"
 
 /* config usb msc device debug inforation */
-#define USBD_MSC_DEBUG          1
+#define USBD_MSC_DEBUG          0
 #if defined(CONFIG_PLATFORM_8195BHP)
 #if	USBD_MSC_DEBUG
 #define USBD_PRINTF(fmt, args...)		            DBG_8195BL("\n\r%s: " fmt, __FUNCTION__, ## args)
@@ -26,6 +26,7 @@
 #endif
 #else
 #if	USBD_MSC_DEBUG
+#define DBG_8195A printf
 #define USBD_PRINTF(fmt, args...)		            DBG_8195A("\n\r%s: " fmt, __FUNCTION__, ## args)
 #define USBD_ERROR(fmt, args...)		            DBG_8195A("\n\r%s: " fmt, __FUNCTION__, ## args)
 #define USBD_WARN(fmt, args...)		            	DBG_8195A("\n\r%s: " fmt, __FUNCTION__, ## args)
@@ -33,6 +34,7 @@
 #define FUN_EXIT                                    DBG_8195A("\n\r%s <==\n", __func__)
 #define FUN_TRACE                                   DBG_8195A("\n\r%s:%d \n", __func__, __LINE__)
 #else
+#define DBG_8195A printf
 #define USBD_PRINTF(fmt, args...)
 #define USBD_ERROR(fmt, args...)		            DBG_8195A("\n\r%s: " fmt, __FUNCTION__, ## args)
 #define USBD_WARN(fmt, args...)
@@ -56,24 +58,11 @@ enum data_direction {
 	DATA_DIR_NONE
 };
 
-typedef enum _disk_type {
-	DISK_SDCARD,
-	DISK_FLASH
-} disk_type;
-
 //structure predefine
 struct msc_dev;
 struct msc_bufhd;
-#if (defined(CONFIG_PLATFORM_8195BHP) || defined (CONFIG_PLATFORM_8721D))
+
 #include "sd.h"
-struct msc_opts {
-	SD_RESULT(*disk_init)(void);
-	SD_RESULT(*disk_deinit)(void);
-	SD_RESULT(*disk_getcapacity)(u32 *sectors);
-	SD_RESULT(*disk_read)(u32 sector, u8 *buffer, u32 count);
-	SD_RESULT(*disk_write)(u32 sector, const u8 *buffer, u32 count);
-};
-#else
 struct msc_opts {
 	int (*disk_init)(void);
 	int (*disk_deinit)(void);
@@ -81,7 +70,7 @@ struct msc_opts {
 	int (*disk_read)(u32 sector, u8 *buffer, u32 count);
 	int (*disk_write)(u32 sector, const u8 *buffer, u32 count);
 };
-#endif
+
 
 struct msc_lun {
 	unsigned int	initially_ro: 1;
@@ -203,9 +192,9 @@ int usbd_msc_bulk_out_transfer(struct msc_dev *mscdev, struct usb_request *req);
 /*
 * N_bh : number of buffer header
 * Size_bh: buffer size per buffer
-* type:msc physical disk type
+* disk_op:disk operation function pointer
 */
-int usbd_msc_init(int N_bh, int Size_bh, disk_type type);
+int usbd_msc_init(int N_bh, int Size_bh, struct msc_opts *disk_op);
 void usbd_msc_deinit(void);
 
 #endif

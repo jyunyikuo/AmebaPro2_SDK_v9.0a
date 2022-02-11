@@ -43,12 +43,5 @@ void mmf2_video_example_v4_rgb_init(void);
 
 void mmf2_video_example_v1_reset_init(void);
 
-void mmf2_video_example_p2p_av_init(void);
-
-int video_voe_presetting(int v1_enable, int v1_w, int v1_h, int v1_bps, int v1_shapshot,
-						 int v2_enable, int v2_w, int v2_h, int v2_bps,
-						 int v3_enable, int v3_w, int v3_h, int v3_bps,
-						 int v4_enable, int v4_w, int v4_h);
-
 
 #endif /* MMF2_VIDEO_EXAMPLE_H */

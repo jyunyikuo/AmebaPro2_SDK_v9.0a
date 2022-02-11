@@ -1,6 +1,7 @@
 #ifndef EXAMPLE_MEDIA_UVCD_H
 #define EXAMPLE_MEDIA_UVCD_H
 
+#include "platform_opts.h"
 //#include "video_common_api.h"
 
 #define UVCD_TUNNING_MODE  1// 1 :Contain four formats to support tunning tool (YUV2 NV12 H264 JPEG)
@@ -8,8 +9,13 @@
 #define CUSTOMER_AMEBAPRO_ADVANCE 0 //1: Based on the defined "UVCD_TUNNING_MODE", this option "1" is for customer release, "0" is for internal use.
 void example_media_uvcd(void);
 
-#define MAX_W 1280
-#define MAX_H 720
+#if USE_SENSOR == SENSOR_GC4653
+#define MAX_W 2560
+#define MAX_H 1440
+#else
+#define MAX_W 1920
+#define MAX_H 1080
+#endif
 
 #define UVCD_YUY2 1
 #define UVCD_NV12 1

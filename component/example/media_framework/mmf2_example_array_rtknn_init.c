@@ -13,7 +13,7 @@
 
 #include "input_image_640x360x3.h"
 // TODO: move model id to proper header
-#include "nn_model_init.h"
+#include "nn_model_info_ddr.h"
 #include "mobilenet_ssd_uint8.h"
 #include "face300x300_uint8.h"
 
@@ -33,11 +33,12 @@ static array_params_t h264_array_params = {
 	}
 };
 
+#if MODEL_SSDM_USED
 static rtknn_params_t rtknn_ssd_params = {
 	.model_id = MOBILENETSSD_20OBJ,	// for built-in postbuild
 	.model = mobilenet_ssd_uint8,
-	.m_width = NNMODEL_SM_WIDTH,
-	.m_height = NNMODEL_SM_HEIGHT,
+	.m_width = NNMODEL_SM_IMG_WIDTH,
+	.m_height = NNMODEL_SM_IMG_HEIGHT,
 
 	.roi = {
 		.xmin = 0,
@@ -46,13 +47,14 @@ static rtknn_params_t rtknn_ssd_params = {
 		.ymax = 360,
 	}
 };
+#endif
 
-
+#if MODEL_FACE_USED
 static rtknn_params_t rtknn_face_params = {
 	.model_id = MODEL_FACE,			// for built-in postbuild
 	.model = face_300x300_uint8,
-	.m_width = NNMODEL_FACE_WIDTH,
-	.m_height = NNMODEL_FACE_HEIGHT,
+	.m_width = NNMODEL_FACE_IMG_WIDTH,
+	.m_height = NNMODEL_FACE_IMG_HEIGHT,
 
 	.roi = {
 		.xmin = 320,
@@ -61,7 +63,7 @@ static rtknn_params_t rtknn_face_params = {
 		.ymax = 360,
 	}
 };
-
+#endif
 
 void mmf2_example_array_rtknn_init(void)
 {
@@ -86,8 +88,12 @@ void mmf2_example_array_rtknn_init(void)
 	rtknn_ctx = mm_module_open(&rtknn_module);
 	if (rtknn_ctx) {
 		//mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_MODEL_ID, MOBILENETSSD_20OBJ);
+#if MODEL_SSDM_USED
 		mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_PARAMS, (int)&rtknn_ssd_params);
-		//mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_PARAMS, (int)&rtknn_face_params);
+#endif
+#if MODEL_FACE_USED
+		mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_PARAMS, (int)&rtknn_face_params);
+#endif
 		mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_WIDTH, 640);
 		mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_HEIGHT, 360);
 		mm_module_ctrl(rtknn_ctx, CMD_RTKNN_SET_FPS, 5);

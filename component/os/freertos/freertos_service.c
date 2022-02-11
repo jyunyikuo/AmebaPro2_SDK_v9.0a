@@ -188,7 +188,13 @@ static int __in_interrupt(void)
 #if defined(__ICCARM__)
 	return (__get_PSR() & 0x1FF) != 0;
 #elif defined(__GNUC__)
+
+#ifdef ARM_CORE_CM4
 	return (__get_xPSR() & 0x1FF) != 0;
+#else
+	return __get_IPSR() != 0;
+#endif
+
 #endif
 #endif
 }
@@ -509,7 +515,7 @@ static void _freertos_msleep_os(int ms)
 {
 #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
 	vTaskDelay(ms / portTICK_RATE_MS);
-#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	if (pmu_yield_os_check()) {
 		vTaskDelay(ms / portTICK_RATE_MS);
 	} else {
@@ -533,7 +539,7 @@ static void _freertos_usleep_os(int us)
 	WLAN_BSP_UsLoop(us);
 #elif defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)
 	hal_delay_us(us);
-#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	DelayUs(us);
 #else
 #error "Please implement hardware dependent micro second level sleep here"
@@ -544,7 +550,7 @@ static void _freertos_mdelay_os(int ms)
 {
 #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP)
 	vTaskDelay(ms / portTICK_RATE_MS);
-#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	if (pmu_yield_os_check()) {
 		vTaskDelay(ms / portTICK_RATE_MS);
 	} else {
@@ -568,7 +574,7 @@ static void _freertos_udelay_os(int us)
 	WLAN_BSP_UsLoop(us);
 #elif defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)
 	hal_delay_us(us);
-#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	DelayUs(us);
 #else
 #error "Please implement hardware dependent micro second level sleep here"
@@ -579,7 +585,7 @@ static void _freertos_yield_os(void)
 {
 #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
 	taskYIELD();
-#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	if (pmu_yield_os_check()) {
 		taskYIELD();
 	} else {
@@ -710,9 +716,9 @@ static u64 _freertos_modular64(u64 n, u64 base)
 /* Refer to ecos bsd tcpip codes */
 static int _freertos_arc4random(void)
 {
-#if defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 
-#if defined(CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	int value = (int)rand();
 #else
 	int value = (int)Rand();
@@ -965,7 +971,7 @@ u32  _freertos_timerReset(_timerHandle xTimer,
 
 void _freertos_acquire_wakelock(void)
 {
-#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 
 #if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
 	if (pmu_yield_os_check()) {
@@ -979,7 +985,7 @@ void _freertos_acquire_wakelock(void)
 void _freertos_release_wakelock(void)
 {
 
-#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 
 #if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
 	if (pmu_yield_os_check()) {
@@ -992,7 +998,7 @@ void _freertos_release_wakelock(void)
 
 void _freertos_wakelock_timeout(uint32_t timeout)
 {
-#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_8711B) || defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 	if (pmu_yield_os_check()) {
 		pmu_set_sysactive_time(timeout);
 	} else {

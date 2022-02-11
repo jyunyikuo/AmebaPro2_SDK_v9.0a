@@ -50,7 +50,7 @@ void init_thread(void *param)
 	//setup reconnection flag
 	wifi_config_autoreconnect(1, AUTO_RECONNECT_COUNT, AUTO_RECONNECT_INTERVAL);
 #endif
-	printf("\n\r%s(%d), Available heap 0x%x", __FUNCTION__, __LINE__, xPortGetFreeHeapSize());
+	printf("\n\r%s(%d), Available heap 0x%x\n", __FUNCTION__, __LINE__, xPortGetFreeHeapSize());
 #endif
 
 	/* Kill init thread after all init tasks done */
@@ -60,6 +60,6 @@ void init_thread(void *param)
 void wlan_network()
 {
 	if (xTaskCreate(init_thread, ((const char *)"init"), STACKSIZE, NULL, tskIDLE_PRIORITY + 3 + PRIORITIE_OFFSET, NULL) != pdPASS) {
-		printf("\n\r%s xTaskCreate(init_thread) failed", __FUNCTION__);
+		printf("\n\r%s xTaskCreate(init_thread) failed\n", __FUNCTION__);
 	}
 }

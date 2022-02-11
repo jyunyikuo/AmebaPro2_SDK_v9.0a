@@ -29,9 +29,10 @@ extern "C" {
  *
  * \ingroup BT_HID
  */
-typedef enum t_bt_hid_protocol_mode {
-	BT_HID_BOOT_PROTO_MODE             = 0x00,
-	BT_HID_REPORT_PROTO_MODE           = 0x01,
+typedef enum t_bt_hid_protocol_mode
+{
+    BT_HID_BOOT_PROTO_MODE             = 0x00,
+    BT_HID_REPORT_PROTO_MODE           = 0x01,
 } T_BT_HID_PROTOCOL_MODE;
 
 /**
@@ -41,11 +42,12 @@ typedef enum t_bt_hid_protocol_mode {
  *
  * \ingroup BT_HID
  */
-typedef enum t_bt_hid_report_type {
-	BT_HID_REPORT_TYPE_RESERVED          = 0x00,
-	BT_HID_REPORT_TYPE_INPUT             = 0x01,
-	BT_HID_REPORT_TYPE_OUTPUT            = 0x02,
-	BT_HID_REPORT_TYPE_FEATURE           = 0x03,
+typedef enum t_bt_hid_report_type
+{
+    BT_HID_REPORT_TYPE_RESERVED          = 0x00,
+    BT_HID_REPORT_TYPE_INPUT             = 0x01,
+    BT_HID_REPORT_TYPE_OUTPUT            = 0x02,
+    BT_HID_REPORT_TYPE_FEATURE           = 0x03,
 } T_BT_HID_REPORT_TYPE;
 
 /**
@@ -139,9 +141,9 @@ bool bt_hid_disconnect_req(uint8_t *bd_addr);
  * \ingroup BT_HID
  */
 bool bt_hid_control_get_report_rsp(uint8_t               *bd_addr,
-								   T_BT_HID_REPORT_TYPE   report_type,
-								   uint8_t               *buf,
-								   uint16_t               len);
+                                   T_BT_HID_REPORT_TYPE   report_type,
+                                   uint8_t               *buf,
+                                   uint16_t               len);
 
 /**
  * bt_hid.h
@@ -158,7 +160,7 @@ bool bt_hid_control_get_report_rsp(uint8_t               *bd_addr,
  * \ingroup BT_HID
  */
 bool bt_hid_control_get_protocol_rsp(uint8_t                 *bd_addr,
-									 T_BT_HID_PROTOCOL_MODE   proto_mode);
+                                     T_BT_HID_PROTOCOL_MODE   proto_mode);
 
 /**
  * bt_hid.h
@@ -177,9 +179,9 @@ bool bt_hid_control_get_protocol_rsp(uint8_t                 *bd_addr,
  * \ingroup BT_HID
  */
 bool bt_hid_interrupt_data_send(uint8_t               *bd_addr,
-								T_BT_HID_REPORT_TYPE   report_type,
-								uint8_t               *buf,
-								uint16_t               len);
+                                T_BT_HID_REPORT_TYPE   report_type,
+                                uint8_t               *buf,
+                                uint16_t               len);
 
 #ifdef __cplusplus
 }

@@ -29,9 +29,10 @@ extern "C" {
  *
  * \ingroup REMOTE_CONTROL
  */
-typedef enum {
-	REMOTE_SESSION_STATE_DISCONNECTED   = 0,
-	REMOTE_SESSION_STATE_CONNECTED      = 1,
+typedef enum
+{
+    REMOTE_SESSION_STATE_DISCONNECTED   = 0,
+    REMOTE_SESSION_STATE_CONNECTED      = 1,
 } T_REMOTE_SESSION_STATE;
 
 /**
@@ -41,11 +42,12 @@ typedef enum {
  *
  * \ingroup REMOTE_CONTROL
  */
-typedef enum {
-	REMOTE_SESSION_MODE_ACTIVE          = 0,
-	REMOTE_SESSION_MODE_SLEEP_PENDING   = 1,
-	REMOTE_SESSION_MODE_SLEEP           = 2,
-	REMOTE_SESSION_MODE_ACTIVE_PENDING  = 3,
+typedef enum
+{
+    REMOTE_SESSION_MODE_ACTIVE          = 0,
+    REMOTE_SESSION_MODE_SLEEP_PENDING   = 1,
+    REMOTE_SESSION_MODE_SLEEP           = 2,
+    REMOTE_SESSION_MODE_ACTIVE_PENDING  = 3,
 } T_REMOTE_SESSION_MODE;
 
 /**
@@ -55,10 +57,11 @@ typedef enum {
  *
  * \ingroup REMOTE_CONTROL
  */
-typedef enum {
-	REMOTE_SESSION_ROLE_SINGLE          = 0,
-	REMOTE_SESSION_ROLE_PRIMARY         = 1,
-	REMOTE_SESSION_ROLE_SECONDARY       = 2,
+typedef enum
+{
+    REMOTE_SESSION_ROLE_SINGLE          = 0,
+    REMOTE_SESSION_ROLE_PRIMARY         = 1,
+    REMOTE_SESSION_ROLE_SECONDARY       = 2,
 } T_REMOTE_SESSION_ROLE;
 
 /**
@@ -68,10 +71,11 @@ typedef enum {
  *
  * \ingroup REMOTE_CONTROL
  */
-typedef enum {
-	REMOTE_TIMER_DEFAULT                = 0x00,
-	REMOTE_TIMER_LOW_PRECISION          = 0x01,
-	REMOTE_TIMER_HIGH_PRECISION         = 0x02,
+typedef enum
+{
+    REMOTE_TIMER_DEFAULT                = 0x00,
+    REMOTE_TIMER_LOW_PRECISION          = 0x01,
+    REMOTE_TIMER_HIGH_PRECISION         = 0x02,
 } T_REMOTE_TIMER_TYPE;
 
 /**
@@ -81,17 +85,18 @@ typedef enum {
  *
  * \ingroup REMOTE_CONTROL
  */
-typedef enum {
-	REMOTE_RELAY_STATUS_ASYNC_RCVD          = 0x00,
-	REMOTE_RELAY_STATUS_ASYNC_LOOPBACK      = 0x01,
-	REMOTE_RELAY_STATUS_SYNC_RCVD           = 0x02,
-	REMOTE_RELAY_STATUS_SYNC_TOUT           = 0x03,
-	REMOTE_RELAY_STATUS_SYNC_EXPIRED        = 0x04,
-	REMOTE_RELAY_STATUS_SYNC_LOOPBACK       = 0x06,
-	REMOTE_RELAY_STATUS_SYNC_REF_CHANGED    = 0x07,
-	REMOTE_RELAY_STATUS_SYNC_SENT_OUT       = 0x08,
-	REMOTE_RELAY_STATUS_ASYNC_SENT_OUT      = 0x09,
-	REMOTE_RELAY_STATUS_SEND_FAILED         = 0x0A,
+typedef enum
+{
+    REMOTE_RELAY_STATUS_ASYNC_RCVD          = 0x00,
+    REMOTE_RELAY_STATUS_ASYNC_LOOPBACK      = 0x01,
+    REMOTE_RELAY_STATUS_SYNC_RCVD           = 0x02,
+    REMOTE_RELAY_STATUS_SYNC_TOUT           = 0x03,
+    REMOTE_RELAY_STATUS_SYNC_EXPIRED        = 0x04,
+    REMOTE_RELAY_STATUS_SYNC_LOOPBACK       = 0x06,
+    REMOTE_RELAY_STATUS_SYNC_REF_CHANGED    = 0x07,
+    REMOTE_RELAY_STATUS_SYNC_SENT_OUT       = 0x08,
+    REMOTE_RELAY_STATUS_ASYNC_SENT_OUT      = 0x09,
+    REMOTE_RELAY_STATUS_SEND_FAILED         = 0x0A,
 } T_REMOTE_RELAY_STATUS;
 
 /**
@@ -116,9 +121,9 @@ typedef void *T_REMOTE_RELAY_HANDLE;
  * \ingroup REMOTE_CONTROL
  */
 typedef void (*P_REMOTE_RELAY_CBACK)(uint16_t               msg_id,
-									 T_REMOTE_RELAY_STATUS  status,
-									 void                  *buf,
-									 uint16_t               len);
+                                     T_REMOTE_RELAY_STATUS  status,
+                                     void                  *buf,
+                                     uint16_t               len);
 
 /**
  * remote.h
@@ -318,9 +323,9 @@ bool remote_session_mode_set(T_REMOTE_SESSION_MODE mode);
  * \ingroup REMOTE_CONTROL
  */
 bool remote_roleswap_start(uint8_t                      *bd_addr,
-						   bool                          force_roleswap,
-						   bool                          stop_after_shadow,
-						   P_REMOTE_ROLESWAP_SYNC_CBACK  cback);
+                           bool                          force_roleswap,
+                           bool                          stop_after_shadow,
+                           P_REMOTE_ROLESWAP_SYNC_CBACK  cback);
 
 /**
  * remote.h
@@ -386,10 +391,10 @@ bool remote_relay_unregister(T_REMOTE_RELAY_HANDLE handle);
  * \ingroup REMOTE_CONTROL
  */
 bool remote_async_msg_relay(T_REMOTE_RELAY_HANDLE  handle,
-							uint16_t               msg_id,
-							void                  *msg_buf,
-							uint16_t               msg_len,
-							bool                   loopback);
+                            uint16_t               msg_id,
+                            void                  *msg_buf,
+                            uint16_t               msg_len,
+                            bool                   loopback);
 
 /**
  * remote.h
@@ -415,12 +420,12 @@ bool remote_async_msg_relay(T_REMOTE_RELAY_HANDLE  handle,
  * \ingroup REMOTE_CONTROL
  */
 bool remote_sync_msg_relay(T_REMOTE_RELAY_HANDLE  handle,
-						   uint16_t               msg_id,
-						   void                  *msg_buf,
-						   uint16_t               msg_len,
-						   T_REMOTE_TIMER_TYPE    timer_type,
-						   uint32_t               timer_period,
-						   bool                   loopback);
+                           uint16_t               msg_id,
+                           void                  *msg_buf,
+                           uint16_t               msg_len,
+                           T_REMOTE_TIMER_TYPE    timer_type,
+                           uint32_t               timer_period,
+                           bool                   loopback);
 
 #ifdef __cplusplus
 }

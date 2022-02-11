@@ -2,7 +2,7 @@
  * @file     fw_voe_rom_boot.h
  * @brief    Define the data structure for VOE ROM Boot functions.
  * @version  V1.00
- * @date     2021-07-28
+ * @date     2021-11-15
  *
  * @note
  *
@@ -156,7 +156,44 @@ typedef struct isp_multi_fcs_hdr_s {
 	uint8_t  reserved[6];
 } isp_multi_fcs_hdr_t;
 
+typedef struct isp_multi_fcs_info_s {
+	uint32_t sensor_set_size[MULTI_FCS_MAX];
+	uint32_t resv[22];
+} isp_multi_fcs_info_t;
 
+typedef struct iq_info_s {
+	uint32_t start_addr;
+	uint32_t data_size;
+	uint32_t resv[14];
+} iq_info_t;
+
+typedef struct sensor_info_s {
+	uint32_t start_addr;
+	uint32_t data_size;
+	uint32_t resv[14];
+} sensor_info_t;
+
+typedef struct sensor_set_info_s {
+	uint32_t fcs_data_size;
+	uint32_t fcs_data_offset;
+	uint32_t iq_start_addr;
+	uint32_t iq_data_size;
+	uint32_t sensor_start_addr;
+	uint32_t sensor_data_size;
+	uint32_t resv[2];
+} sensor_set_info_t;
+
+typedef struct isp_multi_fcs_ld_info_s {
+	uint8_t fcs_id;
+	uint8_t multi_fcs_cnt;
+	uint8_t resv1[2];
+	uint32_t magic;
+	uint32_t version;
+	uint32_t wait_km_init_timeout_us;
+	uint32_t fcs_hdr_start;
+	uint32_t resv2[3];
+	sensor_set_info_t sensor_set[MULTI_FCS_MAX];
+} isp_multi_fcs_ld_info_t;
 
 typedef struct isp_fcs_header_s {
 
@@ -172,17 +209,17 @@ typedef struct isp_fcs_header_s {
 	uint8_t i2c_device_cnt;
 	uint8_t i2c_speed_mode;
 	uint16_t i2c_speed;     // unit: KHz
-	uint16_t i2c_timeout;   //unit: us
 
+	uint16_t i2c_timeout;   //unit: us
 	uint8_t i2c_id;
 	uint8_t timer_id;
+
 	uint8_t adc_id;   // use 1 gpio
 	uint8_t pwm_id;   // same function as ir_led
-
-
 	uint8_t gpio_list[GPIO_MAX];
-
 	uint8_t gpio_cnt;
+
+
 	uint8_t snr_clk_pin; // dedicated gpio
 	uint8_t i2c_scl; // dedicated gpio
 	uint8_t i2c_sda; // dedicated gpio
@@ -191,7 +228,6 @@ typedef struct isp_fcs_header_s {
 	uint8_t adc_th_num;
 	uint8_t adc_th_table_num;
 	uint8_t adc_value_byte;
-
 	uint8_t adc_use_cali;
 
 	int16_t adc_gain_deno;

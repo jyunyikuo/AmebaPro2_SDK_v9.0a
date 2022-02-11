@@ -15,7 +15,7 @@
 #include "wifi_simple_config.h"
 #include "wifi_conf.h"
 
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #include "platform_opts_bt.h"
 #endif
 
@@ -374,7 +374,7 @@ int SC_send_simple_config_ack(u8 round)
 						goto leave_ack;
 					}
 
-#else if
+#else
 					goto leave_ack;
 #endif
 
@@ -558,8 +558,8 @@ static int SC_softAP_find_ap_from_scan_buf(char *target_ssid, void *user_data, i
 		return -1;
 	}
 
-	if (wifi_get_scan_records(&ap_num, scan_buf) < 0) {
-		rtw_mfree(scan_buf, 0);
+	if (wifi_get_scan_records((unsigned int *)(&ap_num), scan_buf) < 0) {
+		rtw_mfree((u8 *)scan_buf, 0);
 		return -1;
 	}
 
@@ -571,7 +571,7 @@ static int SC_softAP_find_ap_from_scan_buf(char *target_ssid, void *user_data, i
 			pwifi->security_type = scanned_ap_info->security;
 		}
 	}
-	rtw_mfree(scan_buf, 0);
+	rtw_mfree((u8 *)scan_buf, 0);
 	return 0;
 
 }
@@ -596,7 +596,7 @@ static int SC_softAP_get_ap_security_mode(IN char *ssid, OUT rtw_security_t *sec
 	} else {
 		SC_softAP_find_ap_from_scan_buf(ssid, (void *)&wifi, scanned_ap_num);
 
-		if (strcmp(wifi.ssid, ssid) == 0) {
+		if (strcmp((char *)wifi.ssid, ssid) == 0) {
 			*security_mode = wifi.security_type;
 			ret = 1;
 		}
@@ -735,7 +735,7 @@ ssid_set_done:
 
 	if (wifi->security_type == RTW_SECURITY_WEP_PSK) {
 		if (wifi->password_len == 10) {
-			u32 p[5] = {0};
+			unsigned int p[5] = {0};
 			u8 pwd[6], i = 0;
 			sscanf((const char *)backup_sc_ctx->password, "%02x%02x%02x%02x%02x", &p[0], &p[1], &p[2], &p[3], &p[4]);
 			for (i = 0; i < 5; i++) {
@@ -746,7 +746,7 @@ ssid_set_done:
 			strncpy((char *)backup_sc_ctx->password, (char *)pwd, sizeof(backup_sc_ctx->password));
 			wifi->password_len = 5;
 		} else if (wifi->password_len == 26) {
-			u32 p[13] = {0};
+			unsigned int p[13] = {0};
 			u8 pwd[14], i = 0;
 			sscanf((const char *)backup_sc_ctx->password, "%02x%02x%02x%02x%02x%02x%02x"\
 				   "%02x%02x%02x%02x%02x%02x", &p[0], &p[1], &p[2], &p[3], &p[4], \
@@ -842,14 +842,14 @@ enum sc_result SC_parse_scan_result_and_connect(char *scan_buf, int scanned_ap_n
 				printf("Connecting to  MAC=%02x:%02x:%02x:%02x:%02x:%02x, ssid = %s, SEC=%d\n",
 					   scanned_ap_info->BSSID.octet[0], scanned_ap_info->BSSID.octet[1], scanned_ap_info->BSSID.octet[2],
 					   scanned_ap_info->BSSID.octet[3], scanned_ap_info->BSSID.octet[4], scanned_ap_info->BSSID.octet[5],
-					   scanned_ap_info->SSID.val, scanned_ap_info->security);
+					   scanned_ap_info->SSID.val, (int)scanned_ap_info->security);
 
 				scan_channel = scanned_ap_info->channel;
 
 				// translate wep key if get_connection_info_from_profile() does not do it due to wrong security form locked ssid for dual band router
 				if (scanned_ap_info->security == RTW_SECURITY_WEP_PSK) {
 					if (wifi->password_len == 10) {
-						u32 p[5] = {0};
+						unsigned int p[5] = {0};
 						u8 pwd[6], i = 0;
 						sscanf((const char *)backup_sc_ctx->password, "%02x%02x%02x%02x%02x", &p[0], &p[1], &p[2], &p[3], &p[4]);
 						for (i = 0; i < 5; i++) {
@@ -860,7 +860,7 @@ enum sc_result SC_parse_scan_result_and_connect(char *scan_buf, int scanned_ap_n
 						strncpy((char *)backup_sc_ctx->password, (char *)pwd, sizeof(backup_sc_ctx->password));
 						wifi->password_len = 5;
 					} else if (wifi->password_len == 26) {
-						u32 p[13] = {0};
+						unsigned int p[13] = {0};
 						u8 pwd[14], i = 0;
 						sscanf((const char *)backup_sc_ctx->password, "%02x%02x%02x%02x%02x%02x%02x"\
 							   "%02x%02x%02x%02x%02x%02x", &p[0], &p[1], &p[2], &p[3], &p[4], \
@@ -894,9 +894,7 @@ enum sc_result SC_parse_scan_result_and_connect(char *scan_buf, int scanned_ap_n
 			}
 		}
 	}
-sc_connect_wifi_fail:
-	printf("%s fail\n", __FUNCTION__);
-	return ret;
+
 
 sc_connect_wifi_success:
 	printf("%s success\n", __FUNCTION__);
@@ -932,7 +930,7 @@ int  SC_connect_to_candidate_AP(rtw_network_info_t *wifi)
 	char *scan_buf = NULL;
 	unsigned int scan_cnt = 0;
 	char *ssid = (char *)wifi->ssid.val;
-	int ssid_len = wifi->ssid.len;
+
 
 	printf("\nConnect with SSID=%s  password=%s\n", wifi->ssid.val, wifi->password);
 
@@ -1223,7 +1221,7 @@ void init_simple_config_lib_config(struct simple_config_lib_config *config)
 	config->strlen_fn = (simple_config_strlen_fn)strlen;
 	config->zmalloc_fn = (simple_config_zmalloc_fn)rtw_zmalloc;
 #if CONFIG_LWIP_LAYER
-	config->ntohl_fn = lwip_ntohl;
+	config->ntohl_fn = (simple_config_ntohl_fn)lwip_ntohl;
 #else
 	config->ntohl_fn = _ntohl;
 #endif
@@ -1477,14 +1475,14 @@ static int simple_config_softap_config(void)
 				}
 				continue;
 			case SOFTAP_DECODE_SUCCESS: {
-				char softAP_ack_content[17];
+				char softAP_ack_content[18];
 				//printf("softAP mode simpleConfig success, send response\n");
 				// ack content: MAC address in string mode
 				snprintf(softAP_ack_content, sizeof(softAP_ack_content), "%02x:%02x:%02x:%02x:%02x:%02x",
 						 mac_addr[0], mac_addr[1], mac_addr[2],
 						 mac_addr[3], mac_addr[4], mac_addr[5]);
 
-				if (send(client_fd, softAP_ack_content, sizeof(softAP_ack_content), 0) <= 0) {
+				if (send(client_fd, softAP_ack_content, sizeof(softAP_ack_content) - 1, 0) <= 0) {
 					tcp_err = -3;
 				} else {
 					vTaskDelay(500);    // make sure the response pkt has enough time to be transmitted
@@ -1550,16 +1548,17 @@ static int SimpleConfig_softAP_start(const char *ap_name, const char *ap_passwor
 	rtw_softap_info_t softAP_config = {0};
 	int ret = 0;
 
+	wifi_set_mode(RTW_MODE_AP);
+
 #if CONFIG_LWIP_LAYER
 	dhcps_deinit();
 
-	u32 addr = WIFI_MAKEU32(GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-	u32 netmask = WIFI_MAKEU32(NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
-	u32 gw = WIFI_MAKEU32(GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+	u32 addr = WIFI_MAKEU32(AP_IP_ADDR0, AP_IP_ADDR1, AP_IP_ADDR2, AP_IP_ADDR3);
+	u32 netmask = WIFI_MAKEU32(AP_NETMASK_ADDR0, AP_NETMASK_ADDR1, AP_NETMASK_ADDR2, AP_NETMASK_ADDR3);
+	u32 gw = WIFI_MAKEU32(AP_GW_ADDR0, AP_GW_ADDR1, AP_GW_ADDR2, AP_GW_ADDR3);
 	LwIP_SetIP(0, addr, netmask, gw);
 #endif
 
-	wifi_set_mode(RTW_MODE_AP);
 	wifi_set_powersave_mode(IPS_MODE_NONE, LPS_MODE_NONE);//add to close powersave
 #ifdef CONFIG_WPS_AP
 	wpas_wps_dev_config(LwIP_GetMAC(0), 1);
@@ -1583,7 +1582,7 @@ static int SimpleConfig_softAP_start(const char *ap_name, const char *ap_passwor
 	while (1) {
 		rtw_wifi_setting_t setting;
 		wifi_get_setting(WLAN0_IDX, &setting);
-		if (strlen(setting.ssid) > 0) {
+		if (strlen((char *)setting.ssid) > 0) {
 			if (strcmp((const char *) setting.ssid, (const char *)ap_name) == 0) {
 				//printf("%s started\n", ap_name);
 				ret = 0;

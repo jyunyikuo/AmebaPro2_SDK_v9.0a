@@ -33,6 +33,7 @@
 #include <gap_conn_le.h>
 #include "platform_stdlib.h"
 #include "ble_peripheral_at_cmd.h"
+#include "gatt_builtin_services.h"
 
 /** @defgroup  PERIPH_APP Peripheral Application
     * @brief This file handles BLE peripheral application routines.
@@ -422,6 +423,57 @@ T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data)
 }
 /** @} */ /* End of group PERIPH_GAP_CALLBACK */
 
+#if F_BT_GAPS_CHAR_WRITEABLE
+/** @defgroup  SCATTERNET_GAPS_WRITE GAP Service Callback Handler
+    * @brief Use @ref F_BT_GAPS_CHAR_WRITEABLE to open
+    * @{
+    */
+/**
+ * @brief    All the BT GAP service callback events are handled in this function
+ * @param[in] service_id  Profile service ID
+ * @param[in] p_para      Pointer to callback data
+ * @return   Indicates the function call is successful or not
+ * @retval   result @ref T_APP_RESULT
+ */
+T_APP_RESULT gap_service_callback(T_SERVER_ID service_id, void *p_para)
+{
+	(void) service_id;
+	T_APP_RESULT  result = APP_RESULT_SUCCESS;
+	T_GAPS_CALLBACK_DATA *p_gap_data = (T_GAPS_CALLBACK_DATA *)p_para;
+	APP_PRINT_INFO2("gap_service_callback: conn_id = %d msg_type = %d\n", p_gap_data->conn_id,
+					p_gap_data->msg_type);
+	APP_PRINT_INFO2("gap_service_callback: len = 0x%x,opcode = %d\n", p_gap_data->msg_data.len,
+					p_gap_data->msg_data.opcode);
+	if (p_gap_data->msg_type == SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE) {
+		switch (p_gap_data->msg_data.opcode) {
+		case GAPS_WRITE_DEVICE_NAME: {
+			T_LOCAL_NAME device_name;
+			memcpy(device_name.local_name, p_gap_data->msg_data.p_value, p_gap_data->msg_data.len);
+			device_name.local_name[p_gap_data->msg_data.len] = 0;
+			//printf("GAPS_WRITE_DEVICE_NAME:device_name = %s\r\n",device_name.local_name);
+			flash_save_local_name(&device_name);
+		}
+		break;
+
+		case GAPS_WRITE_APPEARANCE: {
+			uint16_t appearance_val;
+			T_LOCAL_APPEARANCE appearance;
+			LE_ARRAY_TO_UINT16(appearance_val, p_gap_data->msg_data.p_value);
+			appearance.local_appearance = appearance_val;
+			//printf("GAPS_WRITE_APPEARANCE:appearance = %s\r\n",appearance.local_appearance);
+			flash_save_local_appearance(&appearance);
+		}
+		break;
+		default:
+			APP_PRINT_ERROR1("gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
+			//printf("gap_service_callback: unhandled msg_data.opcode 0x%x\r\n", p_gap_data->msg_data.opcode);
+			break;
+		}
+	}
+	return result;
+}
+#endif
+
 /** @defgroup  PERIPH_SEVER_CALLBACK Profile Server Callback Event Handler
     * @brief Handle profile server callback event
     * @{
@@ -508,7 +560,7 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
 			if (p_simp_cb_data->msg_data.read_value_index == SIMP_READ_V1) {
 				uint8_t value[2] = {0x01, 0x02};
 				APP_PRINT_INFO0("SIMP_READ_V1");
-				printf("SIMP_READ_V1: value 0x%x 0x%x\r\n", value[0], value[1]);
+				printf("SIMP_READ_V1: value 0x%02x 0x%02x\r\n", value[0], value[1]);
 				simp_ble_service_set_parameter(SIMPLE_BLE_SERVICE_PARAM_V1_READ_CHAR_VAL, 2, &value);
 			}
 		}
@@ -520,9 +572,9 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
 								p_simp_cb_data->msg_data.write.len);
 				printf("SIMP_WRITE_V2: write type %d, len %d\r\n", p_simp_cb_data->msg_data.write.write_type,
 					   p_simp_cb_data->msg_data.write.len);
-				printf("SIMP_WRITE_V2 value:");
+				printf("SIMP_WRITE_V2: value ");
 				for (int i = 0; i < p_simp_cb_data->msg_data.write.len; i ++) {
-					printf("0x%2x ", *(p_simp_cb_data->msg_data.write.p_value + i));
+					printf("0x%02x ", *(p_simp_cb_data->msg_data.write.p_value + i));
 				}
 				printf("\r\n");
 			}

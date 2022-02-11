@@ -80,6 +80,8 @@ typedef struct rtw_softap_info {
 	unsigned char		channel;
 } rtw_softap_info_t;
 
+typedef void (*ap_channel_switch_callback_t)(unsigned char channel, rtw_channel_switch_res_t ret);
+
 typedef void (*rtw_joinstatus_callback_t)(\
 		rtw_join_status_t join_status);
 
@@ -112,6 +114,7 @@ typedef struct rtw_network_info {
 
 typedef int (*wifi_do_fast_connect_ptr)(void);
 typedef int (*write_fast_connect_info_ptr)(unsigned int data1, unsigned int data2);
+typedef void (*p_wlan_autoreconnect_hdl_t)(rtw_security_t, char *, int, char *, int, int);
 
 /**
   * @brief  The structure is used to describe the scan result of the AP.
@@ -295,6 +298,26 @@ typedef struct rtw_mac_filter_list {
 	unsigned char mac_addr[6];
 } rtw_mac_filter_list_t;
 
+#ifdef CONFIG_RTL8735B
+typedef struct wowlan_pattern {
+	unsigned char eth_da[6];
+	unsigned char eth_sa[6];
+	unsigned char eth_proto_type[2];
+	unsigned char header_len[1];
+	unsigned char ip_proto[1];
+	unsigned char ip_sa[4];
+	unsigned char ip_da[4];
+	unsigned char src_port[2];
+	unsigned char dest_port[2];
+	unsigned char flag2[1];
+	unsigned char mask[6];
+	unsigned char window[2];
+	unsigned char checksum[2];
+	unsigned char urgent_pointer[2];
+	unsigned char payload[64];
+	unsigned char payload_mask[9];
+} wowlan_pattern_t;
+#else
 typedef struct wowlan_pattern {
 	unsigned char eth_da[6];
 	unsigned char eth_sa[6];
@@ -309,6 +332,7 @@ typedef struct wowlan_pattern {
 	unsigned char dest_port[2];
 	unsigned char mask[5];
 } wowlan_pattern_t;
+#endif
 
 struct psk_info {
 	unsigned char index;
@@ -349,8 +373,9 @@ typedef struct raw_data_desc {
 	unsigned char *buf;          /**< poninter of buf where raw data is stored*/
 	unsigned short buf_len;      /**< the length of raw data*/
 	unsigned short flags;        /**< send options*/
+	unsigned char tx_rate;       /**< specific tx rate, please refer to enum MGN_RATE in wifi_constants.h*/
+	unsigned char retry_limit;   /**< retry limit configure, when set to 0, will use default retry limit 12*/
 	/* todo*/
-	unsigned int tx_rate;
 	unsigned int tx_power;
 } raw_data_desc_t;
 

@@ -68,6 +68,19 @@ void sys_log_uart_on(void);
   */
 void sys_log_uart_off(void);
 
+#if defined(CONFIG_PLATFORM_AMEBAD2) && (CONFIG_PLATFORM_AMEBAD2 == 1)
+/**
+  * @brief  store or load adc calibration parameter
+  * @param  write:  this parameter can be one of the following values:
+  *		@arg 0: load adc calibration parameter a & b & c from flash system data region
+  *		@arg 1: store adc calibration parameter a & b & c to flash system data region
+  * @param  a: pointer to adc parameter a
+  * @param  b: pointer to adc parameter b
+  * @param  c: pointer to adc parameter c
+  * @retval none
+  */
+void sys_adc_calibration(u8 write, u16 *a, u16 *b, u16 *c);
+#else
 /**
   * @brief  store or load adc calibration parameter
   * @param  write:  this parameter can be one of the following values:
@@ -78,6 +91,7 @@ void sys_log_uart_off(void);
   * @retval none
   */
 void sys_adc_calibration(u8 write, u16 *offset, u16 *gain);
+#endif
 
 /**
   * @brief  system software reset

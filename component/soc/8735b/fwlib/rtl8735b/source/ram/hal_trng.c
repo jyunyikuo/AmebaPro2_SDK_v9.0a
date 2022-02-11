@@ -352,4 +352,3 @@ u32 hal_trng_read_data(hal_trng_adapter_t *ptrng_adp)
 
 #endif
 
-

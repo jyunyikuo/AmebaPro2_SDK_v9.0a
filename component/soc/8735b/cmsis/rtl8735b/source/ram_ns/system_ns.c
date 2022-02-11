@@ -66,8 +66,8 @@ void SystemInit(void)
 
 	// clear all pending interrupt
 	for (i = 0; i < MAX_PERIPHERAL_IRQ_NUM; i++) {
-		NVIC_DisableIRQ(i);
-		NVIC_ClearPendingIRQ(i);
+		NVIC_DisableIRQ((IRQn_Type)i);
+		NVIC_ClearPendingIRQ((IRQn_Type)i);
 	}
 
 #if defined (__VTOR_PRESENT) && (__VTOR_PRESENT == 1)

@@ -68,100 +68,114 @@ extern "C" {
   * @{
   */
 /** @brief GATTS client handle type */
-typedef enum {
-	HDL_GATTS_SRV_START,                   //!< start handle of gap service
-	HDL_GATTS_SRV_END,                     //!< end handle of gap service
-	HDL_GATTS_SERVICE_CHANGED,             //!< service changed handle
-	HDL_GATTS_SERVICE_CHANGED_CCCD,        //!< service changed CCCD handle
-	HDL_GATTS_CLIENT_SUPPORTED_FEATURES,   //!< Client Supported Features handle
-	HDL_GATTS_DATABASE_HASH,               //!< Database Hash handle
-	HDL_GATTS_CACHE_LEN,                   //!< handle cache length
+typedef enum
+{
+    HDL_GATTS_SRV_START,                   //!< start handle of gap service
+    HDL_GATTS_SRV_END,                     //!< end handle of gap service
+    HDL_GATTS_SERVICE_CHANGED,             //!< service changed handle
+    HDL_GATTS_SERVICE_CHANGED_CCCD,        //!< service changed CCCD handle
+    HDL_GATTS_CLIENT_SUPPORTED_FEATURES,   //!< Client Supported Features handle
+    HDL_GATTS_DATABASE_HASH,               //!< Database Hash handle
+    HDL_GATTS_CACHE_LEN,                   //!< handle cache length
 } T_GATTS_CLIENT_HANDLE_TYPE;
 
 /** @brief GATTS client discovery state */
-typedef enum {
-	DISC_GATTS_IDLE,
-	DISC_GATTS_START,
-	DISC_GATTS_DONE,
-	DISC_GATTS_FAILED,
+typedef enum
+{
+    DISC_GATTS_IDLE,
+    DISC_GATTS_START,
+    DISC_GATTS_DONE,
+    DISC_GATTS_FAILED,
 } T_GATTS_DISC_STATE;
 
 /** @brief GATTS client read type */
-typedef enum {
-	GATTS_READ_CLIENT_SUPPORTED_FEATURES,
-	GATTS_READ_DATABASE_HASH,
+typedef enum
+{
+    GATTS_READ_CLIENT_SUPPORTED_FEATURES,
+    GATTS_READ_DATABASE_HASH,
 } T_GATTS_READ_TYPE;
 
 /** @brief Client Supported Features value */
-typedef struct {
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_CLIENT_SUPPORTED_FEATURES;
 
 /** @brief GATTS client read content */
-typedef union {
-	T_CLIENT_SUPPORTED_FEATURES client_supported_features;
-	uint8_t database_hash[GATTS_DATABASE_HASH_LEN];
+typedef union
+{
+    T_CLIENT_SUPPORTED_FEATURES client_supported_features;
+    uint8_t database_hash[GATTS_DATABASE_HASH_LEN];
 } T_GATTS_READ_DATA;
 
 /** @brief GATTS client read data, used to inform app read response data */
-typedef struct {
-	T_GATTS_READ_TYPE type;
-	T_GATTS_READ_DATA data;
-	uint16_t cause;
+typedef struct
+{
+    T_GATTS_READ_TYPE type;
+    T_GATTS_READ_DATA data;
+    uint16_t cause;
 } T_GATTS_READ_RESULT;
 
 /** @brief GATTS client write type*/
-typedef enum {
-	GATTS_WRITE_SERVICE_CHANGED_IND_ENABLE,
-	GATTS_WRITE_SERVICE_CHANGED_IND_DISABLE,
-	GATTS_WRITE_CLIENT_SUPPORTED_FEATURES,
+typedef enum
+{
+    GATTS_WRITE_SERVICE_CHANGED_IND_ENABLE,
+    GATTS_WRITE_SERVICE_CHANGED_IND_DISABLE,
+    GATTS_WRITE_CLIENT_SUPPORTED_FEATURES,
 } T_GATTS_WRTIE_TYPE;
 
 /** @brief GATTS client write result*/
-typedef struct {
-	T_GATTS_WRTIE_TYPE type;
-	uint16_t cause;
+typedef struct
+{
+    T_GATTS_WRTIE_TYPE type;
+    uint16_t cause;
 } T_GATTS_WRITE_RESULT;
 
 /** @brief GATTS client notif/ind receive type*/
-typedef enum {
-	GATTS_SERVICE_CHANGED_INDICATE,
+typedef enum
+{
+    GATTS_SERVICE_CHANGED_INDICATE,
 } T_GATTS_NOTIF_IND_TYPE;
 
 /** @brief GATTS client notif/ind receive data */
-typedef struct {
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_GATTS_NOTIF_IND_VALUE;
 
 /** @brief GATTS client notif/ind receive content*/
-typedef struct {
-	T_GATTS_NOTIF_IND_TYPE type;
-	T_GATTS_NOTIF_IND_VALUE data;
+typedef struct
+{
+    T_GATTS_NOTIF_IND_TYPE type;
+    T_GATTS_NOTIF_IND_VALUE data;
 } T_GATTS_NOTIF_IND_DATA;
 
 /** @brief GATTS client callback type */
-typedef enum {
-	GATTS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
-	GATTS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
-	GATTS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
-	GATTS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
-	GATTS_CLIENT_CB_TYPE_INVALID,             //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    GATTS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
+    GATTS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
+    GATTS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
+    GATTS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
+    GATTS_CLIENT_CB_TYPE_INVALID,             //!< Invalid callback type, no practical usage.
 } T_GATTS_CLIENT_CB_TYPE;
 
 /** @brief GATTS client callback content */
-typedef union {
-	T_GATTS_DISC_STATE     disc_state;
-	T_GATTS_READ_RESULT     read_result;
-	T_GATTS_WRITE_RESULT    write_result;
-	T_GATTS_NOTIF_IND_DATA  notif_ind_data;
+typedef union
+{
+    T_GATTS_DISC_STATE     disc_state;
+    T_GATTS_READ_RESULT     read_result;
+    T_GATTS_WRITE_RESULT    write_result;
+    T_GATTS_NOTIF_IND_DATA  notif_ind_data;
 } T_GATTS_CLIENT_CB_CONTENT;
 
 /** @brief GATTS client callback data */
-typedef struct {
-	T_GATTS_CLIENT_CB_TYPE     cb_type;
-	T_GATTS_CLIENT_CB_CONTENT  cb_content;
+typedef struct
+{
+    T_GATTS_CLIENT_CB_TYPE     cb_type;
+    T_GATTS_CLIENT_CB_CONTENT  cb_content;
 } T_GATTS_CLIENT_CB_DATA;
 
 /** End of GATTS_Client_Exported_Types * @} */
@@ -276,7 +290,7 @@ bool gatts_client_set_service_changed_ind(uint8_t conn_id, bool ind);
   * \endcode
   */
 bool gatts_client_set_client_supported_features(uint8_t conn_id, uint16_t len,
-		uint8_t *p_client_supp_feats);
+                                                uint8_t *p_client_supp_feats);
 
 /**
   * @brief  Used by application, to get handle cache.

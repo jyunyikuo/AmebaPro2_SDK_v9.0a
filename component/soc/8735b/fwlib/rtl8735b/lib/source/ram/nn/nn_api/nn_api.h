@@ -84,6 +84,8 @@ typedef struct MODEL_INFO_S {
 
 void nn_rxi300_regulator(float rate_multipier);
 
+void nn_axi_outstandingRead(unsigned int numOutstandingRead);
+
 void nn_hw_version(void);
 void nn_clkcontrol(unsigned int freqscale);
 

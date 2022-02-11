@@ -61,12 +61,10 @@
 #define CONFIG_VERIFY_SEMIHOST                  0
 #define CONFIG_VERIFY_DHRYSTONE                 0
 
-#define CONFIG_VERIFY_VOE                       0
-#define CONFIG_VERIFY_ISP                       0
+//#define CONFIG_VERIFY_VOE                       0
 #define CONFIG_VERIFY_ENC                       0
 #define CONFIG_VERIFY_NN                        0
 #define CONFIG_VERIFY_VIDEO                     0
-#define CONFIG_VERIFY_ISP_SDK                   0
 
 #define CONFIG_VERIFY_DDR                       0
 
@@ -74,6 +72,7 @@
 #define CONFIG_VERIFY_OTG                       0
 #define CONFIG_VERIFY_SYSVIEW                   0
 #define CONFIG_VERIFY_SDHOST                    0
+#define CONFIG_VERIFY_SDIOHOST                  0
 #define CONFIG_VERIFY_GMAC                      0
 #define CONFIG_VERIFY_OTP                       0
 #define CONFIG_VERIFY_FLASH_SEC                 0
@@ -81,20 +80,17 @@
 #define CONFIG_VERIFY_TRNG                      0
 #define CONFIG_VERIFY_RTC                       0
 #define CONFIG_VERIFY_FS                        0
-// Depend macro define
+
+// Verify dependency
 #if CONFIG_VERIFY_ENC
-#undef CONFIG_VERIFY_ISP
-#define CONFIG_VERIFY_ISP                   0
+//#undef CONFIG_VERIFY_ISP
+//#define CONFIG_VERIFY_ISP                   0
 #undef CONFIG_VERIFY_VIDEO
 #define CONFIG_VERIFY_VIDEO                 0
 #endif
 
-#if CONFIG_VERIFY_ISP
-#undef CONFIG_VIDEO_EN
-#define CONFIG_VIDEO_EN                     0
-#endif
-
-
-
+// No longer maintained
+//#define CONFIG_VERIFY_ISP                       0
+//#define CONFIG_VERIFY_ISP_SDK                   0
 
 #endif  // end of "#define _VERIFY_CONF_H_"

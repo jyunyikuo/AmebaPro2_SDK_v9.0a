@@ -13,9 +13,15 @@
 #define DBG_DRAM_INFO(...)
 #endif
 
+//#define TM_TTFF_MEASURE
+
+#if defined(TM_TTFF_MEASURE)
+#define dbg_printf(...)                     do {  } while(0)
+#endif
+
 #define ROUND_UP(divider, divisor) (((divider)%(divisor)) ? (((divider)/(divisor))+1) : ((divider)/(divisor)))
 
-const static unsigned short pll_frequence_table[6][13] = {
+unsigned short pll_frequence_table[6][13] = {
 	/*{ cco_band,          cco_kvco,         dpi_icp,        dpi_loop_pi_isel,
 	    dpi_lpf_cp,        dpi_lpf_sr,       dpi_pdiv,       dpi_pll_ldo_vsel,
 	    dp_pll_sel_cpmode, dpi_post_pi_bias, dpi_post_pi_rl, dpi_post_pi_rs,
@@ -24,10 +30,11 @@ const static unsigned short pll_frequence_table[6][13] = {
 	{1, 1, 3, 1, 1, 3, 0, 0, 1, 0, 2, 0, 0}, //400 MHz
 	{1, 1, 3, 1, 1, 3, 0, 0, 1, 0, 2, 0, 0}, //333 MHz
 	{0, 0, 3, 0, 1, 3, 0, 0, 1, 0, 2, 0, 0}, //200 MHz
-	{3, 0, 3, 1, 1, 3, 0, 0, 1, 0, 3, 0, 0}, //480 MHz
+	{3, 1, 3, 1, 1, 3, 0, 0, 1, 0, 3, 0, 0}, //480 MHz
 	{3, 1, 3, 2, 1, 3, 0, 0, 1, 0, 3, 0, 0}  //Else
 };
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER) || CONFIG_PXP || SIMU_DDR_PXP_INIT_FLOW_EN
 struct rxi316_dram_info rxi316_ddr2_dev = {
 	DDR_2,
 	PAGE_2K,
@@ -38,6 +45,31 @@ struct rxi316_dram_info rxi316_ddr2_dev = {
 	DQ_16,
 	10  // dram_colu_bits
 }; //rxi316_ ddr2_dev
+#else
+
+struct rxi316_dram_info rxi316_ddr2_dev_64MB = {
+	DDR_2,
+	PAGE_2K,
+	BANK_4,
+	BST_LEN_8,
+	SENQUENTIAL,
+	HYBR_256MB,
+	DQ_16,
+	10  // dram_colu_bits
+}; //rxi316_ ddr2_dev
+
+struct rxi316_dram_info rxi316_ddr2_dev = {
+	DDR_2,
+	PAGE_2K,
+	BANK_8,
+	BST_LEN_8,
+	SENQUENTIAL,
+	HYBR_256MB,
+	DQ_16,
+	10  // dram_colu_bits
+}; //rxi316_ ddr2_dev
+
+#endif
 
 struct rxi316_dram_info rxi316_ddr3_dev = {
 	DDR_3,
@@ -50,31 +82,6 @@ struct rxi316_dram_info rxi316_ddr3_dev = {
 	10  // dram_colu_bits
 }; // rxi316_ddr3_dev
 
-#if CONFIG_PXP || SIMU_DDR_PXP_INIT_FLOW_EN // PXP , asic simu run flow
-struct rxi316_dram_mode_reg_info rxi316_ddr2_mode_reg = {
-	3,   // dram_wr_lat  //query - WL, CAS = 4
-	4,   // dram_rd_lat  //query -RL, CAS = 4
-	0,   // dram_add_lat  //query - AL
-	0,   // parity_lat
-	6,   // 5 or 6 tphy_wd=(DFI_RATIO == 2)? ((wl+1-AC_SHARE) / DFI_RATIO) : (wl  / DFI_RATIO)  //query - wl, CAS = 4
-	2,   // tphy_rd=(DFI_RATIO == 2)? ((rl+1-AC_SHARE) / DFI_RATIO) : (rl  / DFI_RATIO)  //query - rl, , CAS = 4
-	0,   // without write preamble
-	0,   // without write pstamble
-	0,   // without read pstamble
-	0,   // mode reg 0 or value
-	0,   // mode reg 1 or value
-	0,   // mode reg 2 or value
-	0,   // mode reg 3 or value
-	0,   // mode reg 4 or value
-	0,   // mode reg 5 or value
-	0,   // mode reg 6 or value
-	0,   // mode reg 11 or value
-	0,   // mode reg 12 or value
-	0,   // mode reg 13 or value
-	0,   // mode reg 14 or value
-	0    // mode reg 22 or value
-}; // rxi316_ddr2_mode_reg_1066mhz
-#else
 struct rxi316_dram_mode_reg_info rxi316_ddr2_mode_reg = {
 	6,   // dram_wr_lat  //query - WL, CAS = 7
 	7,   // dram_rd_lat  //query -RL, CAS = 7
@@ -98,8 +105,6 @@ struct rxi316_dram_mode_reg_info rxi316_ddr2_mode_reg = {
 	0,   // mode reg 14 or value
 	0    // mode reg 22 or value
 }; // rxi316_ddr2_mode_reg_1066mhz
-
-#endif
 
 struct rxi316_dram_mode_reg_info rxi316_ddr3_mode_reg = {
 	6,   // dram_wr_lat
@@ -181,6 +186,7 @@ struct rxi316_dram_timing_info rxi316_ddr3_timing = {  //G0102
 	0           // RTP = TRTP > (TRTP_TCK*DRAM_FRQ)?round_up(TRTP, DRAM_FRQX2):round_up(TRTP_TCK , DFI_RATIO);  //G0102 - not used for DDR2,3
 }; // rxi316_ddr3_timing_1333mhz
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER) || CONFIG_PXP || SIMU_DDR_PXP_INIT_FLOW_EN
 struct bus_addr_remap_info ddr2_bus_addr_remap_info = {
 	UNREAMP,         // bus_addr[0]
 	UNREAMP,         // bus_addr[1]
@@ -215,6 +221,78 @@ struct bus_addr_remap_info ddr2_bus_addr_remap_info = {
 	UNREAMP,         // bus_addr[30]
 	UNREAMP          // bus_addr[31]
 }; //ddr2_dq16_bus_addr_remap_info
+#else
+
+struct bus_addr_remap_info ddr2_bus_addr_remap_info_64MB = {
+	UNREAMP,         // bus_addr[0]
+	UNREAMP,         // bus_addr[1]
+	UNREAMP,         // bus_addr[2]
+	COLU2_REMAP,     // bus_addr[3]
+	COLU3_REMAP,     // bus_addr[4]
+	COLU4_REMAP,     // bus_addr[5]
+	COLU5_REMAP,     // bus_addr[6]
+	COLU6_REMAP,     // bus_addr[7]
+	COLU7_REMAP,     // bus_addr[8]
+	COLU8_REMAP,     // bus_addr[9]
+	COLU9_REMAP,     // bus_addr[10]
+	BANK0_REMAP,     // bus_addr[11]
+	BANK1_REMAP,     // bus_addr[12]
+	ROW0_REMAP,      // bus_addr[13]
+	ROW1_REMAP,      // bus_addr[14]
+	ROW2_REMAP,      // bus_addr[15]
+	ROW3_REMAP,      // bus_addr[16]
+	ROW4_REMAP,      // bus_addr[17]
+	ROW5_REMAP,      // bus_addr[18]
+	ROW6_REMAP,      // bus_addr[19]
+	ROW7_REMAP,      // bus_addr[20]
+	ROW8_REMAP,      // bus_addr[21]
+	ROW9_REMAP,      // bus_addr[22]
+	ROW10_REMAP,     // bus_addr[23]
+	ROW11_REMAP,     // bus_addr[24]
+	ROW12_REMAP,     // bus_addr[25]
+	UNREAMP,         // bus_addr[26]
+	UNREAMP,         // bus_addr[27]
+	UNREAMP,         // bus_addr[28]
+	UNREAMP,         // bus_addr[29]
+	UNREAMP,         // bus_addr[30]
+	UNREAMP          // bus_addr[31]
+}; //ddr2_dq16_bus_addr_remap_info
+
+struct bus_addr_remap_info ddr2_bus_addr_remap_info = {
+	UNREAMP,         // bus_addr[0]
+	UNREAMP,         // bus_addr[1]
+	UNREAMP,         // bus_addr[2]
+	COLU2_REMAP,     // bus_addr[3]
+	COLU3_REMAP,     // bus_addr[4]
+	COLU4_REMAP,     // bus_addr[5]
+	COLU5_REMAP,     // bus_addr[6]
+	COLU6_REMAP,     // bus_addr[7]
+	COLU7_REMAP,     // bus_addr[8]
+	COLU8_REMAP,     // bus_addr[9]
+	COLU9_REMAP,     // bus_addr[10]
+	BANK0_REMAP,     // bus_addr[11]
+	BANK1_REMAP,     // bus_addr[12]
+	BANK2_REMAP,     // bus_addr[13]
+	ROW0_REMAP,      // bus_addr[14]
+	ROW1_REMAP,      // bus_addr[15]
+	ROW2_REMAP,      // bus_addr[16]
+	ROW3_REMAP,      // bus_addr[17]
+	ROW4_REMAP,      // bus_addr[18]
+	ROW5_REMAP,      // bus_addr[19]
+	ROW6_REMAP,      // bus_addr[20]
+	ROW7_REMAP,      // bus_addr[21]
+	ROW8_REMAP,      // bus_addr[22]
+	ROW9_REMAP,      // bus_addr[23]
+	ROW10_REMAP,     // bus_addr[24]
+	ROW11_REMAP,     // bus_addr[25]
+	ROW12_REMAP,     // bus_addr[26]
+	UNREAMP,         // bus_addr[27]
+	UNREAMP,         // bus_addr[28]
+	UNREAMP,         // bus_addr[29]
+	UNREAMP,         // bus_addr[30]
+	UNREAMP          // bus_addr[31]
+}; //ddr2_dq16_bus_addr_remap_info
+#endif
 
 struct bus_addr_remap_info ddr3_bus_addr_remap_info = {
 	UNREAMP,         // bus_addr[0]
@@ -1051,7 +1129,7 @@ void hal_dramc_init(DRAMC_TypeDef *dramc_dev, struct rxi316_dram_device_info *rx
 	DBG_DRAM_INFO("base address = %x\r\n", &(dramc_dev->dram_size));
 
 	// ----> cr_dram_size setting
-	dram_size = 0x3ffffff;
+	dram_size = 0xfffffff;
 	dramc_dev->dram_size = dram_size;
 
 
@@ -1707,6 +1785,8 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 	hal_delay_us(1);
 	cpu_read_modify_write(&dpi_dev_map->DPI_CRT_RST_CTL, 0x30, 0x30);
 
+	dpi_dev_map->DPI_AFIFO_STR_0 = 0x22222222;//CL7
+
 	cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_1, 0x300000, 0x300000);
 
 	cpu_read_modify_write(&dpi_dev_map->DPI_CRT_RST_CTL, 0x1, 0x1);
@@ -1791,9 +1871,11 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 	cpu_read_modify_write(&dpi_dev_map->DPI_CRT_CTL, 0x0, 0x4);
 	dpi_dev_map->DPI_CMD_ADR_PH = 0x7C055555;
 
-	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x1000, 0x203F00);
-	dpi_dev_map->DPI_READ_CTRL_0_0 = 0x3;
-	dpi_dev_map->DPI_READ_CTRL_0_1 = 0x3;
+	/*CL7*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_0, 0x1002, 0x203F03);
+	dpi_dev_map->DPI_READ_CTRL_0_0 = 0x5;
+	dpi_dev_map->DPI_READ_CTRL_0_1 = 0x5;
+	cpu_read_modify_write(&dpi_dev_map->DPI_DPI_CTRL_1, 0xC, 0xC);
 }
 
 void hal_ddr3_phy_init(uint32_t dram_period_ps)
@@ -1907,7 +1989,7 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 	u32 ddr_freq = 1000000 / dram_period_ps;
 	u32 freq;
 
-	DBG_DRAM_INFO("ddr_freq = %d\r\n", ddr_freq);
+	dbg_printf("ddr_freq = %d\r\n", ddr_freq);
 
 	hal_delay_us(1);
 	/*Release Bandgap reset*/
@@ -1971,7 +2053,7 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 		freq = 5;
 	}
 
-	dram_set_pll_frequency(&pll_frequence_table[freq][0]);
+	dram_set_pll_frequency(ddr_freq, &pll_frequence_table[freq][0]);
 
 	hal_delay_us(50);
 
@@ -2044,6 +2126,7 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 	cpu_read_modify_write(&dpi_dev_map->DPI_READ_CTRL_0_1, 0x7 << DPI_SHIFT_TM_DQS_EN_FTUN, DPI_MASK_TM_DQS_EN_FTUN | DPI_MASK_TM_DQS_EN);////CHUN-CHI
 	cpu_read_modify_write(&dpi_dev_map->DPI_READ_CTRL1, 0x6 << DPI_SHIFT_TM_RD_FIFO, DPI_MASK_TM_RD_FIFO);//533, CAS = 7
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
 	/*DCK*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x17 << DPI_SHIFT_POST_PI_SEL0, DPI_MASK_POST_PI_SEL0);
 	dpi_dev_map->DPI_PLL_CTL1 |= (1 << 0);
@@ -2054,10 +2137,8 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 
 	/*DQS0, DQS1*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x1D << DPI_SHIFT_POST_PI_SEL2, DPI_MASK_POST_PI_SEL2);
-	//cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x2 << DPI_SHIFT_DQS_RD_STR_NUM_0, DPI_MASK_DQS_RD_STR_NUM_0);//480, CAS = 4
 	cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x3 << DPI_SHIFT_DQS_RD_STR_NUM_0, DPI_MASK_DQS_RD_STR_NUM_0);//533, CAS = 7
 	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x1D << DPI_SHIFT_POST_PI_SEL3, DPI_MASK_POST_PI_SEL3);
-	//cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x2 << DPI_SHIFT_DQS_RD_STR_NUM_1, DPI_MASK_DQS_RD_STR_NUM_1);//480, CAS = 4
 	cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x3 << DPI_SHIFT_DQS_RD_STR_NUM_1, DPI_MASK_DQS_RD_STR_NUM_1);//533, CAS = 7
 
 	/*If pi value is 0 ~ 15, oesync = 0, if pi value is 16 ~ 31, oesync = 1*/
@@ -2067,7 +2148,28 @@ void hal_ddr2_phy_init(uint32_t dram_period_ps)
 	/*DQ0, DQ1*/
 	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI1, 0x5 << DPI_SHIFT_POST_PI_SEL6, DPI_MASK_POST_PI_SEL6);
 	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI2, 0x6 << DPI_SHIFT_POST_PI_SEL7, DPI_MASK_POST_PI_SEL7);
+#else
+	/*DCK*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x16 << DPI_SHIFT_POST_PI_SEL0, DPI_MASK_POST_PI_SEL0);
+	dpi_dev_map->DPI_PLL_CTL1 |= (1 << 0);
 
+	/*DCS*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI2, 0x0 << DPI_SHIFT_POST_PI_SEL10, DPI_MASK_POST_PI_SEL10);
+
+	/*DQS0, DQS1*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x1E << DPI_SHIFT_POST_PI_SEL2, DPI_MASK_POST_PI_SEL2);
+	cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x3 << DPI_SHIFT_DQS_RD_STR_NUM_0, DPI_MASK_DQS_RD_STR_NUM_0);//533, CAS = 7
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI0, 0x1B << DPI_SHIFT_POST_PI_SEL3, DPI_MASK_POST_PI_SEL3);
+	cpu_read_modify_write(&dpi_dev_map->DPI_AFIFO_STR_0, 0x3 << DPI_SHIFT_DQS_RD_STR_NUM_1, DPI_MASK_DQS_RD_STR_NUM_1);//533, CAS = 7
+
+	/*If pi value is 0 ~ 15, oesync = 0, if pi value is 16 ~ 31, oesync = 1*/
+	dpi_dev_map->DPI_PLL_CTL1 |= (1 << 2);
+	dpi_dev_map->DPI_PLL_CTL1 |= (1 << 3);
+
+	/*DQ0, DQ1*/
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI1, 0x6 << DPI_SHIFT_POST_PI_SEL6, DPI_MASK_POST_PI_SEL6);
+	cpu_read_modify_write(&dpi_dev_map->DPI_PLL_PI2, 0x4 << DPI_SHIFT_POST_PI_SEL7, DPI_MASK_POST_PI_SEL7);
+#endif
 	/*DQ DLY*/
 	dpi_dev_map->DPI_DQ_DLY_0 = 0x88888888;
 	dpi_dev_map->DPI_DQ_DLY_0_1 = 0x88888888;
@@ -2106,7 +2208,7 @@ void hal_ddr3_phy_init(uint32_t dram_period_ps)
 	u32 ddr_freq = 1000000 / dram_period_ps;
 	u32 freq;
 
-	DBG_DRAM_INFO("ddr_freq = %d\r\n", ddr_freq);
+	dbg_printf("ddr_freq = %d\r\n", ddr_freq);
 
 	hal_delay_us(1);
 	/*Release Bandgap reset*/
@@ -2172,7 +2274,7 @@ void hal_ddr3_phy_init(uint32_t dram_period_ps)
 		freq = 5;
 	}
 
-	dram_set_pll_frequency(&pll_frequence_table[freq][0]);
+	dram_set_pll_frequency(ddr_freq, &pll_frequence_table[freq][0]);
 
 	hal_delay_us(50);
 
@@ -2295,6 +2397,27 @@ void hal_ddr3_phy_init(uint32_t dram_period_ps)
 
 #endif
 
+void hal_dram_scramble_ctrl(u8 ctrl)
+{
+	if (ctrl == ENABLE) {
+		/*Set scramble seed, all DRAM region will be scrambled*/
+		HAL_WRITE32(DRAMC_FUNC_BASE_ADDR, 0x270, 0x6231DCE5);
+
+		/*Set SCE Start base address for scramble*/
+		HAL_WRITE32(DRAMC_FUNC_BASE_ADDR, 0x200, 0);
+
+		/*Set SCE End base address for scramble*/
+		HAL_WRITE32(DRAMC_FUNC_BASE_ADDR, 0x204, 0xFFFFF000);
+
+		/*Enable scramble function*/
+		HAL_WRITE32(DRAMC_FUNC_BASE_ADDR, 0x204, 0xFFFFF001);
+	} else {
+		/*Disable scramble function*/
+		HAL_WRITE32(DRAMC_FUNC_BASE_ADDR, 0x204, 0xFFFFF000);
+	}
+
+}
+
 void hal_init_dram()
 {
 	u32 chip_id = 0;
@@ -2303,12 +2426,18 @@ void hal_init_dram()
 	DRAM_FE_TypeDef *dram_ft_dev = (DRAM_FE_TypeDef *) DRAMC_FRONTEND_BASE_ADDR;
 	SYSON_S_TypeDef *syson_s = SYSON_S;
 
+	/*Initialize clock & function control*/
+	syson_s->SYSON_S_REG_SYS_LPDDR1_CTRL = 0;
+	syson_s->SYSON_S_REG_SYS_DDRPHY_CTRL = 0;
+
+
 	/*Enable clock & function, PAD is not enabled yet*/
 	syson_s->SYSON_S_REG_SYS_LPDDR1_CTRL = SYSON_S_BIT_HS_LPDDR1_EN | SYSON_S_BIT_HS_LPDDR1_CLK_EN;
 	syson_s->SYSON_S_REG_SYS_DDRPHY_CTRL = SYSON_S_BIT_HS_DDRPHY_CRT_RST | SYSON_S_BIT_DDRPHY_RBUS_EN | SYSON_S_BIT_DDRPHY_VCCON | SYSON_S_BIT_HS_DDRPHY_RBUS_CLK_EN
 										   | SYSON_S_BIT_HS_DDRPHY_CRT_CLK_EN;
 
 #if CONFIG_PXP || SIMU_DDR_PXP_INIT_FLOW_EN // PXP , asic simu run flow
+	/*PXP*/
 #if DRAM_TYPE_DDR2
 	dbg_printf("DRAM_TYPE is DDR2.\r\n");
 	dram_type = DDR_2;
@@ -2317,7 +2446,12 @@ void hal_init_dram()
 	dram_type = DDR_3;
 #endif
 #else
+	/*ASIC*/
 	hal_sys_get_chip_id(&chip_id);
+	//dbg_printf("Chip_id = %x\r\n", chip_id);
+
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+	/*Test Chip*/
 	if (((chip_id >> 16) & 0x3) == 0x3) {
 		dbg_printf("DRAM_TYPE is DDR2.\r\n");
 		dram_type = DDR_2;
@@ -2325,6 +2459,34 @@ void hal_init_dram()
 		dbg_printf("DRAM_TYPE is DDR3L.\r\n");
 		dram_type = DDR_3;
 	}
+#else
+
+	/*MP Chip*/
+	if (((chip_id >> 16) & 0x3) == 0x3) {
+		/*Keep bit 4 & bit 5 settings*/
+		if ((((chip_id >> 2) & 0x3) == 0x3)
+			|| (((chip_id >> 2) & 0x3) == 0x0)) {
+			if (((chip_id >> 4) & 0x3) == 0x0) {
+				rxi316_ddr2_info_m.dev = &rxi316_ddr2_dev_64MB;
+				(rxi316_ddr2_info_m.dramc_info)->bus_addr_bit = &ddr2_bus_addr_remap_info_64MB;
+				dbg_printf("DRAM_TYPE is DDR2 64MB.\r\n");
+			} else {
+				dbg_printf("DRAM_TYPE is DDR2 128MB.\r\n");
+			}
+		} else if (((chip_id >> 2) & 0x3) == 0x1) {
+			rxi316_ddr2_info_m.dev = &rxi316_ddr2_dev_64MB;
+			(rxi316_ddr2_info_m.dramc_info)->bus_addr_bit = &ddr2_bus_addr_remap_info_64MB;
+			dbg_printf("DRAM_TYPE is DDR2 64MB.\r\n");
+		} else {
+			dbg_printf("DRAM_TYPE is DDR2 128MB.\r\n");
+		}
+
+		dram_type = DDR_2;
+	} else {
+		dbg_printf("DRAM_TYPE is DDR3L.\r\n");
+		dram_type = DDR_3;
+	}
+#endif
 #endif
 
 	if (dram_type == DDR_2) {

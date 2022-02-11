@@ -36,5 +36,12 @@
 //#include "dwc_otg_hcd.h"
 #endif
 
+
+//#define DBG_8735B_OTG(x...)   DBG_OTG_INFO(x)
+#define DBG_8735B_OTG(x...)
+
+
+
+
 #endif
 

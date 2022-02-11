@@ -573,7 +573,7 @@ void NetworkInit(Network *n)
 	n->rootCA = NULL;
 	n->clientCA = NULL;
 	n->private_key = NULL;
-
+	n->ciphersuites = NULL;
 #endif
 }
 
@@ -581,6 +581,9 @@ void NetworkInit(Network *n)
 #if (MQTT_OVER_SSL)
 static int mqtt_tls_verify(void *data, mbedtls_x509_crt *crt, int depth, int *flags)
 {
+	/* To avoid gcc warnings */
+	(void) data;
+
 	char buf[1024];
 
 	mqtt_printf(MQTT_DEBUG, "\nVerify requested for (Depth %d):\n", depth);
@@ -639,6 +642,8 @@ static void *my_calloc(size_t nelements, size_t elementSize)
 
 static int my_random(void *p_rng, unsigned char *output, size_t output_len)
 {
+	/* To avoid gcc warnings */
+	(void) p_rng;
 	rtw_get_random_bytes(output, output_len);
 	return 0;
 }
@@ -716,13 +721,20 @@ int NetworkConnect(Network *n, char *addr, int port)
 			goto err;
 		}
 
+		if (n->ciphersuites) {
+			mbedtls_ssl_conf_ciphersuites(n->conf, n->ciphersuites);
+		}
+
+
 		mbedtls_ssl_set_bio(n->ssl, &n->my_socket, mbedtls_net_send, mbedtls_net_recv, NULL);
 		mbedtls_ssl_conf_rng(n->conf, my_random, NULL);
 
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
 		if (mbedtls_ssl_conf_max_frag_len(n->conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
 			printf("ssl conf max frag len failed!");
 			goto err;
 		}
+#endif
 
 		if ((mbedtls_ssl_setup(n->ssl, n->conf)) != 0) {
 			mqtt_printf(MQTT_DEBUG, "mbedtls_ssl_setup failed!");
@@ -770,7 +782,11 @@ int NetworkConnect(Network *n, char *addr, int port)
 				goto err;
 			}
 
+#if defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER == 0x03000000)
+			if (mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key) + 1, NULL, 0, NULL, NULL) != 0) {
+#else
 			if (mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key) + 1, NULL, 0) != 0) {
+#endif
 				mqtt_printf(MQTT_DEBUG, "parse client_rsa failed!");
 				goto err;
 			}

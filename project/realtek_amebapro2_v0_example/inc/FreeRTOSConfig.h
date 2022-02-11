@@ -72,7 +72,7 @@ extern uint32_t SystemCoreClock;
 
 /* Constants that describe the hardware and memory usage. */
 #define configCPU_CLOCK_HZ								SystemCoreClock
-#define configMINIMAL_STACK_SIZE						( ( uint16_t ) 130 )
+#define configMINIMAL_STACK_SIZE						( ( uint16_t ) 512 )
 #define configMINIMAL_SECURE_STACK_SIZE					( 1024 )
 #define configMAX_TASK_NAME_LEN							( 12 )
 #define configTOTAL_HEAP_SIZE							( ( size_t ) ( 120 * 1024 ) )
@@ -80,7 +80,8 @@ extern uint32_t SystemCoreClock;
 /* Constants that build features in or out. */
 #define configUSE_MUTEXES								1
 #define configUSE_TICKLESS_IDLE							0
-#define configUSE_APPLICATION_TASK_TAG					0
+#define configUSE_APPLICATION_TASK_TAG					1
+#define configUSE_POSIX_ERRNO							1
 #define configUSE_NEWLIB_REENTRANT						0
 #define configUSE_CO_ROUTINES							0
 #define configUSE_COUNTING_SEMAPHORES					1
@@ -93,6 +94,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_IDLE_HOOK								0
 #define configUSE_TICK_HOOK								0
 #define configUSE_MALLOC_FAILED_HOOK					0
+#define configUSE_DAEMON_TASK_STARTUP_HOOK				1
 
 /* Constants provided for debugging and optimisation assistance. */
 #define configCHECK_FOR_STACK_OVERFLOW					2
@@ -103,7 +105,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TIMERS								1
 #define configTIMER_TASK_PRIORITY						( configMAX_PRIORITIES - 1 )
 #define configTIMER_QUEUE_LENGTH						( 12 + 32 )
-#define configTIMER_TASK_STACK_DEPTH					( 512 )
+#define configTIMER_TASK_STACK_DEPTH					( 1024 )
 
 /* Set the following definitions to 1 to include the API function, or zero
  * to exclude the API function.  NOTE:  Setting an INCLUDE_ parameter to 0 is
@@ -187,6 +189,6 @@ extern void vAssertCalled(uint32_t ulLine, const char *pcFile);
 #endif /* __IASMARM__ */
 
 /* Enable static allocation. */
-//#define configSUPPORT_STATIC_ALLOCATION					1
+#define configSUPPORT_STATIC_ALLOCATION					1
 
 #endif /* FREERTOS_CONFIG_H */

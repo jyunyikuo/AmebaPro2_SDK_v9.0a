@@ -27,14 +27,15 @@
 #define WIRELESS_EXT	22
 
 /**************************** CONSTANTS ****************************/
-typedef unsigned char __u8;
-typedef char __s8;
-typedef unsigned short __u16;
-typedef short __s16;
-typedef unsigned int __u32;
-typedef int __s32;
-typedef	unsigned long long __u64;
-typedef	long long __i64;
+#include <stdint.h>
+typedef uint8_t __u8;
+typedef int8_t __s8;
+typedef uint16_t __u16;
+typedef int16_t __s16;
+typedef uint32_t __u32;
+typedef int32_t __s32;
+typedef	uint64_t __u64;
+typedef	int64_t __i64;
 
 #define	E2BIG		 7	/* Argument list too long */
 

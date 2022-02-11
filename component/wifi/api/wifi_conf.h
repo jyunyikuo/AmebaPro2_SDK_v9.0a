@@ -61,9 +61,6 @@ extern __u32 GlobalDebugEnable;
 #define RTW_API_INFO(args)
 #endif
 
-#define MAC_ARG(x)		((u8*)(x))[0],((u8*)(x))[1],\
-				((u8*)(x))[2],((u8*)(x))[3],\
-				((u8*)(x))[4],((u8*)(x))[5]
 #define CMP_MAC( a, b)		(((a[0])==(b[0]))&& \
 				((a[1])==(b[1]))&& \
 				((a[2])==(b[2]))&& \
@@ -319,6 +316,22 @@ int wifi_set_powersave_mode(u8 ips_mode, u8 lps_mode);
 int wifi_set_mfp_support(unsigned char value);
 
 /**
+ * @brief  Set group id of SAE.
+ * @param[in] value:group id which want to be set
+ * @return  RTW_SUCCESS if setting is successful.
+ * @return  RTW_ERROR otherwise.
+ */
+int wifi_set_group_id(unsigned char value);
+
+/**
+ * @brief  enable or disable pmk cache.
+ * @param[in] value:1 for enable, 0 for disable
+ * @return  RTW_SUCCESS if setting is successful.
+ * @return  RTW_ERROR otherwise.
+ */
+int wifi_set_pmk_cache_enable(unsigned char value);
+
+/**
  * @brief  Trigger Wi-Fi driver to start an infrastructure Wi-Fi network.
  * @param[in]  softAP_config:the pointer of a struct which store the softAP
  * 	configuration, please refer to struct rtw_softap_info_t in wifi_structures.h
@@ -556,6 +569,13 @@ int wifi_get_disconn_reason_code(unsigned short *reason_code);
 rtw_join_status_t wifi_get_join_status(void);
 
 /**
+ * @brief  set the timeout value for checking no beacon
+ * @param  the value of timeout, in seconds.
+ * @return None
+ */
+void wifi_set_no_beacon_timeout(unsigned char timeout_sec);
+
+/**
  * @brief  Set ble scan duty when coex.
  * @param[in]  duty: the desired scan duty for ble
  * @return  1: if the scan duty is successfully set
@@ -770,6 +790,46 @@ void wifi_set_indicate_mgnt(int enable);
 int wifi_send_raw_frame(raw_data_desc_t *raw_data_desc);
 
 /**
+ * @brief  Control initial tx rate by different ToS value in IP header.
+ * @param[in]  enable: set 1 to add control for specified tx_rate for
+ * 	corresponding ToS_value, set 0 to disable initial rate control for this ToS_value.
+ * @param[in]  ToS_precedence: range from 0 to 7, corresponding to IP precedence in TOS field of IP header(BIT7~5).
+ * @param[in]  tx_rate: initial tx rate for packet which has the same ToS value as setted.Please
+ * 	refer to enum MGN_RATE in wifi_constants.h for rate definition.
+ * @return  RTW_SUCCESS or RTW_ERROR.
+ * @note this function only take IP Precedence(BIT 7~5 in ToS field) into consideration.
+ */
+int wifi_set_tx_rate_by_ToS(unsigned char enable, unsigned char ToS_precedence, unsigned char tx_rate);
+
+/**
+ * @brief  Set EDCA parameter.
+ * @param[in]  AC_param: format is shown as in below ,
+ * +--------------------------+-------------+-------------+
+ * |        TXOP Limit        |ECWmin/ECWmax|  ACI/AIFSN  |
+ * +--------------------------+-------------+-------------+
+ * 	BIT31~16 corresponding to TXOP Limit, BIT15~8 corresponding
+ * 	to ECWmin/ECWmax, BIT7~0 corresponding to ACI/AIFSN.
+ * @return  RTW_SUCCESS or RTW_ERROR
+ */
+int wifi_set_EDCA_param(unsigned int AC_param);
+
+/**
+ * @brief  enable or disable CCA for TX
+ * @param[in]  enable: 1 for enable, 0 for disable
+ * @return  RTW_SUCCESS or RTW_ERROR.
+ * @note when disable, both CCA and EDCCA will be disabled.
+ */
+int wifi_set_TX_CCA(unsigned char enable);
+
+/**
+ * @brief  set duration and send a CTS2SELF frame
+ * @param[in]  wlan_idx: the wlan interface index, can be WLAN0_IDX or WLAN1_IDX
+ * @param[in]  duration: the duration value for the CTS2SELF frame
+ * @return  RTW_SUCCESS or RTW_ERROR.
+ */
+int wifi_set_cts2self_duration_and_send(unsigned char wlan_idx, unsigned short duration);
+
+/**
  * @brief  initialize mac address filter list
  * @return  RTW_SUCCESS or RTW_ERROR.
  */
@@ -794,20 +854,42 @@ int wifi_del_mac_filter(unsigned char *hwaddr);
 
 #ifdef CONFIG_WOWLAN_TCP_KEEP_ALIVE
 /**
- * @brief  construct a tcp packet that offload to wlan.
- * 	wlan would keep sending this packet to tcp server.
+ * @brief  construct a tcp packet that offload to wlan. wlan would keep sending this packet to tcp server.
+ *
  * @param[in]  socket_fd : tcp socket
  * @param[in]  content : tcp payload
  * @param[in]  len : tcp payload size
  * @param[in]  interval_ms : send this packeter every interval_ms milliseconds
- * @return  RTW_SUCCESS or RTW_ERROR
+ * @param[in]  resend_ms : if packet fails to send at interval_ms, then resend it after resemd_ms
+ * @param[in]  wake_sys : if packet fails to send after resend several times, should wlan wake system
+ * @return  RTW_SUCCESS
  */
-int wifi_set_tcp_keep_alive_offload(
-	int		socket_fd,
-	uint8_t		*content,
-	size_t		len,
-	uint32_t	interval_ms);
+int wifi_set_tcp_keep_alive_offload(int socket_fd, uint8_t *content, size_t len, uint32_t interval_ms, uint32_t resend_ms, uint8_t wake_sys);
 #endif
+
+#ifdef CONFIG_WOWLAN_DHCP_RENEW
+/**
+ * @brief  construct a udp renew packet that offload to wlan. wlan would keep sending this packet to dhcp server.
+ *
+ * @return  RTW_SUCCESS
+ */
+int wifi_set_dhcp_offload(void);
+#endif
+
+#ifdef CONFIG_ARP_KEEP_ALIVE
+/**
+ * @brief   use ARP response as keep alive packet instead of null frame
+ *
+ * @param[in]   enable : enable or disable ARP response keep alive
+ * @return  RTW_SUCCESS
+ */
+int wifi_wowlan_set_arp_rsp_keep_alive(int enable);
+#endif
+
+#ifdef CONFIG_WOWLAN_DTIMTO
+int wifi_wowlan_set_dtimto(uint8_t dtimto_enable, uint8_t retry_inc, uint8_t ack_timeout, uint8_t dtim);
+#endif
+
 
 // WoWlan related
 //-------------------------------------------------------------//
@@ -839,22 +921,6 @@ int wifi_wowlan_set_pattern(wowlan_pattern_t pattern);
 #endif
 
 //-------------------------------------------------------------//
-#ifdef CONFIG_APP_CTRL_RF_ONOFF
-/**
- * @brief  app control rf on and off
- * @param[in]  Status: can be ON(1) and OFF(0)
- * @return  RTW_SUCCESS or RTW_ERROR
- */
-extern void rtw_rf_cmd(u32 Status);
-
-/**
- * @brief  get port0 or port1 tsf
- * @param[in]  Port can be 0 or 1
- * @return  tsf result
- */
-extern u32 rtw_get_tsf(u32 Port);
-#endif
-
 /*
  * @brief get band type
  * @return  the support band type.
@@ -887,6 +953,29 @@ int wifi_get_auto_chl(
  */
 int wifi_del_station(unsigned char wlan_idx, unsigned char *hwaddr);
 
+/**
+ * @brief  switch to a new channel in AP mode and using CSA to inform sta
+ * @param[in]  new_chl: the new channel will be switched to.
+ * @param[in]  chl_switch_cnt: the channel switch cnt,
+* 	after chl_switch_cnt*102ms, ap will switch to new channel.
+ * @param[in]  callback: this callback will be called after channel switch is done,
+ * 	and will return the new channel number and channel switch result.
+ * @return  RTW_SUCCESS or RTW_ERROR, only indicate whether channel switch cmd is
+ * 	successfully set to wifi driver.
+ * @note  this function should be used when operating as AP.
+ */
+int wifi_ap_switch_chl_and_inform(
+	unsigned char new_chl,
+	unsigned char chl_switch_cnt,
+	ap_channel_switch_callback_t callback);
+
+/**
+ * @brief	Get wifi TSF register[31:0].
+ * @param[in]	port: wifi port 0/1.
+ * @return TSF[31:0] or 0
+ */
+unsigned int wifi_get_tsf_low(unsigned char port_id);
+
 #ifdef CONFIG_RTK_MESH
 /**
  * @brief  print current mac filter list
@@ -908,13 +997,6 @@ int wifi_get_mesh_id(unsigned char *mesh_id);
  * @return  RTW_SUCCESS or RTW_ERROR
  */
 int wifi_set_mesh_rssi_threshold(const char *ifname, s32 rssi);
-
-/**
- * @brief	Get wifi TSF register[31:0].
- * @param[in]	port: wifi port 0/1.
- * @return TSF[31:0] or 0
- */
-u32 wifi_get_tsf_low(u32 port);
 
 #endif
 

@@ -85,6 +85,7 @@ static hal_pwm_comm_adapter_t pwm_com_handler;
 static hal_timer_group_adapter_t _timer_group0;
 //static hal_timer_group_adapter_t _timer_group2;
 //static phal_gdma_adaptor_t gdma1;
+extern u8 init, clk_sel;
 
 void pwmout_init(pwmout_t *obj, PinName pin)
 {
@@ -96,12 +97,29 @@ void pwmout_init(pwmout_t *obj, PinName pin)
 	//#define pinmux_ready 0
 
 	if (!pwm_com_initialed) {
-		hal_timer_clock_init(0, ENABLE);
-		hal_timer_group_init(&_timer_group0, 0);  // Initialize timer group 2 for PWM module
-		hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_4M);  // Default 4MHz
-
+		if (init == 0) {
+			if (clk_sel == 0) {
+				hal_timer_clock_init(0, ENABLE);
+				hal_timer_group_init(&_timer_group0, 0);  // Initialize timer group 2 for PWM module
+				hal_osc4m_cal();
+				hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_4M);  // Default 4MHz
+				hal_pwm_clk_sel(PWM_Sclk_4M);
+				init = 1;
+			} else {
+				hal_timer_clock_init(0, ENABLE);
+				hal_timer_group_init(&_timer_group0, 0);  // Initialize timer group 2 for PWM module
+				hal_timer_group_sclk_sel(&_timer_group0, GTimerSClk_40M);  // Default 40MHz
+				hal_pwm_clk_sel(PWM_Sclk_40M);
+				init = 1;
+			}
+		} else {
+			if (clk_sel == 0) {
+				hal_pwm_clk_sel(PWM_Sclk_4M);
+			} else {
+				hal_pwm_clk_sel(PWM_Sclk_40M);
+			}
+		}
 		hal_pwm_clock_init(ENABLE);
-		hal_pwm_clk_sel(PWM_Sclk_4M);
 		hal_pwm_comm_init(&pwm_com_handler);
 		hal_pwm_comm_tick_source_list(timer_for_pwm_temp);
 		pwm_com_initialed = 1;

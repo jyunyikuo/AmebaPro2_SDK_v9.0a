@@ -607,87 +607,96 @@ parameters for the LE Coded PHY are provided.*/
   */
 
 /** @brief define local adress type */
-typedef enum {
-	GAP_LOCAL_ADDR_LE_PUBLIC           = 0x00,    /**<  Bluetooth low energy public address. */
-	GAP_LOCAL_ADDR_LE_RANDOM           = 0x01,    /**<  Bluetooth low energy random address. */
+typedef enum
+{
+    GAP_LOCAL_ADDR_LE_PUBLIC           = 0x00,    /**<  Bluetooth low energy public address. */
+    GAP_LOCAL_ADDR_LE_RANDOM           = 0x01,    /**<  Bluetooth low energy random address. */
 #if F_BT_LE_PRIVACY_SUPPORT
-	GAP_LOCAL_ADDR_LE_RAP_OR_PUBLIC    = 0x02,    /**< Controller generates the Resolvable Private Address based on the local
+    GAP_LOCAL_ADDR_LE_RAP_OR_PUBLIC    = 0x02,    /**< Controller generates the Resolvable Private Address based on the local
 IRK from the resolving list. If the resolving list contains no matching entry, then use the public address. */
-	GAP_LOCAL_ADDR_LE_RAP_OR_RAND      = 0x03     /**< Controller generates the Resolvable Private Address based on the local
+    GAP_LOCAL_ADDR_LE_RAP_OR_RAND      = 0x03     /**< Controller generates the Resolvable Private Address based on the local
 IRK from the resolving list. If the resolving list contains no matching entry, then use the random address from the most recent successful LE_Set_Random_Address Command. */
-										 /** @} End GAP_LE_LOCAL_ADDR_TYPE_DEFINES */
+                                         /** @} End GAP_LE_LOCAL_ADDR_TYPE_DEFINES */
 #endif
 } T_GAP_LOCAL_ADDR_TYPE;
 
 /** @brief Define random adress type */
-typedef enum {
-	GAP_RAND_ADDR_STATIC            = 0x00,/**<  Static random device address. */
-	GAP_RAND_ADDR_NON_RESOLVABLE    = 0x01,/**<  Non resolvable random device address. */
-	GAP_RAND_ADDR_RESOLVABLE        = 0x02 /**<  Resolvable random device address. */
+typedef enum
+{
+    GAP_RAND_ADDR_STATIC            = 0x00,/**<  Static random device address. */
+    GAP_RAND_ADDR_NON_RESOLVABLE    = 0x01,/**<  Non resolvable random device address. */
+    GAP_RAND_ADDR_RESOLVABLE        = 0x02 /**<  Resolvable random device address. */
 } T_GAP_RAND_ADDR_TYPE;
 
 /** @brief Define indentify address type */
-typedef enum {
-	GAP_IDENT_ADDR_PUBLIC      = 0x00,    /*  low energy public address. */
-	GAP_IDENT_ADDR_RAND        = 0x01,    /*  low energy random address. */
+typedef enum
+{
+    GAP_IDENT_ADDR_PUBLIC      = 0x00,    /*  low energy public address. */
+    GAP_IDENT_ADDR_RAND        = 0x01,    /*  low energy random address. */
 } T_GAP_IDENT_ADDR_TYPE;
 
 /** @brief  Definition of LE direct address type.*/
-typedef enum {
-	GAP_DIRECT_ADDR_LE_PUBLIC              = 0x00, /**<  Public Device Address (default) */
-	GAP_DIRECT_ADDR_LE_RAND                = 0x01, /**<  Random Device Address */
-	GAP_DIRECT_ADDR_LE_PUBLIC_IDENT        = 0x02, /**<  Public Identity Address (Corresponds to Resolved Private Address ) */
-	GAP_DIRECT_ADDR_LE_RAND_IDENT          = 0x03, /**<  Random (static) Identity Address (Corresponds to Resolved Private Address) */
-	GAP_DIRECT_ADDR_LE_RAND_UNABLE_RESOLV  = 0xFE  /**<  No address provided (anonymous advertisement) */
+typedef enum
+{
+    GAP_DIRECT_ADDR_LE_PUBLIC              = 0x00, /**<  Public Device Address (default) */
+    GAP_DIRECT_ADDR_LE_RAND                = 0x01, /**<  Random Device Address */
+    GAP_DIRECT_ADDR_LE_PUBLIC_IDENT        = 0x02, /**<  Public Identity Address (Corresponds to Resolved Private Address ) */
+    GAP_DIRECT_ADDR_LE_RAND_IDENT          = 0x03, /**<  Random (static) Identity Address (Corresponds to Resolved Private Address) */
+    GAP_DIRECT_ADDR_LE_RAND_UNABLE_RESOLV  = 0xFE  /**<  No address provided (anonymous advertisement) */
 } T_GAP_DIRECT_ADDR_TYPE;
 
 /** @brief  Definition of LE white list operation.*/
-typedef enum {
-	GAP_WHITE_LIST_OP_CLEAR  = 0x00,    /**<  Clear white list. */
-	GAP_WHITE_LIST_OP_ADD    = 0x01,    /**<  Add a device to the white list. */
-	GAP_WHITE_LIST_OP_REMOVE = 0x02     /**<  Remove a device from the white list. */
+typedef enum
+{
+    GAP_WHITE_LIST_OP_CLEAR  = 0x00,    /**<  Clear white list. */
+    GAP_WHITE_LIST_OP_ADD    = 0x01,    /**<  Add a device to the white list. */
+    GAP_WHITE_LIST_OP_REMOVE = 0x02     /**<  Remove a device from the white list. */
 } T_GAP_WHITE_LIST_OP;
 
 #if F_BT_LE_GAP_PERIPHERAL_SUPPORT
 /** @brief  Advertising Event Types.*/
-typedef enum {
-	GAP_ADTYPE_ADV_IND            = 0x00,  //!< Connectable undirected advertisement
-	GAP_ADTYPE_ADV_HDC_DIRECT_IND = 0x01,  //!< Connectable high duty cycle directed advertisement
-	GAP_ADTYPE_ADV_SCAN_IND       = 0x02,  //!< Scannable undirected advertisement
-	GAP_ADTYPE_ADV_NONCONN_IND    = 0x03,  //!< Non-Connectable undirected advertisement
-	GAP_ADTYPE_ADV_LDC_DIRECT_IND = 0x04,  //!< Connectable low duty cycle directed advertisement
+typedef enum
+{
+    GAP_ADTYPE_ADV_IND            = 0x00,  //!< Connectable undirected advertisement
+    GAP_ADTYPE_ADV_HDC_DIRECT_IND = 0x01,  //!< Connectable high duty cycle directed advertisement
+    GAP_ADTYPE_ADV_SCAN_IND       = 0x02,  //!< Scannable undirected advertisement
+    GAP_ADTYPE_ADV_NONCONN_IND    = 0x03,  //!< Non-Connectable undirected advertisement
+    GAP_ADTYPE_ADV_LDC_DIRECT_IND = 0x04,  //!< Connectable low duty cycle directed advertisement
 } T_GAP_ADTYPE;
 
 /** @brief  Definition of LE advertising filter policy.*/
-typedef enum {
-	GAP_ADV_FILTER_ANY = 0x00, /**<  Process scan and connection requests from all devices (i.e., the White List is not in use) (default). */
-	GAP_ADV_FILTER_WHITE_LIST_SCAN = 0x01,/**<  Process connection requests from all devices and only scan requests from
+typedef enum
+{
+    GAP_ADV_FILTER_ANY = 0x00, /**<  Process scan and connection requests from all devices (i.e., the White List is not in use) (default). */
+    GAP_ADV_FILTER_WHITE_LIST_SCAN = 0x01,/**<  Process connection requests from all devices and only scan requests from
 devices that are in the White List. */
-	GAP_ADV_FILTER_WHITE_LIST_CONN = 0x02,/**<  Process scan requests from all devices and only connection requests from
+    GAP_ADV_FILTER_WHITE_LIST_CONN = 0x02,/**<  Process scan requests from all devices and only connection requests from
 devices that are in the White List. */
-	GAP_ADV_FILTER_WHITE_LIST_ALL = 0x03,/**<  Process scan and connection requests only from devices in the White List. */
+    GAP_ADV_FILTER_WHITE_LIST_ALL = 0x03,/**<  Process scan and connection requests only from devices in the White List. */
 } T_GAP_ADV_FILTER_POLICY;
 #endif
 
 #if F_BT_LE_GAP_SCAN_SUPPORT
 /** @brief  Definition of LE scan type.*/
-typedef enum {
-	GAP_SCAN_MODE_PASSIVE = 0x00, /**<   Passive Scanning. No scan request PDUs shall be sent. */
-	GAP_SCAN_MODE_ACTIVE  = 0x01   /**<   Active Scanning. Scan request PDUs may be sent. */
+typedef enum
+{
+    GAP_SCAN_MODE_PASSIVE = 0x00, /**<   Passive Scanning. No scan request PDUs shall be sent. */
+    GAP_SCAN_MODE_ACTIVE  = 0x01   /**<   Active Scanning. Scan request PDUs may be sent. */
 } T_GAP_SCAN_MODE;
 
 /** @brief  Definition of LE scan filter policy.*/
-typedef enum {
-	GAP_SCAN_FILTER_ANY = 0x00, /**<  Accept all advertising packets except directed advertising packets not
+typedef enum
+{
+    GAP_SCAN_FILTER_ANY = 0x00, /**<  Accept all advertising packets except directed advertising packets not
 addressed to this device (default). */
-	GAP_SCAN_FILTER_WHITE_LIST = 0x01,/**<  Accept only advertising packets from devices where the advertiser's
+    GAP_SCAN_FILTER_WHITE_LIST = 0x01,/**<  Accept only advertising packets from devices where the advertiser's
 address is in the White List. Directed advertising packets which are not
 addressed to this device shall be ignored. */
-	GAP_SCAN_FILTER_ANY_RPA = 0x02,    /**<  Accept all advertising packets except directed advertising packets
+    GAP_SCAN_FILTER_ANY_RPA = 0x02,    /**<  Accept all advertising packets except directed advertising packets
 where the initiator's identity address does not address this device.
 Note: Directed advertising packets where the initiator's address is a
 resolvable private address that cannot be resolved are also accepted. */
-	GAP_SCAN_FILTER_WHITE_LIST_RPA = 0x03,/**<  Accept all advertising packets except:
+    GAP_SCAN_FILTER_WHITE_LIST_RPA = 0x03,/**<  Accept all advertising packets except:
 1) advertising packets where the advertiser's identity address is not in
 the White List; and
 2) directed advertising packets where the initiator's identity address
@@ -697,114 +706,123 @@ resolvable private address that cannot be resolved are also accepted. */
 } T_GAP_SCAN_FILTER_POLICY;
 
 /** @brief  Definition of LE extended scan duplicate filter type.*/
-typedef enum {
-	GAP_SCAN_FILTER_DUPLICATE_DISABLE = 0x00, /**<  Duplicate filtering disabled. */
-	GAP_SCAN_FILTER_DUPLICATE_ENABLE = 0x01,  /**<  Duplicate filtering enabled. */
-	GAP_SCAN_FILTER_DUPLICATE_ENABLED_RESET_FOR_EACH_PERIOD = 0x02,    /**<  Duplicate filtering enabled, reset for each scan period. */
+typedef enum
+{
+    GAP_SCAN_FILTER_DUPLICATE_DISABLE = 0x00, /**<  Duplicate filtering disabled. */
+    GAP_SCAN_FILTER_DUPLICATE_ENABLE = 0x01,  /**<  Duplicate filtering enabled. */
+    GAP_SCAN_FILTER_DUPLICATE_ENABLED_RESET_FOR_EACH_PERIOD = 0x02,    /**<  Duplicate filtering enabled, reset for each scan period. */
 } T_GAP_SCAN_FILTER_DUPLICATE;
 
 /** This enum type describes adv type for T_GAP_ADV_EVT_TYPE. */
-typedef enum {
-	GAP_ADV_EVT_TYPE_UNDIRECTED = 0x00,    /**<  Connectable  undirected advertising. */
-	GAP_ADV_EVT_TYPE_DIRECTED   = 0x01,    /**<  Connectable directed advertising. */
-	GAP_ADV_EVT_TYPE_SCANNABLE  = 0x02,    /**<  Scanable undirected advertising. */
-	GAP_ADV_EVT_TYPE_NON_CONNECTABLE = 0x03,   /**<  Nonconnectable undirected advertising. */
-	GAP_ADV_EVT_TYPE_SCAN_RSP = 0x04           /**<  scan response. */
+typedef enum
+{
+    GAP_ADV_EVT_TYPE_UNDIRECTED = 0x00,    /**<  Connectable  undirected advertising. */
+    GAP_ADV_EVT_TYPE_DIRECTED   = 0x01,    /**<  Connectable directed advertising. */
+    GAP_ADV_EVT_TYPE_SCANNABLE  = 0x02,    /**<  Scanable undirected advertising. */
+    GAP_ADV_EVT_TYPE_NON_CONNECTABLE = 0x03,   /**<  Nonconnectable undirected advertising. */
+    GAP_ADV_EVT_TYPE_SCAN_RSP = 0x04           /**<  scan response. */
 } T_GAP_ADV_EVT_TYPE;
 #endif
 
 /** @brief Definition of security level. */
-typedef enum {
-	GAP_SEC_LEVEL_NO          = 0x00,/**< No security (No authentication and no encryption).*/
-	GAP_SEC_LEVEL_UNAUTHEN    = 0x04,/**< Unauthenticated pairing with encryption.*/
-	GAP_SEC_LEVEL_AUTHEN      = 0x05,/**< Authenticated pairing with encryption.*/
-	GAP_SEC_LEVEL_SC_UNAUTHEN = 0x07,/**< Unuthenticated LE Secure Connections pairing with encryption using a 128-
+typedef enum
+{
+    GAP_SEC_LEVEL_NO          = 0x00,/**< No security (No authentication and no encryption).*/
+    GAP_SEC_LEVEL_UNAUTHEN    = 0x04,/**< Unauthenticated pairing with encryption.*/
+    GAP_SEC_LEVEL_AUTHEN      = 0x05,/**< Authenticated pairing with encryption.*/
+    GAP_SEC_LEVEL_SC_UNAUTHEN = 0x07,/**< Unuthenticated LE Secure Connections pairing with encryption using a 128-
 bit strength encryption key.*/
-	GAP_SEC_LEVEL_SC_AUTHEN   = 0x08/**<  Authenticated LE Secure Connections pairing with encryption using a 128-
+    GAP_SEC_LEVEL_SC_AUTHEN   = 0x08/**<  Authenticated LE Secure Connections pairing with encryption using a 128-
 bit strength encryption key.*/
 } T_GAP_SEC_LEVEL;
 
 #if F_BT_LE_PRIVACY_SUPPORT
 /** @brief  Definition of LE resolving list operation.*/
-typedef enum {
-	GAP_RESOLV_LIST_OP_CLEAR  = 0x00,    /**< Clear resolving list operation. */
-	GAP_RESOLV_LIST_OP_ADD    = 0x01,    /**< Add a device to the resolving list operation. */
-	GAP_RESOLV_LIST_OP_REMOVE = 0x02     /**< Remove a device from the resolving list operation. */
+typedef enum
+{
+    GAP_RESOLV_LIST_OP_CLEAR  = 0x00,    /**< Clear resolving list operation. */
+    GAP_RESOLV_LIST_OP_ADD    = 0x01,    /**< Add a device to the resolving list operation. */
+    GAP_RESOLV_LIST_OP_REMOVE = 0x02     /**< Remove a device from the resolving list operation. */
 } T_GAP_RESOLV_LIST_OP;
 
 /** @brief  Definition of LE privacy mode.*/
-typedef enum {
-	GAP_PRIVACY_MODE_NETWORK = 0x00,    /**< Network privacy mode. */
-	GAP_PRIVACY_MODE_DEVICE  = 0x01     /**< Device privacy mode. */
+typedef enum
+{
+    GAP_PRIVACY_MODE_NETWORK = 0x00,    /**< Network privacy mode. */
+    GAP_PRIVACY_MODE_DEVICE  = 0x01     /**< Device privacy mode. */
 } T_GAP_PRIVACY_MODE;
 #endif
 
 /** @brief  Definition of LE PHY type.*/
-typedef enum {
-	GAP_PHYS_1M       = 0x01,    /**< LE PHY 1M used. */
-	GAP_PHYS_2M       = 0x02,    /**< LE PHY 2M used. */
-	GAP_PHYS_CODED    = 0x03     /**< LE Coded PHY  used. */
+typedef enum
+{
+    GAP_PHYS_1M       = 0x01,    /**< LE PHY 1M used. */
+    GAP_PHYS_2M       = 0x02,    /**< LE PHY 2M used. */
+    GAP_PHYS_CODED    = 0x03     /**< LE Coded PHY  used. */
 } T_GAP_PHYS_TYPE;
 
 /** @brief  Definition of LE primary advertising PHY type.*/
-typedef enum {
-	GAP_PHYS_PRIM_ADV_1M      = 0x01, /**<  Primary advertisement PHY is LE 1M */
-	GAP_PHYS_PRIM_ADV_CODED   = 0x03  /**<  Primary advertisement PHY is LE Coded */
+typedef enum
+{
+    GAP_PHYS_PRIM_ADV_1M      = 0x01, /**<  Primary advertisement PHY is LE 1M */
+    GAP_PHYS_PRIM_ADV_CODED   = 0x03  /**<  Primary advertisement PHY is LE Coded */
 } T_GAP_PHYS_PRIM_ADV_TYPE;
 
 /** @brief  Definition of LE Coded PHY preference options.*/
-typedef enum {
-	GAP_PHYS_OPTIONS_CODED_PREFER_NO   = 0x00,/**< Host has no preferred coding when transmitting on the LE Coded PHY */
-	GAP_PHYS_OPTIONS_CODED_PREFER_S2   = 0x01,/**< Host prefers that S=2 coding be used when transmitting on the LE Coded PHY */
-	GAP_PHYS_OPTIONS_CODED_PREFER_S8   = 0x02 /**< Host prefers that S=8 coding be used when transmitting on the LE Coded PHY */
+typedef enum
+{
+    GAP_PHYS_OPTIONS_CODED_PREFER_NO   = 0x00,/**< Host has no preferred coding when transmitting on the LE Coded PHY */
+    GAP_PHYS_OPTIONS_CODED_PREFER_S2   = 0x01,/**< Host prefers that S=2 coding be used when transmitting on the LE Coded PHY */
+    GAP_PHYS_OPTIONS_CODED_PREFER_S8   = 0x02 /**< Host prefers that S=8 coding be used when transmitting on the LE Coded PHY */
 } T_GAP_PHYS_OPTIONS;
 
 #if F_BT_LE_5_0_AE_SCAN_SUPPORT
-typedef enum {
-	GAP_EXT_ADV_EVT_DATA_STATUS_COMPLETE  = 0x00, /**< Data status: Complete */
-	GAP_EXT_ADV_EVT_DATA_STATUS_MORE      = 0x01, /**< Data status: Incomplete, more data to come */
-	GAP_EXT_ADV_EVT_DATA_STATUS_TRUNCATED = 0x02, /**< Data status: Incomplete, data truncated, no more to come */
-	GAP_EXT_ADV_EVT_DATA_STATUS_RFU       = 0x03  /**< Data status: Reserved for future use */
+typedef enum
+{
+    GAP_EXT_ADV_EVT_DATA_STATUS_COMPLETE  = 0x00, /**< Data status: Complete */
+    GAP_EXT_ADV_EVT_DATA_STATUS_MORE      = 0x01, /**< Data status: Incomplete, more data to come */
+    GAP_EXT_ADV_EVT_DATA_STATUS_TRUNCATED = 0x02, /**< Data status: Incomplete, data truncated, no more to come */
+    GAP_EXT_ADV_EVT_DATA_STATUS_RFU       = 0x03  /**< Data status: Reserved for future use */
 } T_GAP_EXT_ADV_EVT_DATA_STATUS;
 #endif
 
-#if F_BT_LE_APP_KEY_MANAGER
-typedef enum {
-	GATT_STORE_OP_GET_CCC_BITS,            /**< get CCC Bits for one <bd_addr,bdtype> */
-	GATT_STORE_OP_SET_CCC_BITS,            /**< set CCC Bits for one <bd_addr,bdtype> */
-} T_GATT_STORE_OPCODE;
-#endif
-
-typedef enum {
-	GAP_CTE_TYPE_AOA               = 0x00,            /**< AoA Constant Tone Extension> */
-	GAP_CTE_TYPE_AOD_1US_SLOT      = 0x01,            /**< AoD Constant Tone Extension with 1 us slots> */
-	GAP_CTE_TYPE_AOD_2US_SLOT      = 0x02,            /**< AoD Constant Tone Extension with 2 us slots> */
+typedef enum
+{
+    GAP_CTE_TYPE_AOA               = 0x00,            /**< AoA Constant Tone Extension */
+    GAP_CTE_TYPE_AOD_1US_SLOT      = 0x01,            /**< AoD Constant Tone Extension with 1 us slots */
+    GAP_CTE_TYPE_AOD_2US_SLOT      = 0x02,            /**< AoD Constant Tone Extension with 2 us slots */
 } T_GAP_CTE_TYPE;
 
-typedef enum {
-	GAP_SLOT_DURATIONS_SWITCH_SAMPLE_1US = 0x01,       /**<Switching and sampling slots are 1 us each> */
-	GAP_SLOT_DURATIONS_SWITCH_SAMPLE_2US = 0x02,       /**<Switching and sampling slots are 2 us each> */
+typedef enum
+{
+    GAP_SLOT_DURATIONS_SWITCH_SAMPLE_1US = 0x01,       /**<Switching and sampling slots are 1 us each */
+    GAP_SLOT_DURATIONS_SWITCH_SAMPLE_2US = 0x02,       /**<Switching and sampling slots are 2 us each */
 } T_GAP_SLOT_DUATIONS_TYPE;
 
 #if F_BT_LE_5_0_PA_SYNC_SUPPORT
-/** @brief  Definition of LE periodic advertiser list operation.*/
-typedef enum {
-	GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_CLEAR  = 0x00,    /**<  Clear  periodic advertiser list. */
-	GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_ADD    = 0x01,    /**<  Add an entry to the periodic advertiser list. */
-	GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_REMOVE = 0x02     /**<  Remove an entry from the  periodic advertiser list. */
+/** @brief  Definition of LE Periodic Advertiser list operation. */
+typedef enum
+{
+    GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_CLEAR  = 0x00,    /**< Clear all entries from Periodic Advertiser list. */
+    GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_ADD    = 0x01,    /**< Add an entry to Periodic Advertiser list. */
+    GAP_PA_SYNC_PERIODIC_ADV_LIST_OP_REMOVE = 0x02     /**< Remove one entry from Periodic Advertiser list. */
 } T_GAP_PA_SYNC_PERIODIC_ADV_LIST_OP;
 
-typedef enum {
-	GAP_PERIODIC_ADV_REPORT_DATA_STATUS_COMPLETE  = 0x00, /**< Data complete */
-	GAP_PERIODIC_ADV_REPORT_DATA_STATUS_MORE      = 0x01, /**< Data incomplete, more data to come */
-	GAP_PERIODIC_ADV_REPORT_DATA_STATUS_TRUNCATED = 0x02, /**< Data incomplete, data truncated, no more to come */
+/** @brief  Definition of data status in LE Periodic Advertising Report. */
+typedef enum
+{
+    GAP_PERIODIC_ADV_REPORT_DATA_STATUS_COMPLETE  = 0x00, /**< Data complete. */
+    GAP_PERIODIC_ADV_REPORT_DATA_STATUS_MORE      = 0x01, /**< Data incomplete, more data to come. */
+    GAP_PERIODIC_ADV_REPORT_DATA_STATUS_TRUNCATED = 0x02, /**< Data incomplete, data truncated, no more to come. */
 } T_GAP_PERIODIC_ADV_REPORT_DATA_STATUS;
 
-typedef enum {
-	GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOA_CTE       = 0x00, /**< AoA Constant Tone Extension */
-	GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOD_CTE_1US   = 0x01, /**< AoD Constant Tone Extension with 1 μs slots */
-	GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOD_CTE_2US   = 0x02, /**< AoD Constant Tone Extension with 2 μs slots */
-	GAP_PERIODIC_ADV_REPORT_CTE_TYPE_NO_CTE        = 0xFF, /**< No Constant Tone Extension */
+/** @brief  Definition of CTE type in LE Periodic Advertising Report. */
+typedef enum
+{
+    GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOA_CTE       = 0x00, /**< AoA Constant Tone Extension. */
+    GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOD_CTE_1US   = 0x01, /**< AoD Constant Tone Extension with 1 μs slots. */
+    GAP_PERIODIC_ADV_REPORT_CTE_TYPE_AOD_CTE_2US   = 0x02, /**< AoD Constant Tone Extension with 2 μs slots. */
+    GAP_PERIODIC_ADV_REPORT_CTE_TYPE_NO_CTE        = 0xFF, /**< No Constant Tone Extension. */
 } T_GAP_PERIODIC_ADV_REPORT_CTE_TYPE;
 #endif
 /** End of GAP_LE_TYPES_Exported_Types

@@ -140,9 +140,17 @@ void rtc_disable_alarm(void);
 ///@}
 
 #if (defined(CONFIG_PLATFORM_8735B) && (CONFIG_PLATFORM_8735B == 1))
-
 ///@name AmebaPro2
 ///@{
+/**
+  * @brief  Set the specified RTC Alarm and interrupt.
+  * @param  alarm: alarm object define in application software.
+  * @param  alarmHandler:  alarm interrupt callback function.
+  * @retval   status:
+  *            - 1: success
+  *            - Others: failure
+  */
+void rtc_set_alarm_time(time_t t, alarm_irq_handler alarmHandler);
 /**
   * @brief  To set the compensation value of the RTC CLK.
   * @param  func_en The RTC compensation function enable. 1: Enable; 0:Disable

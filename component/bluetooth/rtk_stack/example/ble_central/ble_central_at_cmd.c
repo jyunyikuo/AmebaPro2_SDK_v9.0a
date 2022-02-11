@@ -35,7 +35,7 @@ extern T_GAP_DEV_STATE ble_scatternet_gap_dev_state;
 #endif
 
 #if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-    (defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 #include "bt_mesh_provisioner_multiple_profile_app_flags.h"
 extern void *bt_mesh_provisioner_multiple_profile_evt_queue_handle;
@@ -185,7 +185,6 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 #endif
 
 	u8 DestAddr[6] = {0};
-	//u8 addr_len;
 	u8 DestAddrType = GAP_REMOTE_ADDR_LE_PUBLIC;
 #if F_BT_LE_USE_STATIC_RANDOM_ADDR
 	T_GAP_LOCAL_ADDR_TYPE local_addr_type = GAP_LOCAL_ADDR_LE_RANDOM;
@@ -205,7 +204,6 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	}
 
 	hex_str_to_bd_addr(strlen(argv[2]), (s8 *)argv[2], (u8 *)DestAddr);
-	//mtu = (argc==4)? atoi((const char *)(argv[3])): 256;
 
 	conn_req_param.scan_interval = 0xA0;	//100ms
 	conn_req_param.scan_window = 0x80;		//80ms
@@ -218,13 +216,13 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	le_set_conn_param(GAP_CONN_PARAM_1M, &conn_req_param);
 
 	printf("cmd_con, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
-		   DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
+			DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
 
-	le_connect(0, DestAddr, (T_GAP_REMOTE_ADDR_TYPE)DestAddrType, local_addr_type,
-			   1000);
+	le_connect(0, DestAddr, (T_GAP_REMOTE_ADDR_TYPE)DestAddrType, local_addr_type, 1000);
 
 	return 0;
 }
+
 int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 {
 	(void) argc;
@@ -242,6 +240,11 @@ int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 	if (type == 0) {
 		le_modify_white_list(GAP_WHITE_LIST_OP_CLEAR, NULL, GAP_REMOTE_ADDR_LE_PUBLIC);
 	} else {
+		if (argc != 4){
+			printf("ERROR:input parameter error!\r\n");
+			return -1;
+		}
+
 		if (type == 1) {
 			operation = GAP_WHITE_LIST_OP_ADD;
 		} else if (type == 2) {
@@ -260,9 +263,8 @@ int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 
 		hex_str_to_bd_addr(strlen(argv[3]), (s8 *)argv[3], (u8 *)DestAddr);
 
-
 		printf("cmd_modify, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
-			   DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
+				DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
 
 		le_modify_white_list(operation, DestAddr, DestAddrType);
 	}
@@ -287,28 +289,26 @@ int ble_central_at_cmd_get_conn_info(int argc, char **argv)
 	u8 conn_max_link;
 	T_GAP_CONN_INFO conn_info;
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
-    (defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL))
+	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL))
 	conn_max_link = BLE_CENTRAL_APP_MAX_LINKS;
 #endif
 #if ((defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET) || \
-    (defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 	conn_max_link = BLE_SCATTERNET_APP_MAX_LINKS;
 #endif
 	for (conn_id = 0; conn_id < conn_max_link; conn_id++) {
 		if (le_get_conn_info(conn_id, &conn_info)) {
 			printf("ShowCon conn_id %d state 0x%x role %d\r\n", conn_id,
-				   conn_info.conn_state, conn_info.role);
+					conn_info.conn_state, conn_info.role);
 			printf("RemoteBd = [%02x:%02x:%02x:%02x:%02x:%02x] type = %d\r\n",
-				   conn_info.remote_bd[5], conn_info.remote_bd[4],
-				   conn_info.remote_bd[3], conn_info.remote_bd[2],
-				   conn_info.remote_bd[1], conn_info.remote_bd[0],
-				   conn_info.remote_bd_type);
+					conn_info.remote_bd[5], conn_info.remote_bd[4],
+					conn_info.remote_bd[3], conn_info.remote_bd[2],
+					conn_info.remote_bd[1], conn_info.remote_bd[0],
+					conn_info.remote_bd_type);
 		}
 	}
-	printf("active link num %d,  idle link num %d\r\n",
-		   le_get_active_link_num(), le_get_idle_link_num());
+	printf("active link num %d, idle link num %d\r\n", le_get_active_link_num(), le_get_idle_link_num());
 	return 0;
-
 }
 
 int ble_central_at_cmd_update_conn_request(int argc, char **argv)
@@ -322,20 +322,19 @@ int ble_central_at_cmd_update_conn_request(int argc, char **argv)
 	u16 supervision_timeout = hex_str_to_int(strlen(argv[5]), (s8 *)argv[5]);
 
 	ret = le_update_conn_param(conn_id,
-							   conn_interval_min,
-							   conn_interval_max,
-							   conn_latency,
-							   supervision_timeout,
-							   2 * (conn_interval_min - 1),
-							   2 * (conn_interval_max - 1));
+								conn_interval_min,
+								conn_interval_max,
+								conn_latency,
+								supervision_timeout,
+								2 * (conn_interval_min - 1),
+								2 * (conn_interval_max - 1));
 	return ret;
-
 }
 
 int ble_central_at_cmd_bond_information(int argc, char **argv)
 {
 	(void) argc;
-	//int ret = 0;
+
 	if (strcmp(argv[1], "CLEAR") == 0) {
 		le_bond_clear_all_keys();
 	} else if (strcmp(argv[1], "INFO") == 0) {
@@ -345,15 +344,15 @@ int ble_central_at_cmd_bond_information(int argc, char **argv)
 			p_entry = le_find_key_entry_by_idx(i);
 			if (p_entry != NULL) {
 				printf("bond_dev[%d]: bd 0x%02x%02x%02x%02x%02x%02x, addr_type %d, flags 0x%x\r\n",
-					   p_entry->idx,
-					   p_entry->remote_bd.addr[5],
-					   p_entry->remote_bd.addr[4],
-					   p_entry->remote_bd.addr[3],
-					   p_entry->remote_bd.addr[2],
-					   p_entry->remote_bd.addr[1],
-					   p_entry->remote_bd.addr[0],
-					   p_entry->remote_bd.remote_bd_type,
-					   p_entry->flags);
+						p_entry->idx,
+						p_entry->remote_bd.addr[5],
+						p_entry->remote_bd.addr[4],
+						p_entry->remote_bd.addr[3],
+						p_entry->remote_bd.addr[2],
+						p_entry->remote_bd.addr[1],
+						p_entry->remote_bd.addr[0],
+						p_entry->remote_bd.remote_bd_type,
+						p_entry->flags);
 			}
 		}
 	} else {
@@ -462,13 +461,13 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 	T_GAP_DEV_STATE new_state = {0};
 
 	if (argc >= 2) {
-		scan_enable = atoi(*(argv + 1));
+		scan_enable = atoi(argv[1]);
 		if (scan_enable == 1) {
 			if (argc == 3) {
-				scan_filter_policy = atoi(*(argv + 2));
+				scan_filter_policy = atoi(argv[2]);
 			} else if (argc == 4) {
-				scan_filter_policy = atoi(*(argv + 2));
-				scan_filter_duplicate = atoi(*(argv + 3));
+				scan_filter_policy = atoi(argv[2]);
+				scan_filter_duplicate = atoi(argv[3]);
 			}
 		}
 	}
@@ -598,7 +597,7 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 				return -1;
 			}
 		}
-		//passcode = dec_str_to_int(strlen(argv[3]), argv[3]);
+
 		passcode = atoi(argv[3]);
 		if (passcode > GAP_PASSCODE_MAX) {
 			printf("ERROR:passcode is out of range[0-999999]!\r\n");
@@ -606,18 +605,18 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		}
 		le_bond_passkey_input_confirm(conn_id, passcode, confirm);
 	} else if (strcmp(argv[1], "MODE") == 0) {
-		u8  auth_pair_mode = GAP_PAIRING_MODE_PAIRABLE;
+		u8 auth_pair_mode = GAP_PAIRING_MODE_PAIRABLE;
 		u16 auth_flags = GAP_AUTHEN_BIT_BONDING_FLAG;
-		u8  auth_io_cap = GAP_IO_CAP_NO_INPUT_NO_OUTPUT;
+		u8 auth_io_cap = GAP_IO_CAP_NO_INPUT_NO_OUTPUT;
 #if F_BT_LE_SMP_OOB_SUPPORT
-		u8  oob_enable = false;
+		u8 oob_enable = false;
 #endif
-		u8  auth_sec_req_enable = false;
+		u8 auth_sec_req_enable = false;
 		u16 auth_sec_req_flags = GAP_AUTHEN_BIT_BONDING_FLAG;
 
 		if (argc >= 3) {
 			auth_flags = hex_str_to_int(strlen(argv[2]), (s8 *)argv[2]);
-			auth_sec_req_flags =  auth_flags;
+			auth_sec_req_flags = auth_flags;
 		}
 		if (argc >= 4) {
 			auth_io_cap = atoi(argv[3]);
@@ -627,8 +626,8 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		}
 #if F_BT_LE_SMP_OOB_SUPPORT
 //		if (argc >= 6) {
-//	        oob_enable = atoi(argv[5]);
-//	    }
+//			oob_enable = atoi(argv[5]);
+//		}
 #endif
 
 		gap_set_param(GAP_PARAM_BOND_PAIRING_MODE, sizeof(auth_pair_mode), &auth_pair_mode);
@@ -638,8 +637,7 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		gap_set_param(GAP_PARAM_BOND_OOB_ENABLED, sizeof(uint8_t), &oob_enable);
 #endif
 		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_ENABLE, sizeof(auth_sec_req_enable), &auth_sec_req_enable);
-		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_REQUIREMENT, sizeof(auth_sec_req_flags),
-						  &auth_sec_req_flags);
+		le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_REQUIREMENT, sizeof(auth_sec_req_flags), &auth_sec_req_flags);
 		ret = gap_set_pairable_mode();
 
 		if (ret == GAP_CAUSE_SUCCESS) {
@@ -688,7 +686,7 @@ int ble_central_at_cmd_read(int argc, char **argv)
 	conn_id = atoi(argv[1]);
 
 	if (argc == 3) {
-		handle =  hex_str_to_int(strlen(argv[2]), (s8 *)argv[2]);
+		handle = hex_str_to_int(strlen(argv[2]), (s8 *)argv[2]);
 		gcs_attr_read(conn_id, handle);
 	}
 
@@ -729,6 +727,7 @@ int ble_central_at_cmd_write(int argc, char **argv)
 	u8 write_type;
 	u16 handle;
 	int length;
+	int data_count;
 
 	conn_id = atoi(argv[1]);
 	write_type = atoi(argv[2]);
@@ -738,15 +737,23 @@ int ble_central_at_cmd_write(int argc, char **argv)
 	if (length == -1) {
 		printf("Error:value length should be hexadecimal and start with '0X' or '0x'\r\n");
 		return -1;
+	} else if (length == 0) {
+		printf("Error:value length should larger than 0\r\n");
+		return -1;
 	}
+
 	u8 *data = (u8 *)os_mem_alloc(0, length * sizeof(u8));
 
+	data_count = argc - 5;
 	for (u8 i = 0; i < length; ++ i) {
-		data[i] = hex_str_to_int(strlen(argv[i + 5]), (s8 *)argv[i + 5]);
+		if (i < data_count) {
+			data[i] = hex_str_to_int(strlen(argv[i + 5]), (s8 *)argv[i + 5]);
+		} else {
+			data[i] = 0xff;
+		}
 	}
 
-	T_GAP_CAUSE ret = gcs_attr_write(conn_id, (T_GATT_WRITE_TYPE)write_type, handle,
-									 length, data);
+	T_GAP_CAUSE ret = gcs_attr_write(conn_id, (T_GATT_WRITE_TYPE)write_type, handle, length, data);
 
 	if (data != NULL) {
 		os_mem_free(data);
@@ -797,21 +804,29 @@ int ble_central_at_cmd_set_phy(int argc, char **argv)
 		all_phys = GAP_PHYS_PREFER_ALL;
 		tx_phys = GAP_PHYS_PREFER_2M_BIT;
 		rx_phys = GAP_PHYS_PREFER_2M_BIT;
-	} else if (phys == 2) { //set PHY tx/rx support CODRD_S8
+	} else if (phys == 2) { //set PHY tx support 2M, rx support 1M
 		all_phys = GAP_PHYS_PREFER_ALL;
-		tx_phys = GAP_PHYS_PREFER_CODED_BIT;
-		rx_phys = GAP_PHYS_PREFER_CODED_BIT;
-		phy_options = GAP_PHYS_OPTIONS_CODED_PREFER_S8;
-	} else if (phys == 3) { //set PHY tx/rx support CODRD_S2
+		tx_phys = GAP_PHYS_PREFER_2M_BIT;
+		rx_phys = GAP_PHYS_PREFER_1M_BIT;
+	} else if (phys == 3) { //set PHY tx support 1M, rx support 2M
+		all_phys = GAP_PHYS_PREFER_ALL;
+		tx_phys = GAP_PHYS_PREFER_1M_BIT;
+		rx_phys = GAP_PHYS_PREFER_2M_BIT;
+	} else if (phys == 4) { //set PHY tx/rx support CODED_S2
 		all_phys = GAP_PHYS_PREFER_ALL;
 		tx_phys = GAP_PHYS_PREFER_CODED_BIT;
 		rx_phys = GAP_PHYS_PREFER_CODED_BIT;
 		phy_options = GAP_PHYS_OPTIONS_CODED_PREFER_S2;
-	} else { //set PHY tx support 2M,rx support 1M
-		all_phys = GAP_PHYS_NO_PREFER_TX_BIT;
-		tx_phys = GAP_PHYS_PREFER_2M_BIT;
-		rx_phys = GAP_PHYS_PREFER_1M_BIT;
+	} else if (phys == 5) { //set PHY tx/rx support CODED_S8
+		all_phys = GAP_PHYS_PREFER_ALL;
+		tx_phys = GAP_PHYS_PREFER_CODED_BIT;
+		rx_phys = GAP_PHYS_PREFER_CODED_BIT;
+		phy_options = GAP_PHYS_OPTIONS_CODED_PREFER_S8;
+	} else {
+		printf("Error parameter!\r\n");
+		return -1;
 	}
+
 	cause = le_set_phy(conn_id, all_phys, tx_phys, rx_phys, phy_options);
 
 	return cause;

@@ -11,8 +11,13 @@ static void flash_test_task(void *param)
 {
 	dbg_printf("\r\n   FLASH DEMO   \r\n");
 
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
+#endif
+
 	flash_t flash;
 	uint32_t address = FLASH_APP_BASE;
+
 
 #if 1
 	uint32_t val32_to_write = 0x13572468;

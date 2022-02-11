@@ -3,7 +3,7 @@
 * @brief       The HAL Non-secure callable API implementation for the EFUSE
 *
 * @version     V1.00
-* @date        2018-07-26
+* @date        2022-01-03
 *
 * @note
 *
@@ -33,7 +33,7 @@
 #define _HAL_SYS_CTRL_NSC_H_
 #include "cmsis.h"
 #include <arm_cmse.h>   /* Use CMSE intrinsics */
-
+#include "hal_sys_ctrl.h"
 #ifdef  __cplusplus
 extern "C"
 {
@@ -56,8 +56,17 @@ void NS_ENTRY hal_aon_wdt_enable_nsc(u8 enable, u32 timeout);
 void NS_ENTRY hal_osc4m_cal_nsc(void);
 void NS_ENTRY hal_sys_bt_uart_mux_nsc(uint8_t sel);
 void NS_ENTRY hal_32k_s1_sel_nsc(u8 sel);
-
-
+void NS_ENTRY hal_xtal_32768_en_nsc(u8 enable);
+void NS_ENTRY hal_sys_lxbus_shared_en_nsc(u8 used_id, u8 en);
+uint8_t NS_ENTRY hal_sys_get_ld_fw_idx_nsc(void);
+void NS_ENTRY hal_sys_get_chip_id_nsc(uint32_t *pchip_id);
+uint8_t NS_ENTRY hal_sys_get_rma_state_nsc(void);
+void NS_ENTRY hal_sys_set_system_reset_nsc(void);
+uint8_t NS_ENTRY hal_sys_get_boot_select_nsc(void);
+hal_status_t NS_ENTRY hal_sys_dbg_port_cfg_nsc(dbg_port_mode_t dbg_mode, dbg_port_pin_sel_t pin_sel);
+uint32_t NS_ENTRY hal_sys_get_video_info_nsc(uint8_t idx);
+void NS_ENTRY hal_pll_98p304_ctrl_nsc(u8 en, u8 clk_src);
+void NS_ENTRY hal_pll_45p158_ctrl_nsc(u8 en, u8 clk_src);
 #endif
 
 #if defined(CONFIG_BUILD_NONSECURE)
@@ -72,10 +81,22 @@ void hal_aon_wdt_enable(u8 enable, u32 timeout);
 void hal_osc4m_cal(void);
 void hal_sys_bt_uart_mux(uint8_t sel);
 void hal_32k_s1_sel(u8 sel);
+void hal_sys_lxbus_shared_en_nsc(u8 used_id, u8 en);
+uint8_t hal_sys_get_ld_fw_idx_nsc(void);
+void hal_sys_get_chip_id_nsc(uint32_t *pchip_id);
+uint8_t hal_sys_get_rma_state_nsc(void);
+void hal_sys_set_system_reset_nsc(void);
+uint8_t hal_sys_get_boot_select_nsc(void);
+hal_status_t hal_sys_dbg_port_cfg_nsc(dbg_port_mode_t dbg_mode, dbg_port_pin_sel_t pin_sel);
+uint32_t hal_sys_get_video_info_nsc(uint8_t idx);
+void hal_pll_98p304_ctrl_nsc(u8 en, u8 clk_src);
+void hal_pll_45p158_ctrl_nsc(u8 en, u8 clk_src);
 
+#if !defined(ENABLE_SECCALL_PATCH)
 #define hal_sys_peripheral_en                 hal_sys_peripheral_nsc
 #define hal_sys_set_clk                       hal_sys_set_clk_nsc
 #define hal_sys_get_clk                       hal_sys_get_clk_nsc
+#endif
 #define hal_sys_set_bus_idau                  hal_sys_set_bus_idau_nsc
 #define hal_sdm_32k_enable                    hal_sdm_32k_enable_nsc
 #define hal_read_sdm_32k_time_loss            hal_read_sdm_32k_time_loss_nsc
@@ -84,7 +105,20 @@ void hal_32k_s1_sel(u8 sel);
 #define hal_osc4m_cal                         hal_osc4m_cal_nsc
 #define hal_sys_bt_uart_mux                   hal_sys_bt_uart_mux_nsc
 #define hal_32k_s1_sel                        hal_32k_s1_sel_nsc
-
+#if !defined(ENABLE_SECCALL_PATCH)
+#define hal_sys_lxbus_shared_en               hal_sys_lxbus_shared_en_nsc
+#endif
+#define hal_sys_get_ld_fw_idx                 hal_sys_get_ld_fw_idx_nsc
+#define hal_sys_get_chip_id                   hal_sys_get_chip_id_nsc
+#define hal_sys_get_rma_state                 hal_sys_get_rma_state_nsc
+#define hal_sys_set_system_reset              hal_sys_set_system_reset_nsc
+#define hal_sys_get_boot_select               hal_sys_get_boot_select_nsc
+#define hal_sys_dbg_port_cfg                  hal_sys_dbg_port_cfg_nsc
+#if !defined(ENABLE_SECCALL_PATCH)
+#define hal_sys_get_video_info                hal_sys_get_video_info_nsc
+#endif
+#define hal_pll_98p304_ctrl			          hal_pll_98p304_ctrl_nsc
+#define hal_pll_45p158_ctrl			          hal_pll_45p158_ctrl_nsc
 #endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
 
 /** @} */ /* End of group hal_sys_ctrl_nsc */

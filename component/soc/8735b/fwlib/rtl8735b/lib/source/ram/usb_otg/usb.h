@@ -1150,6 +1150,7 @@ struct usb_device {
 	void *hcd;
 	struct usb_host_endpoint ep0;
 
+	u8 dummy2[4]; //wei add for test
 	struct usb_device_descriptor descriptor;
 	u8 dummy[64 - 18]; //wei add for test
 	struct usb_host_config *config;

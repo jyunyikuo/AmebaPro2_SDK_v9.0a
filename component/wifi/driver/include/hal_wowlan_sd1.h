@@ -8,6 +8,8 @@
 #include "hal_phy_reg.h"
 #ifdef CONFIG_RTL8730A
 #include "wififw_reg_rom.h"
+#elif defined(CONFIG_RTL8720E)
+#include "wififw_reg_ram.h"
 #else
 #include "hal_com_reg.h"
 #endif
@@ -32,6 +34,16 @@ int rtw_hal_wow_set_pattern(_adapter *adapter, wowlan_pattern_t pattern);
 
 void rtw_hal_wow_enable(_adapter *adapter);
 void rtw_hal_wow_disable(_adapter *adapter);
+
+#define REMOTE_INFO_CTRL_SET_VALD_EN(target, _value) \
+	SET_BITS_TO_LE_4BYTE(target + 0, 0, 8, _value)
+#define REMOTE_INFO_CTRL_SET_PTK_EN(target, _value) \
+	SET_BITS_TO_LE_4BYTE(target + 1, 0, 1, _value)
+#define REMOTE_INFO_CTRL_SET_GTK_EN(target, _value) \
+	SET_BITS_TO_LE_4BYTE(target + 1, 1, 1, _value)
+#define REMOTE_INFO_CTRL_SET_GTK_IDX(target, _value) \
+	SET_BITS_TO_LE_4BYTE(target + 2, 0, 8, _value)
+
 #endif
 void rtw_hal_set_fw_rsvd_page(_adapter *adapter, bool finished);
 

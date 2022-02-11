@@ -5,7 +5,7 @@
 #include "platform_opts.h"
 #include "section_config.h"
 
-#if CONFIG_EXAMPLE_FATFS
+#include "example_fatfs.h"
 
 #if CONFIG_FATFS_EN
 #include "ff.h"
@@ -13,11 +13,11 @@
 
 /* Config for Ameba-1 */
 #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8710C)
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 #include "usb.h"
 #include <disk_if/inc/usbdisk.h>
 #define STACK_SIZE		2048
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 #include "sdio_combine.h"
 #include "sdio_host.h"
 #include <disk_if/inc/sdcard.h>
@@ -27,7 +27,7 @@
 //	#error define _USE_MKFS MACRO to 1 in ffconf.h to enable f_mkfs() which creates FATFS volume on Flash.
 //#endif
 
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 #if (_MAX_SS != 4096)
 #error set _MAX_SS to 4096 in ffconf.h to define maximum supported range of sector size for flash memory. See the description below the MACRO for details.
 #endif
@@ -48,7 +48,7 @@ u8 RDBuf[TEST_SIZE];
 /* Config for Ameba-Pro */
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
 #define STACK_SIZE		4096
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 
 #include "sdio_combine.h"
 #include "sdio_host.h"
@@ -56,7 +56,7 @@ u8 RDBuf[TEST_SIZE];
 #include "fatfs_sdcard_api.h"
 #endif
 
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 #if (_MAX_SS != 4096)
 #error set _MAX_SS to 4096 in ffconf.h to define maximum supported range of sector size for flash memory. See the description below the MACRO for details.
 #endif
@@ -68,7 +68,7 @@ u8 RDBuf[TEST_SIZE];
 #include "fatfs_flash_api.h"
 #endif
 
-#if FATFS_DISK_SD && FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_SD && CONFIG_FATFS_IF_FLASH
 #if (_VOLUMES < 2)
 #error set _VOLUMES to 2 in ffconf.h to support dual file system.
 #endif
@@ -76,13 +76,13 @@ u8 RDBuf[TEST_SIZE];
 #endif // defined(CONFIG_PLATFORM_8195BHP)
 
 #if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_AMEBAD2)
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 #include <disk_if/inc/sdcard.h>
-#elif FATFS_DISK_USB
+#elif CONFIG_FATFS_IF_USB
 #include "usb.h"
 #include <disk_if/inc/usbdisk.h>
 _Sema       us_sto_rdy_sema;
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 #if (_MAX_SS != 4096)
 #error set _MAX_SS to 4096 in ffconf.h to define maximum supported range of sector size for flash memory. See the description below the MACRO for details.
 #endif
@@ -93,7 +93,7 @@ _Sema       us_sto_rdy_sema;
 #include <disk_if/inc/flash_fatfs.h>
 #endif
 
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 #define STACK_SIZE		4096
 #else
 #define STACK_SIZE		2048
@@ -118,10 +118,10 @@ u8 RDBuf[TEST_SIZE]__attribute__((aligned(32)));
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
 #define TEST_BUF_SIZE	(512)
 
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 fatfs_sd_params_t fatfs_sd;
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 fatfs_flash_params_t fatfs_flash;
 #endif
 
@@ -194,12 +194,14 @@ void example_fatfs_thread(void *param)
 	char flash_fn[64] = "flash_file.txt";
 	char flash_test_fn[64] = "flash_drive_test.txt";
 	char flash_dir[64] = "flash_dir";
-	int br, bw;
+	unsigned int br, bw;
 	int ret = 0;
 
 	printf("=== FATFS Example ===\n\r");
-
-#if FATFS_DISK_SD
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
+#endif
+#if CONFIG_FATFS_IF_SD
 	res = fatfs_sd_init();
 	if (res < 0) {
 		printf("fatfs_sd_init fail (%d)\n", res);
@@ -208,7 +210,7 @@ void example_fatfs_thread(void *param)
 	}
 	fatfs_sd_get_param(&fatfs_sd);
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 	res = fatfs_flash_init();
 	if (res < 0) {
 		printf("fatfs_flash_init fail (%d)\n", res);
@@ -223,7 +225,7 @@ void example_fatfs_thread(void *param)
 		//printf("FatFS Write/Read test begin......\n\n");
 
 		printf("\n\r=== Clear files ===\n\r");
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 		del_dir(fatfs_sd.drv, 0);
 		printf("List files in SD card: %s\n\r", fatfs_sd.drv);
 		res = list_files(fatfs_sd.drv);
@@ -232,7 +234,7 @@ void example_fatfs_thread(void *param)
 		}
 		printf("\n\r");
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 		del_dir(fatfs_flash.drv, 0);
 		printf("List files in flash: %s\n\r", fatfs_flash.drv);
 		res = list_files(fatfs_flash.drv);
@@ -242,12 +244,12 @@ void example_fatfs_thread(void *param)
 		printf("\n\r");
 #endif
 
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 // SD test
 		printf("\n\r=== SD card FS Read/Write test ===\n\r");
 		// file write & read test
 		strcpy(path, fatfs_sd.drv);
-		sprintf(&path[strlen(path)], "%s", sd_fn);
+		snprintf(&path[strlen(path)], sizeof(path), "%s", sd_fn);
 
 		res = f_open(&m_file, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
 		if (res) {
@@ -301,12 +303,12 @@ void example_fatfs_thread(void *param)
 		printf("Create directory: %s \n\r", path_dir);
 		f_mkdir(path_dir);
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 // Flash test
 		printf("\n\r=== Flash FS Read/Write test ===\n\r");
 		// file write & read test
 		strcpy(path, fatfs_flash.drv);
-		sprintf(&path[strlen(path)], "%s", flash_fn);
+		snprintf(&path[strlen(path)], sizeof(path), "%s", flash_fn);
 
 		res = f_open(&m_file, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
 		if (res) {
@@ -363,7 +365,7 @@ void example_fatfs_thread(void *param)
 
 		// List all files
 		printf("\n\r=== List files ===\n\r");
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 		printf("List files in SD card: %s\n\r", fatfs_sd.drv);
 		res = list_files(fatfs_sd.drv);
 		if (res) {
@@ -371,7 +373,7 @@ void example_fatfs_thread(void *param)
 		}
 		printf("\n\r");
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 		printf("List files in flash: %s\n\r", fatfs_flash.drv);
 		res = list_files(fatfs_flash.drv);
 		if (res) {
@@ -383,10 +385,10 @@ void example_fatfs_thread(void *param)
 	}
 
 fail:
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 	fatfs_sd_close();
 #endif
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 	fatfs_flash_close();
 #endif
 
@@ -420,10 +422,10 @@ void example_fatfs_thread(void *param)
 
 	//1 init disk drive
 	printf("Init Disk driver.\n");
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 	sdio_driver_init();
 #endif
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 	_usb_init();
 	ret = wait_usb_ready();
 	if (ret != USB_INIT_OK) {
@@ -435,7 +437,7 @@ void example_fatfs_thread(void *param)
 		goto exit;
 	}
 
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 	// Set sdio debug level
 	DBG_INFO_MSG_OFF(_DBG_SDIO_);
 	DBG_WARN_MSG_OFF(_DBG_SDIO_);
@@ -453,12 +455,12 @@ void example_fatfs_thread(void *param)
 
 	//1 register disk driver to fatfs
 	printf("Register disk driver to Fatfs.\n");
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 	drv_num = FATFS_RegisterDiskDriver(&USB_disk_Driver);
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 	drv_num = FATFS_RegisterDiskDriver(&SD_disk_Driver);
 	u8 test_info[] = "\"Ameba test fatfs sd card ~~~~\"";
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 	drv_num = FATFS_RegisterDiskDriver(&FLASH_disk_Driver);
 	u8 test_info[] = "\"Ameba test fatfs flash~~~~\"";
 	flash = 1;
@@ -508,7 +510,7 @@ void example_fatfs_thread(void *param)
 		// write and read test
 		strcpy(path, logical_drv);
 
-		sprintf(&path[strlen(path)], "%s", filename);
+		snprintf(&path[strlen(path)], sizeof(path), "%s", filename);
 
 		//Open source file
 		res = f_open(&m_file, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
@@ -586,9 +588,9 @@ fail:
 		free(workbuf);
 	}
 #endif
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 	// deinit usb driver
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 	//sdio_deinit_host();
 	deinit_combine(psdioh_adapter);
 #endif
@@ -618,7 +620,7 @@ void example_fatfs_thread(void *param)
 	int flash = 0;
 	u8 test_info[] = "\"Ameba test fatfs sd card ~~~~\"";
 
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 	_usb_init();
 	ret = wait_usb_ready();
 	if (ret != USB_INIT_OK) {
@@ -631,17 +633,17 @@ void example_fatfs_thread(void *param)
 	}
 	usb_hcd_post_init();
 	rtw_init_sema(&us_sto_rdy_sema, 0);
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 	ConfigDebug[LEVEL_ERROR] |= BIT(MODULE_SDIO);
 	ConfigDebug[LEVEL_WARN] |= BIT(MODULE_SDIO);
 #endif
 	//1 register disk driver to fatfs
 	printf("Register disk driver to Fatfs.\n");
-#if FATFS_DISK_USB
+#if CONFIG_FATFS_IF_USB
 	drv_num = FATFS_RegisterDiskDriver(&USB_disk_Driver);
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 	drv_num = FATFS_RegisterDiskDriver(&SD_disk_Driver);
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 	drv_num = FATFS_RegisterDiskDriver(&FLASH_disk_Driver);
 #endif
 
@@ -662,7 +664,7 @@ void example_fatfs_thread(void *param)
 
 		res = f_mount(&m_fs, logical_drv, 1);
 		if (res) {
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 			if (f_mkfs(logical_drv, 1, 4096) != FR_OK) {
 				printf("Create FAT volume on Flash fail.\n");
 				goto exit;
@@ -671,7 +673,7 @@ void example_fatfs_thread(void *param)
 				printf("FATFS mount logical drive on Flash fail.\n");
 				goto exit;
 			}
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 			/*check  if there is a file system. if not, it take about 15 seconds to f_mkfs.*/
 			if (res == FR_NO_FILESYSTEM) {
 				res = f_mount(&m_fs, logical_drv, 0);
@@ -705,7 +707,7 @@ void example_fatfs_thread(void *param)
 		// write and read test
 		strcpy(path, logical_drv);
 
-		sprintf(&path[strlen(path)], "%s", filename);
+		snprintf(&path[strlen(path)], sizeof(path) "%s", filename);
 
 		//Open source file
 		res = f_open(&m_file, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
@@ -788,23 +790,23 @@ void example_fatfs_thread(void *param)
 	int test_result = 1;
 	int ret = 0;
 	int flash = 0;
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 	u8 test_info[] = "\"Ameba test fatfs sd card ~~~~\"";
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 	u8 test_info[] = "\"Ameba test fatfs flash ~~~~\"";
 #endif
 
 
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 	ConfigDebug[LEVEL_ERROR] |= BIT(MODULE_SDIO);
 	ConfigDebug[LEVEL_WARN] |= BIT(MODULE_SDIO);
 #endif
 	//1 register disk driver to fatfs
 	printf("Register disk driver to Fatfs.\n");
 
-#if FATFS_DISK_SD
+#if CONFIG_FATFS_IF_SD
 	drv_num = FATFS_RegisterDiskDriver(&SD_disk_Driver);
-#elif FATFS_DISK_FLASH
+#elif CONFIG_FATFS_IF_FLASH
 	drv_num = FATFS_RegisterDiskDriver(&FLASH_disk_Driver);
 #endif
 
@@ -826,7 +828,7 @@ void example_fatfs_thread(void *param)
 		res = f_mount(&m_fs, logical_drv, 1);
 		printf("res:%d\n", res);
 		if (res) {
-#if FATFS_DISK_FLASH
+#if CONFIG_FATFS_IF_FLASH
 			res = f_mkfs(logical_drv, NULL, NULL, 4096);
 			if (res != FR_OK) {
 				printf("Create FAT volume on Flash fail:%d\n", res);
@@ -836,10 +838,10 @@ void example_fatfs_thread(void *param)
 				printf("FATFS mount logical drive on Flash fail.\n");
 				goto exit;
 			}
-#elif FATFS_DISK_SD
+#elif CONFIG_FATFS_IF_SD
 			/*check if there is a file system. if not, it may take about seconds to f_mkfs.*/
 			if (res == FR_NO_FILESYSTEM) {
-				res = f_mkfs(logical_drv, NULL, NULL, 4096);
+				res = f_mount(&m_fs, logical_drv, 0);
 				if (res) {
 					printf("FATFS mount logical drive fail.\n");
 					goto exit;
@@ -870,7 +872,7 @@ void example_fatfs_thread(void *param)
 		// write and read test
 		strcpy(path, logical_drv);
 
-		sprintf(&path[strlen(path)], "%s", filename);
+		snprintf(&path[strlen(path)], sizeof(path), "%s", filename);
 
 		//Open source file
 		res = f_open(&m_file, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
@@ -941,9 +943,9 @@ char *print_file_info(FILINFO fileinfo, char *fn, char *path)
 	char fname[64];
 	memset(fname, 0, sizeof(fname));
 	snprintf(fname, sizeof(fname), "%s", fn);
-
+	unsigned long long int fsize = (unsigned long long int)fileinfo.fsize;
 	snprintf(info, sizeof(info),
-			 "%c%c%c%c%c  %u/%02u/%02u  %02u:%02u  %9u  %30s  %30s",
+			 "%c%c%c%c%c  %u/%02u/%02u  %02u:%02u  %9llu  %30s  %30s",
 			 (fileinfo.fattrib & AM_DIR) ? 'D' : '-',
 			 (fileinfo.fattrib & AM_RDO) ? 'R' : '-',
 			 (fileinfo.fattrib & AM_HID) ? 'H' : '-',
@@ -954,7 +956,7 @@ char *print_file_info(FILINFO fileinfo, char *fn, char *path)
 			 fileinfo.fdate & 31,
 			 (fileinfo.ftime >> 11),
 			 (fileinfo.ftime >> 5) & 63,
-			 fileinfo.fsize,
+			 fsize,
 			 fn,
 			 path);
 	printf("%s\n\r", info);
@@ -967,7 +969,7 @@ FRESULT list_files(char *list_path)
 	FILINFO m_fileinfo;
 	FRESULT res;
 	char *filename;
-#if _USE_LFN && !defined(FATFS_R_13C)
+#if _USE_LFN && ((!defined(FATFS_R_13C)) && (!defined(FATFS_R_14B)))
 	char fname_lfn[_MAX_LFN + 1];
 	m_fileinfo.lfname = fname_lfn;
 	m_fileinfo.lfsize = sizeof(fname_lfn);
@@ -987,7 +989,7 @@ FRESULT list_files(char *list_path)
 				break;
 			}
 
-#if _USE_LFN && !defined(FATFS_R_13C)
+#if _USE_LFN && ((!defined(FATFS_R_13C)) && (!defined(FATFS_R_14B)))
 			filename = *m_fileinfo.lfname ? m_fileinfo.lfname : m_fileinfo.fname;
 #else
 			filename = m_fileinfo.fname;
@@ -999,7 +1001,7 @@ FRESULT list_files(char *list_path)
 			// check if the object is directory
 			if (m_fileinfo.fattrib & AM_DIR) {
 				print_file_info(m_fileinfo, filename, cur_path);
-				sprintf(&cur_path[strlen(list_path)], "/%s", filename);
+				snprintf(&cur_path[strlen(list_path)], sizeof(cur_path), "/%s", filename);
 				res = list_files(cur_path);
 				//strcpy(list_path, cur_path);
 				if (res != FR_OK) {
@@ -1028,7 +1030,7 @@ FRESULT del_dir(const TCHAR *path, int del_self)
 	FILINFO m_fileinfo;
 	char *filename;
 	char file[_MAX_LFN + 1];
-#if _USE_LFN && !defined(FATFS_R_13C)
+#if _USE_LFN && ((!defined(FATFS_R_13C)) && (!defined(FATFS_R_14B)))
 	char fname_lfn[_MAX_LFN + 1];
 	m_fileinfo.lfname = fname_lfn;
 	m_fileinfo.lfsize = sizeof(fname_lfn);
@@ -1044,17 +1046,17 @@ FRESULT del_dir(const TCHAR *path, int del_self)
 				break;
 			}
 
-#if _USE_LFN && !defined(FATFS_R_13C)
+#if _USE_LFN && ((!defined(FATFS_R_13C)) && (!defined(FATFS_R_14B)))
 			filename = *m_fileinfo.lfname ? m_fileinfo.lfname : m_fileinfo.fname;
 #else
 			filename = m_fileinfo.fname;
 #endif
-			if (*filename == '.' || *filename == '..') {
+			if (filename[0] == '.' || filename[1] == '.') {
 				continue;
 			}
 
 			printf("del: %s\n\r", filename);
-			sprintf((char *)file, "%s/%s", path, filename);
+			snprintf((char *)file, sizeof(file), "%s/%s", path, filename);
 
 			if (m_fileinfo.fattrib & AM_DIR) {
 				res = del_dir(file, 1);
@@ -1086,4 +1088,3 @@ void example_fatfs(void)
 	}
 }
 #endif
-#endif /* CONFIG_EXAMPLE_FATFS */

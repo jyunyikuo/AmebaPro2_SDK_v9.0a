@@ -4,7 +4,6 @@
 *
 ******************************************************************************/
 #include "platform_opts.h"
-#if CONFIG_EXAMPLE_KVS_WEBRTC_MMF
 
 #include "mmf2_link.h"
 #include "mmf2_siso.h"
@@ -19,7 +18,7 @@
 
 #include "example_kvs_webrtc_mmf.h"
 #include "module_kvs_webrtc.h"
-#include "example_kvs_webrtc.h"
+#include "sample_config_webrtc.h"
 
 /*****************************************************************************
 * ISP channel : 0
@@ -43,13 +42,23 @@
 #define VIDEO_CODEC AV_CODEC_ID_H264
 #endif
 
+#if V1_RESOLUTION == VIDEO_VGA
+#define V1_WIDTH	640
+#define V1_HEIGHT	480
+#elif V1_RESOLUTION == VIDEO_HD
+#define V1_WIDTH	1280
+#define V1_HEIGHT	720
+#elif V1_RESOLUTION == VIDEO_FHD
+#define V1_WIDTH	1920
+#define V1_HEIGHT	1080
+#endif
+
 static mm_context_t *video_v1_ctx           = NULL;
 static mm_context_t *audio_ctx              = NULL;
 static mm_context_t *g711e_ctx              = NULL;
 static mm_context_t *g711d_ctx              = NULL;
 
 static mm_context_t *kvs_webrtc_v1_a1_ctx   = NULL;
-static mm_context_t *kvs_webrtc_audio_ctx   = NULL;
 
 static mm_siso_t *siso_audio_g711e          = NULL;
 static mm_siso_t *siso_webrtc_g711d         = NULL;
@@ -60,8 +69,8 @@ static video_params_t video_v1_params = {
 	.stream_id = V1_CHANNEL,
 	.type = VIDEO_TYPE,
 	.resolution = V1_RESOLUTION,
-	.width = video_res_w[V1_RESOLUTION],
-	.height = video_res_h[V1_RESOLUTION],
+	.width = V1_WIDTH,
+	.height = V1_HEIGHT,
 	.bps = V1_BPS,
 	.fps = V1_FPS,
 	.gop = V1_GOP,
@@ -89,7 +98,6 @@ static g711_params_t g711d_params = {
 	.mode     = G711_DECODE
 };
 
-
 #include "wifi_conf.h"
 #include "lwip_netconf.h"
 #define wifi_wait_time 500 //Here we wait 5 second to wiat the fast connect 
@@ -111,10 +119,10 @@ void example_kvs_webrtc_mmf_thread(void *param)
 {
 	common_init();
 
-	int voe_heap_size = video_voe_presetting(1, V1_RESOLUTION, V1_BPS, 0,
-						0, NULL, NULL,
-						0, NULL, NULL,
-						0, NULL);
+	int voe_heap_size = video_voe_presetting(1, V1_WIDTH, V1_HEIGHT, V1_BPS, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
 
@@ -155,9 +163,6 @@ void example_kvs_webrtc_mmf_thread(void *param)
 
 	kvs_webrtc_v1_a1_ctx = mm_module_open(&kvs_webrtc_module);
 	if (kvs_webrtc_v1_a1_ctx) {
-		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, CMD_KVS_WEBRTC_SET_VIDEO_HEIGHT, video_v1_params.height);
-		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, CMD_KVS_WEBRTC_SET_VIDEO_WIDTH, video_v1_params.width);
-		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, CMD_KVS_WEBRTC_SET_VIDEO_BPS, video_v1_params.bps);
 		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, MM_CMD_SET_QUEUE_LEN, 6);
 		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_STATIC);
 		mm_module_ctrl(kvs_webrtc_v1_a1_ctx, CMD_KVS_WEBRTC_SET_APPLY, 0);
@@ -236,5 +241,3 @@ void example_kvs_webrtc_mmf(void)
 		printf("\r\n example_kvs_webrtc_mmf_thread: Create Task Error\n");
 	}
 }
-
-#endif /* CONFIG_EXAMPLE_KVS_WEBRTC_MMF */

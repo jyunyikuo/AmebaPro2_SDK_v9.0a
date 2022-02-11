@@ -306,6 +306,7 @@ typedef struct hal_gpio_pin_adapter_s {
 	uint32_t s_ram_aon_gpio_on;     ///< Secure GPIO RAM has turned on power and clock for AON GPIO
 	uint32_t s_ram_pon_gpio_on;     ///< Secure GPIO RAM has turned on power and clock for PON GPIO
 	uint32_t s_ram_gpio_on;         ///< Secure GPIO RAM has turned on power and clock for SYSON GPIO
+	uint32_t reserved[7];           ///< Reserved, make 32-byte aligned
 } hal_gpio_adapter_t, *phal_gpio_adapter_t;
 
 /**
@@ -323,6 +324,7 @@ typedef struct hal_gpio_irq_pin_adapter_s {
 	gpio_irq_callback_t irq_callback;   ///< the call-back function of the GPIO IRQ
 	uint32_t irq_callback_arg;      ///< the argument of the IRQ call-back function, it's a priviate data will be pass to the application with the call back function.
 	void *pnext;                    ///< point to the next gpio_irq_pin_adapter
+	uint32_t reserved[7];           ///< Reserved, make 32-byte aligned
 } hal_gpio_irq_adapter_t, *phal_gpio_irq_adapter_t;
 
 /**
@@ -330,24 +332,25 @@ typedef struct hal_gpio_irq_pin_adapter_s {
 */
 
 typedef struct hal_gpio_port_adapter_s {
-	uint8_t port_idx;               ///< the IP port index
-	//uint8_t chip_port_idx;          ///< the chip port index (for pinmux reg & unreg purposes)
-	uint8_t pin_offset;             ///< the pin0 of this port which is located at the offset of the IP port
+	uint8_t port_idx;               		///< the IP port index
+	//uint8_t chip_port_idx;        		  ///< the chip port index (for pinmux reg & unreg purposes)
+	uint8_t pin_offset;             		///< the pin0 of this port which is located at the offset of the IP port
 	uint8_t reserv0;
 	uint8_t reserv1;
-	uint32_t pin_mask;              ///< the mask of pin to indicates what pin is included
-//    uint32_t bit_mask;            ///< the bit mask to read/write register
-	volatile uint32_t *in_port;     ///< the IN port address
-	volatile uint32_t *out0_port;   ///< the OUT port address for write 0
-	volatile uint32_t *out1_port;   ///< the OUT port address for write 1
-	volatile uint32_t *outt_port;   ///< the OUT port address for toggling
+	uint32_t pin_mask;              		///< the mask of pin to indicates what pin is included
+//    uint32_t bit_mask;            		///< the bit mask to read/write register
+	volatile uint32_t *in_port;     		///< the IN port address
+	volatile uint32_t *out0_port;   		///< the OUT port address for write 0
+	volatile uint32_t *out1_port;   		///< the OUT port address for write 1
+	volatile uint32_t *outt_port;   		///< the OUT port address for toggling
 
 	// To handle GPIO E overflow. Overflow means the bits from GPIO E fills to the end of GPIO Group A registers, and flows to use GPIO Group B registers.
-	uint8_t pin_offset_PORTE; 			///< the pin0 of this port which is located at the offset of the IP port
-	volatile uint32_t *in_port_PORTE;     ///< the IN port address - for GPIO Port E overflow
-	volatile uint32_t *out0_port_PORTE;   ///< the OUT port address for write 0 - for GPIO Port E overflow
-	volatile uint32_t *out1_port_PORTE;   ///< the OUT port address for write 1 - for GPIO Port E overflow
-	volatile uint32_t *outt_port_PORTE;   ///< the OUT port address for toggling - for GPIO Port E overflow
+	uint8_t pin_offset_PORTE; 				///< the pin0 of this port which is located at the offset of the IP port
+	volatile uint32_t *in_port_PORTE;     	///< the IN port address - for GPIO Port E overflow
+	volatile uint32_t *out0_port_PORTE;   	///< the OUT port address for write 0 - for GPIO Port E overflow
+	volatile uint32_t *out1_port_PORTE;   	///< the OUT port address for write 1 - for GPIO Port E overflow
+	volatile uint32_t *outt_port_PORTE;  	///< the OUT port address for toggling - for GPIO Port E overflow
+	uint32_t reserved[5];                	///< Reserved, make 32-byte aligned
 } hal_gpio_port_adapter_t, *phal_gpio_port_adapter_t;
 
 /**
@@ -356,16 +359,17 @@ typedef struct hal_gpio_port_adapter_s {
 typedef struct hal_gpio_comm_adapter_s {
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_head; ///< the head of the gpio_irq_pin_adapter list
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_tail; ///< the tail of the gpio_irq_pin_adapter list
-	volatile uint32_t gpio_irq_using;        ///< the bit map to indicate using status of IRQ functions // may be need to add more
-	volatile uint32_t gpio_deb_using;        ///< the bit map to indicate using status of debounce functions
-	volatile uint32_t critical_lv;  ///< to record AON GPIO HAL enter critical section level
+	volatile uint32_t gpio_irq_using;        			///< the bit map to indicate using status of IRQ functions // may be need to add more
+	volatile uint32_t gpio_deb_using;        			///< the bit map to indicate using status of debounce functions
+	volatile uint32_t critical_lv;  					///< to record AON GPIO HAL enter critical section level
 	union {
 		volatile uint32_t errs;
 		struct {
-			volatile uint32_t irq_err: 1;    ///< IRQ handler error
-			volatile uint32_t init_err: 1;   ///< initial error
+			volatile uint32_t irq_err: 1;    			///< IRQ handler error
+			volatile uint32_t init_err: 1;   			///< initial error
 		} err_flag;
 	};
+	uint32_t reserved[2];                				///< Reserved, make 32-byte aligned
 } hal_gpio_comm_adapter_t, *phal_gpio_comm_adapter_t;
 
 /**
@@ -374,16 +378,17 @@ typedef struct hal_gpio_comm_adapter_s {
 typedef struct hal_aon_gpio_comm_adapter_s {
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_head; ///< the head of the gpio_irq_pin_adapter list
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_tail; ///< the tail of the gpio_irq_pin_adapter list
-	volatile uint32_t gpio_irq_using;        ///< the bit map to indicate using status of IRQ functions // may be need to add more
-	volatile uint32_t gpio_deb_using;        ///< the bit map to indicate using status of debounce functions
-	volatile uint32_t critical_lv;  ///< to record AON GPIO HAL enter critical section level
+	volatile uint32_t gpio_irq_using;        			///< the bit map to indicate using status of IRQ functions // may be need to add more
+	volatile uint32_t gpio_deb_using;        			///< the bit map to indicate using status of debounce functions
+	volatile uint32_t critical_lv; 						///< to record AON GPIO HAL enter critical section level
 	union {
 		volatile uint32_t errs;
 		struct {
-			volatile uint32_t irq_err: 1;    ///< IRQ handler error
-			volatile uint32_t init_err: 1;   ///< initial error
+			volatile uint32_t irq_err: 1;   			///< IRQ handler error
+			volatile uint32_t init_err: 1;  			///< initial error
 		} err_flag;
 	};
+	uint32_t reserved[2];                				///< Reserved, make 32-byte aligned
 } hal_aon_gpio_comm_adapter_t, *phal_aon_gpio_comm_adapter_t;
 
 /**
@@ -392,19 +397,18 @@ typedef struct hal_aon_gpio_comm_adapter_s {
 typedef struct hal_pon_gpio_comm_adapter_s {
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_head; ///< the head of the gpio_irq_pin_adapter list
 	volatile phal_gpio_irq_adapter_t gpio_irq_list_tail; ///< the tail of the gpio_irq_pin_adapter list
-	volatile uint32_t gpio_irq_using;        ///< the bit map to indicate using status of IRQ functions // may be need to add more
-	volatile uint32_t gpio_deb_using;        ///< the bit map to indicate using status of debounce functions
-	volatile uint32_t critical_lv;  ///< to record AON GPIO HAL enter critical section level
+	volatile uint32_t gpio_irq_using;        			///< the bit map to indicate using status of IRQ functions // may be need to add more
+	volatile uint32_t gpio_deb_using;        			///< the bit map to indicate using status of debounce functions
+	volatile uint32_t critical_lv;  					///< to record AON GPIO HAL enter critical section level
 	union {
 		volatile uint32_t errs;
 		struct {
-			volatile uint32_t irq_err: 1;    ///< IRQ handler error
-			volatile uint32_t init_err: 1;   ///< initial error
+			volatile uint32_t irq_err: 1;    			///< IRQ handler error
+			volatile uint32_t init_err: 1;  			///< initial error
 		} err_flag;
 	};
+	uint32_t reserved[2];                				///< Reserved, make 32-byte aligned
 } hal_pon_gpio_comm_adapter_t, *phal_pon_gpio_comm_adapter_t;
-
-// #if !defined(CONFIG_BUILD_SECURE) // Sunny commented out
 
 /// @cond DOXYGEN_ROM_HAL_API
 
@@ -478,8 +482,6 @@ hal_status_t hal_rtl_gpio_slew_rate_ctrl(uint32_t pin_name, uint8_t slew_rate_fu
 
 /** @} */ /* End of group hs_hal_gpio_rom_func */
 /// @endcond /* End of condition DOXYGEN_ROM_HAL_API */
-
-// #endif  // end of "#if !defined(CONFIG_BUILD_SECURE)" // Sunny commented out
 
 /**
   \brief  The data structure of the stubs functions of the GPIO HAL functions in ROM

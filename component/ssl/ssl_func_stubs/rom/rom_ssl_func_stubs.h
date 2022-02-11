@@ -16,11 +16,22 @@
 #include "mbedtls/pem.h"
 #include "mbedtls/dhm.h"
 #include "mbedtls/ecjpake.h"
-#include "mbedtls/arc4.h"
 #include "mbedtls/ecdh.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x03000000)
+#define mbedtls_arc4_context void
+#else
+#include "mbedtls/arc4.h"
 #include "mbedtls/pk_internal.h"
+#endif
+
+#ifndef u32
+typedef uint32_t u32;
+#endif
+#ifndef u8
+typedef uint8_t  u8;
+#endif
 
 #if (defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
 typedef struct ssl_func_stubs_s {

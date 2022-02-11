@@ -37,7 +37,6 @@
 extern const cmd_shell_func_stubs_t cmd_shell_stubs;
 
 #define SHELL_CMD_BUF_SIZE       80
-#define SHELL_CMD_LIST_SIZE      100
 #define SHELL_CMD_HIST_SIZE      256
 
 shell_command_t shell_cmd_hdl;

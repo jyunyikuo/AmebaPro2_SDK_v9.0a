@@ -90,29 +90,32 @@ extern "C"
   * @{
   */
 /** @brief Scan PHY type used in @ref le_ext_scan_set_phy_param. */
-typedef enum {
-	LE_SCAN_PHY_LE_1M,     /**< Set @ref T_GAP_LE_EXT_SCAN_PARAM for LE 1M PHY. */
-	LE_SCAN_PHY_LE_CODED,  /**< Set @ref T_GAP_LE_EXT_SCAN_PARAM for LE Coded PHY. */
+typedef enum
+{
+    LE_SCAN_PHY_LE_1M,     /**< Set @ref T_GAP_LE_EXT_SCAN_PARAM for LE 1M PHY. */
+    LE_SCAN_PHY_LE_CODED,  /**< Set @ref T_GAP_LE_EXT_SCAN_PARAM for LE Coded PHY. */
 } T_LE_EXT_SCAN_PHY_TYPE;
 
 /** @brief Extended scan parameter. */
-typedef struct {
-	T_GAP_SCAN_MODE
-	scan_type;      /**< Scan type. Write only. Default is GAP_SCAN_MODE_ACTIVE, @ref T_GAP_SCAN_MODE. */
-	uint16_t
-	scan_interval;  /**< Scan Interval. Write only. In units of 0.625ms, range: 0x0004 to 0xFFFF. Default is 0x40. */
-	uint16_t
-	scan_window;    /**< Scan Window. Write only. In units of 0.625ms, range: 0x0004 to 0xFFFF. Default is 0x20. */
+typedef struct
+{
+    T_GAP_SCAN_MODE
+    scan_type;      /**< Scan type. Write only. Default is GAP_SCAN_MODE_ACTIVE, @ref T_GAP_SCAN_MODE. */
+    uint16_t
+    scan_interval;  /**< Scan Interval. Write only. In units of 0.625ms, range: 0x0004 to 0xFFFF. Default is 0x40. */
+    uint16_t
+    scan_window;    /**< Scan Window. Write only. In units of 0.625ms, range: 0x0004 to 0xFFFF. Default is 0x20. */
 } T_GAP_LE_EXT_SCAN_PARAM;
 
 /** @brief Extended scan parameter type. */
-typedef enum {
-	GAP_PARAM_EXT_SCAN_LOCAL_ADDR_TYPE   = 0x340,  /**< The type of address being used in the scan request packets. Read/Write. Size is uint8_t. Default is GAP_LOCAL_ADDR_LE_PUBLIC (@ref T_GAP_LOCAL_ADDR_TYPE). */
-	GAP_PARAM_EXT_SCAN_FILTER_POLICY     = 0x341,  /**< Scanning filter policy. Read/Write. Size is uint8_t. Default is GAP_SCAN_FILTER_ANY (@ref T_GAP_SCAN_FILTER_POLICY). */
-	GAP_PARAM_EXT_SCAN_PHYS              = 0x342,  /**< Scanning PHYs.  window. Read/Write. Size is uint8_t. Default is GAP_EXT_SCAN_PHYS_1M_BIT (@ref EXT_SCAN_PHY). */
-	GAP_PARAM_EXT_SCAN_FILTER_DUPLICATES = 0x343,  /**< Scan Filter Duplicates. Read/Write. Size is uint8_t. Default is GAP_SCAN_FILTER_DUPLICATE_ENABLE (@ref T_GAP_SCAN_FILTER_DUPLICATE). */
-	GAP_PARAM_EXT_SCAN_DURATION          = 0x344,  /**< Scan duration. Read/Write. Size is uint16_t. In units of 10ms, range: 0x0000~0xFFFF. Default is zero. */
-	GAP_PARAM_EXT_SCAN_PERIOD            = 0x345,  /**< Scan period. Read/Write. Size is uint16_t. In units of 1.28sec, range: 0x0000~0xFFFF. Default is zero. */
+typedef enum
+{
+    GAP_PARAM_EXT_SCAN_LOCAL_ADDR_TYPE   = 0x340,  /**< The type of address being used in the scan request packets. Read/Write. Size is uint8_t. Default is GAP_LOCAL_ADDR_LE_PUBLIC (@ref T_GAP_LOCAL_ADDR_TYPE). */
+    GAP_PARAM_EXT_SCAN_FILTER_POLICY     = 0x341,  /**< Scanning filter policy. Read/Write. Size is uint8_t. Default is GAP_SCAN_FILTER_ANY (@ref T_GAP_SCAN_FILTER_POLICY). */
+    GAP_PARAM_EXT_SCAN_PHYS              = 0x342,  /**< Scanning PHYs.  window. Read/Write. Size is uint8_t. Default is GAP_EXT_SCAN_PHYS_1M_BIT (@ref EXT_SCAN_PHY). */
+    GAP_PARAM_EXT_SCAN_FILTER_DUPLICATES = 0x343,  /**< Scan Filter Duplicates. Read/Write. Size is uint8_t. Default is GAP_SCAN_FILTER_DUPLICATE_ENABLE (@ref T_GAP_SCAN_FILTER_DUPLICATE). */
+    GAP_PARAM_EXT_SCAN_DURATION          = 0x344,  /**< Scan duration. Read/Write. Size is uint16_t. In units of 10ms, range: 0x0000~0xFFFF. Default is zero. */
+    GAP_PARAM_EXT_SCAN_PERIOD            = 0x345,  /**< Scan period. Read/Write. Size is uint16_t. In units of 1.28sec, range: 0x0000~0xFFFF. Default is zero. */
 } T_LE_EXT_SCAN_PARAM_TYPE;
 
 /** End of GAP_LE_EXTENDED_SCAN_Exported_Types
@@ -421,6 +424,56 @@ T_GAP_CAUSE le_ext_scan_start(void);
 T_GAP_CAUSE le_ext_scan_stop(void);
 
 #if F_BT_LE_GAP_MSG_INFO_WAY
+/**
+* @brief  Set extended scanning gap message inform way.
+*
+*         Default value is True.
+*         If use_msg is True, gap will send the extended scanning gap message to io_queue registered by
+*         gap_start_bt_stack. Message type is @ref GAP_MSG_LE_DEV_STATE_CHANGE.
+*         If use_msg is False, gap will send the extended scanning gap message using callback function registered by
+*         @ref app_gap_callback. Message type is @ref GAP_MSG_LE_EXT_SCAN_STATE_CHANGE_INFO.
+*
+* @param[in] use_msg Whether to use message.
+* @retval void
+*
+* <b>Example usage</b>
+* \code{.c}
+    int test(void)
+    {
+        le_ext_scan_gap_msg_info_way(false);
+    }
+
+    void app_handle_ext_scan_state_evt(uint8_t new_state, uint16_t cause)
+    {
+        ......
+        if (new_state == GAP_SCAN_STATE_IDLE)
+        {
+        }
+        else if (new_state == GAP_SCAN_STATE_SCANNING)
+        {
+        }
+        ......
+    }
+
+    T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data)
+    {
+        T_APP_RESULT result = APP_RESULT_SUCCESS;
+        T_LE_CB_DATA *p_data = (T_LE_CB_DATA *)p_cb_data;
+
+        ......
+        switch (cb_type)
+        {
+        case GAP_MSG_LE_EXT_SCAN_STATE_CHANGE_INFO:
+            {
+                app_handle_ext_scan_state_evt(p_data->p_le_ext_scan_state_change_info->state,
+                                              p_data->p_le_ext_scan_state_change_info->cause);
+            }
+            break;
+        }
+        ......
+    }
+* \endcode
+*/
 void le_ext_scan_gap_msg_info_way(bool use_msg);
 #endif
 /** End of GAP_LE_EXTENDED_SCAN_Exported_Functions

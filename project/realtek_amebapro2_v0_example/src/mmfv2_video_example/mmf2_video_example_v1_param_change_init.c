@@ -16,10 +16,16 @@
 * Video type  : H264/HEVC
 *****************************************************************************/
 #define V1_CHANNEL 0
-#define V1_RESOLUTION VIDEO_HD
+#if USE_SENSOR == SENSOR_GC4653
+#define V1_RESOLUTION VIDEO_2K
+#define V1_FPS 15
+#define V1_GOP 15
+#else
+#define V1_RESOLUTION VIDEO_FHD
 #define V1_FPS 30
 #define V1_GOP 30
-#define V1_BPS 1024*1024
+#endif
+#define V1_BPS 2*1024*1024
 #define V1_RCMODE 2 // 1: CBR, 2: VBR
 
 #define USE_H265 0
@@ -43,6 +49,9 @@
 #elif V1_RESOLUTION == VIDEO_FHD
 #define V1_WIDTH	1920
 #define V1_HEIGHT	1080
+#elif V1_RESOLUTION == VIDEO_2K
+#define V1_WIDTH	2560
+#define V1_HEIGHT	1440
 #endif
 
 static mm_context_t *video_v1_ctx			= NULL;
@@ -74,21 +83,37 @@ static rtsp2_params_t rtsp2_v1_params = {
 	}
 };
 
+static void change_resolution_parameter(int parm_index)
+{
+	if (parm_index == 0) {
+		video_v1_params.resolution = VIDEO_FHD;
+		video_v1_params.width = 1920;
+		video_v1_params.height = 1080;
+		video_v1_params.bps = 2 * 1024 * 1024;
+	} else {
+		video_v1_params.resolution = VIDEO_HD;
+		video_v1_params.width = 1280;
+		video_v1_params.height = 720;
+		video_v1_params.bps = 1 * 1024 * 1024;
+	}
+}
+
 void mmf2_video_example_v1_param_change_init(void)
 {
+	int sw = 0;
+	int i = 0;
 	int voe_heap_size = video_voe_presetting(1, V1_WIDTH, V1_HEIGHT, V1_BPS, 0,
-					0, 0, 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0);
+						0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
 
-	int i = 0;
 	video_v1_ctx = mm_module_open(&video_module);
 	if (video_v1_ctx) {
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
-		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, 60);
+		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, V1_FPS);
 		mm_module_ctrl(video_v1_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, V1_CHANNEL);	// start channel 0
 	} else {
@@ -100,7 +125,6 @@ void mmf2_video_example_v1_param_change_init(void)
 	if (rtsp2_v1_ctx) {
 		mm_module_ctrl(rtsp2_v1_ctx, CMD_RTSP2_SELECT_STREAM, 0);
 		mm_module_ctrl(rtsp2_v1_ctx, CMD_RTSP2_SET_PARAMS, (int)&rtsp2_v1_params);
-		mm_module_ctrl(rtsp2_v1_ctx, CMD_RTSP2_SET_DROP_TIME, 5000);
 		mm_module_ctrl(rtsp2_v1_ctx, CMD_RTSP2_SET_APPLY, 0);
 		mm_module_ctrl(rtsp2_v1_ctx, CMD_RTSP2_SET_STREAMMING, ON);
 	} else {
@@ -118,12 +142,23 @@ void mmf2_video_example_v1_param_change_init(void)
 		goto mmf2_video_exmaple_v1_param_change_fail;
 	}
 
-#if 1
-	rt_printf("changing resolution and fps test\n\r");
+	rt_printf("changing resolution and bps test\n\r");
+	for (i = 0; i < 2; i++) {
+		sw++;
+		sw &= 1;
+		// wait 30 seconds, change resolution
+		vTaskDelay(30000);
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, V1_CHANNEL);
+		change_resolution_parameter(sw);
 
 
-	rt_printf("changing rate control mode test\n\r");
+		siso_pause(siso_video_rtsp_v1);
 
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, V1_CHANNEL);	// start channel 0
+
+		siso_resume(siso_video_rtsp_v1);
+	}
 
 	for (i = 0; i < 10; i++) {
 		vTaskDelay(10000);
@@ -131,17 +166,12 @@ void mmf2_video_example_v1_param_change_init(void)
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_BPS, (1024 * 1024 + 1024 * (1 + i)));
 	}
 
-	vTaskDelay(20000);
-	rt_printf("changing bit rate test = %d\n\r", (1024 * 1024));
-	mm_module_ctrl(video_v1_ctx, CMD_VIDEO_BPS, 1024 * 1024);
-
-
-	for (i = 0; i < 10; i++) {
-		vTaskDelay(5000);
-		rt_printf("changing QP test = %d, %d\n\r", (5 + i * 2), (10 + i * 4));
+	for (i = 0; i < 5; i++) {
+		vTaskDelay(10000);
+		rt_printf("changing QP test = %d, %d\n\r", (25 + i * 2), (35 + i * 2));
 		encode_rc_parm_t rc_parm;
-		rc_parm.minQp = (5 + i * 2);
-		rc_parm.maxQp = (10 + i * 4);
+		rc_parm.minQp = (25 + i * 2);
+		rc_parm.maxQp = (35 + i * 2);
 
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_RCPARAM, (int)&rc_parm);
 	}
@@ -152,7 +182,6 @@ void mmf2_video_example_v1_param_change_init(void)
 		rt_printf("changing forcei test\n\r");
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_FORCE_IFRAME, NULL);
 	}
-#endif
 
 	return;
 mmf2_video_exmaple_v1_param_change_fail:

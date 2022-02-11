@@ -53,6 +53,10 @@ static void platform_free_uninit( void *ptr )
 void * (*mbedtls_calloc)( size_t, size_t ) = MBEDTLS_PLATFORM_STD_CALLOC;
 void (*mbedtls_free)( void * )     = MBEDTLS_PLATFORM_STD_FREE;
 
+void * platform_malloc(size_t size)
+{
+	return mbedtls_calloc(1, size);
+}
 extern int platform_set_malloc_free( void * (*malloc_func)( size_t ), void (*free_func)( void * ) );
 int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
                               void (*free_func)( void * ) )
@@ -64,8 +68,11 @@ int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
      * mbedtls RAM codes use function pointers in platform memory implementation
      * Not use malloc/free in ssl ram map for mbedtls RAM codes
      */
+#if defined(CONFIG_PLATFORM_8195B) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)
     platform_set_malloc_free( (void*(*)( size_t ))calloc_func, free_func);
-
+#else
+    platform_set_malloc_free( platform_malloc, free_func );
+#endif
     /* Realtek added to initialize ROM code calloc & free function handler */
 #ifdef CONFIG_USE_MBEDTLS_ROM
     p_rom_ssl_ram_map = (struct _rom_mbedtls_ram_map*)&rom_ssl_ram_map;

@@ -2,17 +2,47 @@
 #include "task.h"
 #include "diag.h"
 #include "hal.h"
-#include <example_entry.h>
 #include "log_service.h"
+#include <platform_opts.h>
+#include <platform_opts_bt.h>
 
-#if CONFIG_EXAMPLE_MEDIA_VIDEO
-#include "hal_video.h"
-#include "video_example_media_framework.h"
-
-extern hal_video_adapter_t *v_adapter;
-hal_gpio_adapter_t sensor_en_gpio;
-
+#ifdef _PICOLIBC__
+int errno;
 #endif
+
+#if defined(CONFIG_FTL_ENABLED)
+#include <ftl_int.h>
+
+const u8 ftl_phy_page_num = 3;	/* The number of physical map pages, default is 3: BT_FTL_BKUP_ADDR, BT_FTL_PHY_ADDR1, BT_FTL_PHY_ADDR0 */
+const u32 ftl_phy_page_start_addr = BT_FTL_BKUP_ADDR;
+
+void app_ftl_init(void)
+{
+	ftl_init(ftl_phy_page_start_addr, ftl_phy_page_num);
+}
+#endif
+
+/* entry for the example*/
+_WEAK void app_example(void)
+{
+
+}
+
+void setup(void)
+{
+#if CONFIG_WLAN
+#if ENABLE_FAST_CONNECT
+	wifi_fast_connect_enable(1);
+#else
+	wifi_fast_connect_enable(0);
+#endif
+	wlan_network();
+#endif
+
+#if defined(CONFIG_FTL_ENABLED)
+	app_ftl_init();
+#endif
+}
 
 /**
   * @brief  Main program.
@@ -23,28 +53,11 @@ void main(void)
 {
 	console_init();
 
-#if CONFIG_EXAMPLE_MEDIA_VIDEO
-	// Enable ISP PWR
-	hal_gpio_init(&sensor_en_gpio, PIN_A5);
-	hal_gpio_set_dir(&sensor_en_gpio, GPIO_OUT);
-	hal_gpio_write(&sensor_en_gpio, 1);
-#endif
+	setup();
 
-	printf("pre_example_entry\r\n");
-	/* pre-processor of application example */
-	pre_example_entry();
-
-	printf("wlan_network\r\n");
-	wlan_network();
-
-	printf("application example\r\n");
 	/* Execute application example */
-	example_entry();
+	app_example();
 
-#if CONFIG_EXAMPLE_MEDIA_VIDEO
-	/* Execute video example */
-	video_example_media_framework();
-#endif
 
 	vTaskStartScheduler();
 	while (1);

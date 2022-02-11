@@ -28,6 +28,11 @@ extern T_GAP_CONN_STATE bt_airsync_config_gap_conn_state;
 extern T_GAP_DEV_STATE bt_airsync_config_gap_dev_state;
 #endif
 
+#if defined(CONFIG_BT_CES_DEMO) && CONFIG_BT_CES_DEMO
+#include "bt_ipc_dev_api.h"
+#include "bt_mesh_provisioner_ces_demo_config.h"
+#endif
+
 // a temp variable for wifi scan
 static void *wifi_scan_sema = NULL;
 static void *BC_status_monitor_task_hdl = NULL;
@@ -38,6 +43,7 @@ static uint8_t pscan_channel_5G[] = {36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 1
 uint8_t last_conn_error = 0;
 rtw_join_status_t last_join_status =RTW_JOINSTATUS_UNKNOWN;
 
+extern uint8_t *lwip_getip_intf(uint8_t idx);
 
 extern uint8_t airsync_specific;
 
@@ -83,11 +89,9 @@ EXIT:
 
 BC_band_t BC_req_band_hdl(void)
 {
-#if defined(CONFIG_PLATFORM_8721D)
-	u8 Band;
-#endif
 	BC_printf("Band Request");
-#if defined(CONFIG_PLATFORM_8721D)
+
+	u8 Band;
 	Band = wifi_get_band_type();
 
 	if (Band == WL_BAND_2_4G) {
@@ -97,9 +101,6 @@ BC_band_t BC_req_band_hdl(void)
 	} else {
 		return BC_BAND_2G_5G;
 	}
-#else
-	return BC_BAND_2G;
-#endif
 }
 
 int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result *BC_scan_result)
@@ -122,7 +123,36 @@ int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result *BC_scan_result)
 
 	BC_printf("Scan %s AP\r\n", (band == BC_BAND_2G) ? "2.4G" : "5G");
 	os_sem_create(&wifi_scan_sema, 0, 1);
-	BC_scan_result->ap_num = 0;
+#if defined(CONFIG_BT_CES_DEMO) && CONFIG_BT_CES_DEMO
+    /* message CA7 to start wifi scan */
+    {
+        int *pret = NULL;
+        uint32_t param_buf[24 + 3] = {0};
+        bt_ipc_dev_request_message bt_dev_ipc_info;
+
+        param_buf[0] = pscan_config_size;
+        param_buf[1] = (uint32_t)BC_scan_result;
+        param_buf[2] = (uint32_t)scan_result_handler;
+        for (uint8_t i = 0; i < pscan_config_size; i++) {
+            param_buf[i + 3] = pscan_channel[i];
+        }
+        pret = bt_ipc_api_dev_message_send(RTK_BT_MESH_CES_DEMO, MESH_DEMO_BC_WIFI_SCAN, param_buf, pscan_config_size + 3);
+        if (pret[0] != RTW_SUCCESS) {
+            BC_printf("Failed to invoke wifi scan on ca7 \n\r");
+            rtw_mfree((void *)pret, sizeof(bt_dev_ipc_info.ret));
+            ret = -1;
+            os_sem_delete(wifi_scan_sema); 
+            goto exit;
+        } else {
+            ret = pret[0];
+            rtw_mfree((void *)pret, sizeof(bt_dev_ipc_info.ret));
+        }
+
+        os_sem_take(wifi_scan_sema, 0xFFFFFFFF);
+	    os_sem_delete(wifi_scan_sema);   
+    }
+#else
+    BC_scan_result->ap_num = 0;
 	rtw_memset(&scan_param, 0, sizeof(rtw_scan_param_t));
 	scan_param.scan_user_data = (void *)BC_scan_result;
 	scan_param.scan_user_callback = scan_result_handler;
@@ -135,6 +165,7 @@ int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result *BC_scan_result)
 	}
 	os_sem_take(wifi_scan_sema, 0xFFFFFFFF);
 	os_sem_delete(wifi_scan_sema);
+#endif
 
 exit:
 	return ret;
@@ -154,6 +185,11 @@ void wifi_join_status_callback(rtw_join_status_t join_status)
 	}
 	last_join_status = join_status;
 }
+
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+#include "bt_ipc_dev_api.h"
+#include "bt_mesh_provisioner_ces_demo_config.h"
+#endif
 
 int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_security_t security, BC_band_t band)
 {
@@ -214,8 +250,24 @@ int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_sec
 	tick2 = rtw_get_current_time();
 	BC_printf("Connected after %dms.\r\n", (tick2 - tick1));
 
-#if CONFIG_LWIP_LAYER
-	/* Start DHCPClient */
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+	{
+        int *ret = NULL;
+        bt_ipc_dev_request_message bt_dev_ipc_info;
+
+        ret = bt_ipc_api_dev_message_send(RTK_BT_MESH_CES_DEMO, MESH_DEMO_START_DHCP, NULL, 0);
+        if (ret[0]) {
+            tick3 = rtw_get_current_time();
+            BC_printf("Got IP after %dms.\r\n", (tick3 - tick1));
+            rtw_mfree((void *)ret, sizeof(bt_dev_ipc_info.ret));
+        } else {
+            BC_printf("Got IP Fail.\r\n");
+            rtw_mfree((void *)ret, sizeof(bt_dev_ipc_info.ret));
+            return -1;
+        }
+    }
+#elif defined(CONFIG_LWIP_LAYER) && CONFIG_LWIP_LAYER
+    /* Start DHCPClient */
 	DCHP_state = LwIP_DHCP(0, DHCP_START);
 
 	if (DCHP_state != DHCP_ADDRESS_ASSIGNED) {
@@ -240,7 +292,7 @@ void BC_req_status_hdl(BC_status_t *status, uint8_t *SSID, uint8_t *BSSID, rtw_s
 	} else if (last_conn_error == 1) {
 		*status = BC_STATE_WRONG_PASSWORD;
 		BC_printf("Wrong Password\r\n");
-	} else if ((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)LwIP_GetIP(0) != IP_ADDR_INVALID)) {
+	} else if ((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)lwip_getip_intf(0) != IP_ADDR_INVALID)) {
 		if (wifi_get_setting(WLAN0_IDX, &setting) != -1) {
 			*status = BC_STATE_CONNECTED;
 			memcpy(SSID, setting.ssid, BC_MAX_SSID_LEN);
@@ -273,7 +325,7 @@ void BC_status_monitor(void *p_param)
 
 	while (1) {
 		os_delay(500);
-		if ((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)LwIP_GetIP(0) != IP_ADDR_INVALID)) {// wifi connected
+		if ((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)lwip_getip_intf(0) != IP_ADDR_INVALID)) {// wifi connected
 #if defined(CONFIG_BT_AIRSYNC_CONFIG) && CONFIG_BT_AIRSYNC_CONFIG
 			if (airsync_specific) {
 				gap_conn_state = bt_airsync_config_gap_conn_state;
@@ -311,7 +363,7 @@ void bt_config_wifi_init(void)
 	BC_cmd_task_init();
 
 	if (BC_status_monitor_task_hdl == NULL) {
-		if (os_task_create(&BC_status_monitor_task_hdl, (char const *)"BC_status_monitor", BC_status_monitor, NULL, 512, 1) != true) {
+		if (os_task_create(&BC_status_monitor_task_hdl, (char const *)"BC_status_monitor", BC_status_monitor, NULL, 1024, 1) != true) {
 			BC_printf("[%s] Create BC_status_monitor failed", __FUNCTION__);
 		}
 	} else {

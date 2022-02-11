@@ -68,7 +68,7 @@
 #define AP_GW_ADDR3   1
 #endif
 
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && (CONFIG_EXAMPLE_UART_ATCMD))
+#if (defined(SUPPORT_UART_LOG_SERVICE) && (SUPPORT_UART_LOG_SERVICE))
 #include "wifi_structures.h"
 #include <wifi_fast_connect.h>
 typedef struct _UART_LOG_CONF_ {
@@ -124,7 +124,7 @@ typedef enum {
 #define UART_SETTING_BACKUP_SECTOR		(0x8000)
 #endif
 
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_AMEBAD2)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_AMEBALITE)
 #define UART_SETTING_BACKUP_SECTOR		(0x2000)
 #endif
 
@@ -250,6 +250,6 @@ extern void spi_at_send_buf(u8 *buf, u32 len);
 
 #define at_printf(fmt, args...) do{printf(fmt, ##args);}while(0)
 #define at_print_data(data, size) do{__rtl_memDump(data, size, NULL);}while(0)
-#endif//#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#endif//#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 
 #endif

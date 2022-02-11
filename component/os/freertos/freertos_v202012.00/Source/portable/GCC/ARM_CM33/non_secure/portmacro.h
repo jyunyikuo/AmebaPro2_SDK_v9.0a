@@ -90,7 +90,7 @@
     #define portARCH_NAME                      "Cortex-M33"
     #define portSTACK_GROWTH                   ( -1 )
     #define portTICK_PERIOD_MS                 ( ( TickType_t ) 1000 / configTICK_RATE_HZ )
-    #define portBYTE_ALIGNMENT                 8
+    #define portBYTE_ALIGNMENT                 32
     #define portNOP()
     #define portINLINE                         __inline
     #ifndef portFORCE_INLINE
@@ -204,6 +204,8 @@
     #define portSVC_FREE_SECURE_CONTEXT        1
     #define portSVC_START_SCHEDULER            2
     #define portSVC_RAISE_PRIVILEGE            3
+
+    #define portSVC_SECCALL                    0x10
 /*-----------------------------------------------------------*/
 
 /**

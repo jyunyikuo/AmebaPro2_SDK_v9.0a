@@ -8,11 +8,11 @@
 #define I2C_MASTER_DEVICE
 #define I2C_SLAVE_DEVICE
 
-#define MBED_I2C_MTR_SDA    PE_8
-#define MBED_I2C_MTR_SCL    PE_7
+#define MBED_I2C_MTR_SDA PE_6 //8
+#define MBED_I2C_MTR_SCL PE_5 //7
 
-#define MBED_I2C_SLV_SDA    PF_3
-#define MBED_I2C_SLV_SCL    PF_2
+#define MBED_I2C_SLV_SDA PF_2 //3
+#define MBED_I2C_SLV_SCL PF_1 //2
 
 #define MBED_I2C_SLAVE_ADDR0    0xAA
 #define MBED_I2C_BUS_CLK        100000  //hz

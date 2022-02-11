@@ -101,6 +101,44 @@ uint8_t hal_otp_rp_mar_rd_syss(uint8_t auto_en);
 uint8_t hal_otp_rp_chk_syss(void);
 uint8_t hal_otp_rp_pg_syss(void);
 
+uint32_t hal_otp_sz_key_wr(uint8_t sz_key_idx, uint8_t *wr_data);
+uint32_t hal_otp_sz_key_rd(uint8_t sz_key_idx, uint8_t *rd_data);
+uint32_t hal_otp_sz_key_lock(uint8_t sz_key_idx);
+uint32_t hal_otp_ssz_key_wr(uint8_t ssz_key_idx, uint8_t *wr_data);
+uint32_t hal_otp_ssz_key_rd(uint8_t ssz_key_idx, uint8_t *rd_data);
+
+int hal_user_otp_get(uint8_t offset, uint8_t len, uint8_t *buf);
+int hal_user_otp_set(uint8_t offset, uint8_t len, uint8_t *buf);
+int hal_otp_sb_key_get(uint8_t *psec_key, uint8_t key_type);
+int hal_otp_sb_key_write(uint8_t *psec_key, uint8_t key_type);
+int hal_otp_s_jtag_key_write(u8 *buf, u8 key_num);
+int hal_otp_ns_jtag_key_write(u8 *buf, u8 key_num);
+int hal_otp_crypto_key_get(uint8_t *pkey, uint8_t key_num);
+int hal_otp_crypto_key_write(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int hal_otp_ecdsa_key_get(uint8_t *pkey, uint8_t key_num);
+int hal_otp_ecdsa_key_write(uint8_t *pkey, uint8_t key_num, uint8_t w_lock_en);
+int hal_otp_ssz_lock(void);
+
+
+
+extern uint8_t efuse_otp_init_flag;
+
+#define OTP_ADJ_VOL_DEFAULT             0x04
+
+enum otp_sb_key_idx_e {
+	SB_OTP_HIGH_VAL_ROTPK_HSH1          =   0x11,
+	SB_OTP_HIGH_VAL_ROTPK_HSH2          =   0x12,
+	SB_OTP_HIGH_VAL_ROTPK_HSH_RMA       =   0x1F,
+
+	SB_OTP_HIGH_VAL_HUK1                =   0x21,
+	SB_OTP_HIGH_VAL_HUK2                =   0x22,
+	SB_OTP_HIGH_VAL_HUK_RMA             =   0x2F,
+
+	SB_OTP_HIGH_VAL_SEC_KEY1            =   0x31,
+	SB_OTP_HIGH_VAL_SEC_KEY2            =   0x32,
+	SB_OTP_HIGH_VAL_SEC_KEY_RMA         =   0x3F,
+};
+
 #ifdef __cplusplus
 }
 #endif

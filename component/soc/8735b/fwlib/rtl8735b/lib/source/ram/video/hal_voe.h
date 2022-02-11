@@ -36,26 +36,25 @@ extern "C" {
 #endif
 
 
-#define REMAP_S7_ITCM 0x04000000   //0x04000000~0x0407FFFF
-#define REMAP_S7_DTCM 0x00080000   //0x20080000~0x200FFFFF
+#define REMAP_S7_ITCM   0x04000000	//0x04000000~0x0407FFFF
+#define REMAP_S7_DTCM   0x00080000	//0x20080000~0x200FFFFF
 
+#define VOE_CODE_SHIFT  0x3A000	// video_adp shift on VOE DDR
 
-#define VOE_IROM_S 0x00000000
-#define VOE_IROM_E 0x000003FF		// 1KB
-#define VOE_IRAM_S 0x00040000
-#define VOE_IRAM_E 0x0004FFFF		// 64KB
+#define VOE_DDR_S       0x70000000	// 1MB
+#define VOE_DDR_E       0x70100000
 
-#define VOE_DROM_S 0x20010000
-#define VOE_DROM_E 0x20013FFF		// 16KB
-#define VOE_DRAM_S 0x20000000
-#define VOE_DRAM_E 0x2000FFFF		// 64KB
+#define VOE_IROM_S      0x00000000	// 1KB
+#define VOE_IROM_E      0x000003FF
+#define VOE_IRAM_S      0x00040000	// 64KB
+#define VOE_IRAM_E      0x0004FFFF
 
+#define VOE_DROM_S      0x20010000	// 16KB
+#define VOE_DROM_E      0x20013FFF
+#define VOE_DRAM_S      0x20000000	// 64KB
+#define VOE_DRAM_E      0x2000FFFF
 
-#if 0
-#define voe_printf  dbg_printf
-#else
-#define voe_printf(fmt, arg...)
-#endif
+//#define __TTFF_VOE__
 
 /**
  * @addtogroup hs_hal_voe VOE
@@ -84,8 +83,7 @@ typedef struct hal_voe_adapter_s {
 	u32 voe_send_message;
 	volatile u32 voe_cmd;
 
-	u32 voe_enc_status[2];
-
+	u32 voe_status;					/*! 0:disable, 1:enable */
 	volatile u32 voe2tm_ack;
 
 } hal_voe_adapter_t, *phal_voe_adapter_t;
@@ -105,8 +103,12 @@ u32 hal_voe_send2voe(u32 cmd, u32 param1, u32 param2);
 int hal_voe_load_fw(voe_cpy_t voe_cpy, int *fw_addr, int *voe_ddr_addr);
 
 int hal_voe_load_sensor(voe_cpy_t voe_cpy, int *fw_addr, int *voe_ddr_addr);
+int hal_voe_load_iq(voe_cpy_t voe_cpy, int *fw_addr, int *voe_ddr_addr);
+int hal_voe_reload_fw(voe_cpy_t voe_cpy, int *fw_addr, int *voe_ddr_addr);
 
-int hal_voe_init(void *voe_cb, void *erac_done, u32 heap_addr, u32 heap_size);
+int hal_voe_cb(void *voe_cb, void *erac_done);
+
+int hal_voe_init(u32 heap_addr, u32 heap_size);
 void hal_voe_deinit(void);
 
 
@@ -129,13 +131,16 @@ hal_status_t hal_voe_cmd_cb(voe_callback_t receive_cmd_cb, void *cb_para);
 u16 hal_voe_cmd(void);
 u16 hal_voe_cmd_data(void);	// Added By Raymond
 uint32_t check_km_cmd(void);
+uint32_t check_km_ch(void);
 
-int hal_voe_fcs_check_km_run_error(void);
+
 int hal_voe_fcs_check_km_run_done(void);
-//void hal_voe_fcs_set_voe_fm_load_flag(void);
-void hal_voe_fcs_set_voe_fm_load_flag_final(void);
+int hal_voe_fcs_set_voe_fm_load_flag_final(void);
 int hal_voe_fcs_check_OK(void);
-int hal_voe_set_wdt(int sec);
+int hal_voe_ready(void);
+
+int hal_voe_set_wdt(int mode, int sec);
+
 
 /** @} */ /* End of group hs_hal_voe */
 

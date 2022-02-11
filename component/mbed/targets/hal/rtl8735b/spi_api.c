@@ -40,7 +40,7 @@ void spi_tx_done_callback(VOID *obj);
 void spi_rx_done_callback(VOID *obj);
 void spi_bus_tx_done_callback(VOID *obj);
 
-u8 format_is_set[4];
+volatile u8 format_is_set[4];
 
 void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel)
 {
@@ -97,6 +97,7 @@ void spi_format(spi_t *obj, int bits, int mode, int slave)
 	phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
 	u32 clk_pin = (phal_ssi_adaptor->spi_pin).spi_clk_pin;
 
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
 	if (slave) {
 		if (clk_pin == PIN_E5) {
 			phal_ssi_adaptor->index = 2;
@@ -114,7 +115,25 @@ void spi_format(spi_t *obj, int bits, int mode, int slave)
 			DBG_SSI_ERR(ANSI_COLOR_RED"spi_format(): Invalid Pin seleciton %x.\n"ANSI_COLOR_RESET, clk_pin);
 		}
 	}
-
+#else
+	if (slave) {
+		if (clk_pin == PIN_E1) {
+			phal_ssi_adaptor->index = 2;
+		} else if (clk_pin == PIN_F6) {
+			phal_ssi_adaptor->index = 3;
+		} else {
+			DBG_SSI_ERR(ANSI_COLOR_RED"spi_format(): Invalid Pin seleciton %x.\n"ANSI_COLOR_RESET, clk_pin);
+		}
+	} else {
+		if (clk_pin == PIN_E1) {
+			phal_ssi_adaptor->index = 0;
+		} else if (clk_pin == PIN_F6) {
+			phal_ssi_adaptor->index = 1;
+		} else {
+			DBG_SSI_ERR(ANSI_COLOR_RED"spi_format(): Invalid Pin seleciton %x.\n"ANSI_COLOR_RESET, clk_pin);
+		}
+	}
+#endif
 	if ((hal_ssi_init(phal_ssi_adaptor)) != HAL_OK) {
 		DBG_SSI_ERR(ANSI_COLOR_RED"spi_format(): SPI %x init fails.\n"ANSI_COLOR_RESET, phal_ssi_adaptor->index);
 		return;
@@ -329,6 +348,16 @@ int32_t spi_slave_read_stream(spi_t *obj, char *rx_buffer, uint32_t length)
 	}
 
 	return ret;
+}
+
+void spi_set_master_rxdelay(spi_t *obj, u32 rx_delay)
+{
+	phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
+	SSI_TypeDef *spi_dev = (SSI_TypeDef *) phal_ssi_adaptor->spi_dev;
+
+	hal_ssi_disable(phal_ssi_adaptor);
+	spi_dev->SSI_RX_SAMPLE_DLY = rx_delay;
+	hal_ssi_enable(phal_ssi_adaptor);
 }
 
 // Slave mode write a sequence of data by interrupt mode
@@ -625,45 +654,7 @@ int32_t spi_slave_write_stream_dma(spi_t *obj, char *tx_buffer, uint32_t length)
 
 int32_t spi_master_read_stream_dma(spi_t *obj, char *rx_buffer, uint32_t length)
 {
-	phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
-	int32_t ret;
-
-	if (obj->state & SPI_STATE_RX_BUSY) {
-		DBG_SSI_WARN("spi_master_read_stream_dma: state(0x%x) is not ready\r\n",
-					 obj->state);
-		return HAL_BUSY;
-	}
-
-	if ((obj->dma_en & SPI_DMA_RX_EN) == 0) {
-		if (HAL_OK == hal_ssi_rx_gdma_init(phal_ssi_adaptor, phal_ssi_adaptor->prx_gdma_adaptor)) {
-			obj->dma_en |= SPI_DMA_RX_EN;
-		} else {
-			return HAL_BUSY;
-		}
-	}
-
-	obj->state |= SPI_STATE_RX_BUSY;
-	ret = hal_ssi_dma_recv(phal_ssi_adaptor, (u8 *)rx_buffer, length);
-	if (ret != HAL_OK) {
-		obj->state &= ~SPI_STATE_RX_BUSY;
-	}
-
-	// for master mode, we need to send data to generate clock out
-	if (obj->dma_en & SPI_DMA_TX_EN) {
-		// TX DMA is on already, so use DMA to TX data
-		// Make the GDMA to use the rx_buffer too
-		ret = hal_ssi_dma_send(phal_ssi_adaptor, (u8 *)rx_buffer, length);
-		if (ret != HAL_OK) {
-			obj->state &= ~SPI_STATE_RX_BUSY;
-		}
-	} else {
-		// TX DMA isn't enabled, so we just use Interrupt mode to TX dummy data
-		if ((ret = hal_ssi_interrupt_init_write(phal_ssi_adaptor, NULL, length)) != HAL_OK) {
-			obj->state &= ~SPI_STATE_RX_BUSY;
-		}
-	}
-
-	return ret;
+	return spi_master_write_read_stream_dma(obj, rx_buffer, rx_buffer, length);
 }
 
 int32_t spi_master_write_stream_dma(spi_t *obj, char *tx_buffer, uint32_t length)
@@ -844,3 +835,4 @@ EndOfDMACS:
 
 #endif  // end of "#ifdef CONFIG_GDMA_EN"
 #endif  // end of "#if CONFIG_SPI_EN"
+

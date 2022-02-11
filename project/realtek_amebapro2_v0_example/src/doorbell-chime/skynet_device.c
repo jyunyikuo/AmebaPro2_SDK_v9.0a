@@ -10,18 +10,17 @@
 #include "device.h"
 #include "serial_api.h"
 #include "mmf2_module.h"
-#include "media_framework/example_media_framework.h"
 #include "app_setting.h"
 #include "avcodec.h"
 
-#define FLASH_SYSTEM_DATA_ADDR			0x441000  // reserve 32K+4K for Image1 + Reserved data
+#define FLASH_SYSTEM_DATA_ADDR			(0x1000000 - 0xA000)  // reserve 32K+4K for Image1 + Reserved data
 #define P2P_SETTING_SECTOR		FLASH_SYSTEM_DATA_ADDR + 0x1000
 #define P2P_SECTOR     P2P_SETTING_SECTOR
 #define WIFI_SETTING_SECTOR		FLASH_SYSTEM_DATA_ADDR + 0x2000
 #define WIFI_SECTOR     WIFI_SETTING_SECTOR
 #define BACKUP_SECTOR	(FLASH_SYSTEM_DATA_ADDR - 0x1000)
 
-#define P2P_UID_LEN				32 		///< Maximum of p2p uid length.
+#define P2P_UID_LEN				41//32 		///< Maximum of p2p uid length.
 
 #define MAX_LISTEVENT_COUNT 50
 
@@ -138,8 +137,9 @@ static int BattCap = 0;
 static int skynetInitFlag = 0;
 static int lSocketID = 0;
 static int ghostSocketID = -1;
-char gP2PString[32];
+char gP2PString[41];
 int UID_Setup = 0;
+static int UID_Reset = 0;
 int Config_Reset = 0;
 int Wake_On_Wlan = 0;
 char pb_file_path[64];
@@ -164,6 +164,7 @@ static int load_wifi_ap = 0;
 static int start_sleep_cnt = 0;
 char *ap_ssid;
 char *ap_password;
+
 /* fastconnect use wifi AT command. Not init_wifi_struct when log service disabled
  * static initialize all values for using fastconnect when log service disabled
  */
@@ -732,7 +733,6 @@ int getCMDPacket(int *SID, int *CID, char *nDestBuf)
 	return nDataSize;
 }
 
-#if 0
 static void Save_P2P_Config(void)
 {
 	flash_t flash;
@@ -749,21 +749,26 @@ static void Save_P2P_Config(void)
 
 	printf("gP2PString:%s\r\n", gP2PString);
 
-	strcpy(p_config.uid, (char *)gP2PString);
-
+	strncpy(p_config.uid, (char *)gP2PString, 40);
+#if 0
 	//flash_read_word(&flash,address,&data);
+
 	if (data == ~0x0) {
 		printf("save p2p config\r\n");
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		flash_stream_write(&flash, address, sizeof(p2p_config_t), (unsigned char *)&p_config);
+		flash_stream_write(&flash, P2P_SECTOR, sizeof(p2p_config_t), (unsigned char *)&p_config);
 		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 		vTaskDelay(20);
 		//sys_reset();
 	} else {
+#else
+	{
+#endif
 		printf("save & erase p2p config\r\n");
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
 		flash_erase_sector(&flash, BACKUP_SECTOR);
-		for (i = 0; i < 0x1000; i += 4) {
+		for (i = 0; i < 0x1000; i += 4)
+		{
 			flash_read_word(&flash, P2P_SECTOR + i, &data);
 			if (i < sizeof(p2p_config_t)) {
 				memcpy(&data, (char *)(&p_config) + i, 4);
@@ -772,12 +777,13 @@ static void Save_P2P_Config(void)
 			}
 			flash_write_word(&flash, BACKUP_SECTOR + i, data);
 		}
-		flash_read_word(&flash, BACKUP_SECTOR + 68, &data);
+		//flash_read_word(&flash, BACKUP_SECTOR + 68, &data);
 		//printf("\n\r Base + BACKUP_SECTOR + 68 wifi channel = %d",data);
 		//erase system data
 		flash_erase_sector(&flash, P2P_SECTOR);
 		//write data back to system data
-		for (i = 0; i < 0x1000; i += 4) {
+		for (i = 0; i < 0x1000; i += 4)
+		{
 			flash_read_word(&flash, BACKUP_SECTOR + i, &data);
 			flash_write_word(&flash, P2P_SECTOR + i, data);
 		}
@@ -808,7 +814,7 @@ static void Load_P2P_Config(void)
 	// flash_Read(address, &local_config, sizeof(local_config));
 
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
-	flash_stream_read(&flash, address, sizeof(p2p_config_t), (unsigned char *)(&local_config));
+	flash_stream_read(&flash, P2P_SECTOR/*address*/, sizeof(p2p_config_t), (char *)(&local_config));
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
 	printf("\r\nLoadP2PConfig(): local_config.boot_mode=0x%x\r\n", local_config.boot_mode);
@@ -847,7 +853,6 @@ static void Load_P2P_Config(void)
 	}
 
 }
-#endif
 
 void initAVInfo()
 {
@@ -886,11 +891,11 @@ void initAVInfo()
 	// strcpy(gPass, "12345678");
 
 	//James used
-	strcpy(gUID, "PIXMAX-00002519-086AA");
-	strcpy(gKey, "B780E0");
-	strcpy(gPass, "12345678");
+	//strcpy(gUID, "PIXMAX-00002519-086AA");
+	//strcpy(gKey, "B780E0");
+	//strcpy(gPass, "12345678");
 
-	//Load_P2P_Config();
+	Load_P2P_Config();
 
 	//Load_WIFI_Config();
 	sprintf(wnet_config.user_pwd, "12345678");
@@ -1777,7 +1782,9 @@ void task_HandleSession(void *param)
 		if (UID_Setup == 1) {
 			UID_Setup = 0;
 			printf("UID Write : %s\n", gP2PString);
-			//Save_P2P_Config();
+			Save_P2P_Config();
+			Load_P2P_Config();
+			UID_Reset = 1;
 		}
 
 		if (Config_Reset == 1) {
@@ -1859,10 +1866,11 @@ void task_LoginSession(void *param)
 	while (gProcessRun) {
 		//if((getIPNotice == 1) || (loginFail == 1)) {
 		//printf("getIPNotice:%d gRTCReady:%d\r\n",getIPNotice,gRTCReady);
-		if ((getIPNotice == 1) || /*(loginFail == 1) ||*/ (startAPMode == 1)) {
+		if ((getIPNotice == 1) || /*(loginFail == 1) ||*/ (startAPMode == 1) || (UID_Reset == 1)) {
 			getIPNotice = 0;
 			loginFail = 0;
 			startAPMode = 0;
+			UID_Reset = 0;
 			printf("\r\n****************Get IP!!!(%d)****************\r\n", sky_init_flag);
 			//test_max_socket();
 			//ftpd_init();

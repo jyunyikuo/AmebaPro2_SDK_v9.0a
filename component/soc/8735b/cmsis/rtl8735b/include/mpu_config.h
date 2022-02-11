@@ -103,21 +103,14 @@
 #define MPU_REGION1_SH                  MPU_OUT_SHAREABLE   // Shareability for Normal memory
 #define MPU_REGION1_ATTR_IDX            0                   // the memory attribute indirect index of the MAIR0/1
 
-#if 1   // Non-cacheable for Video Test
+// Non-cacheable for Video Test
 // MPU region 2 configuration
 #define MPU_REGION2_EN                  1                   // If MPU region 2 configuration enabled
 // define MPU region 2 configuration
-#define MPU_REGION2_BASE                (0x72C00000)        /* region base, the address must be aligned to multiple of 32 bytes,
+#define MPU_REGION2_BASE                (0x70000000)        /* region base, the address must be aligned to multiple of 32 bytes,
                                                                 it should sync. with the linker script */
-#define MPU_REGION2_LIMIT               (0x72DFFFFF)        // region limit, it should sync. with linker script
-#else
-// MPU region 2 configuration
-#define MPU_REGION2_EN                  0                   // If MPU region 2 configuration enabled
-// define MPU region 2 configuration
-#define MPU_REGION2_BASE                (0x20179E00)        /* region base, the address must be aligned to multiple of 32 bytes,
-                                                               it should sync. with the linker script */
-#define MPU_REGION2_LIMIT               (0x20179FFF)        // region limit, it should sync. with linker script
-#endif
+#define MPU_REGION2_LIMIT               (0x700FFFFF)        // region limit, it should sync. with linker script
+
 
 #define MPU_REGION2_XN                  MPU_EXEC_ALLOW      // eXecute Never attribute
 #define MPU_REGION2_AP                  MPU_UN_PRIV_RW      // Access permissions

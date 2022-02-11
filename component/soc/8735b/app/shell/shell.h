@@ -3,7 +3,7 @@
  * @brief    The macro and data structure type definition for command shell.
  *
  * @version  V1.00
- * @date     2021-07-28
+ * @date     2021-08-07
  *
  * @note
  *
@@ -92,6 +92,11 @@ extern "C" {
 /// The ROM CMD LIST SIZE FOR ROM
 #define SHELL_ROM_CMD_LIST_SIZE             32
 
+/// The size of CMD list for verify code
+#define SHELL_VRF_CMD_LIST_SIZE             200
+
+/// The RAM CMD LIST SIZE
+#define SHELL_CMD_LIST_SIZE                 (SHELL_ROM_CMD_LIST_SIZE + SHELL_VRF_CMD_LIST_SIZE)
 
 /**
   \brief  Defines the ASCII code for the shell command input control keys.
@@ -266,7 +271,8 @@ typedef struct cmd_shell_func_stubs_s {
 	void (*shell_rom_cmd_set_prompt)(void);
 
 	const shell_command_entry_t *rom_cmd_table;
-	uint32_t reserved[6];  // reserved space for next ROM code version function table extending.
+	void (*shell_cmd_without_rom_tbl_task_init)(void);
+	uint32_t reserved[5];  // reserved space for next ROM code version function table extending.
 } cmd_shell_func_stubs_t;
 
 BOOL shell_init(shell_reader_t reader, shell_writer_t writer, void *adapter);

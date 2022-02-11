@@ -33,6 +33,10 @@
 #include "gpio_irq_api.h"
 #include "gpio_irq_ex_api.h"
 
+#if defined(CONFIG_BUILD_NONSECURE)
+#include "hal_gpio_nsc.h"
+#endif
+
 // The following 4 global variables are declared in gpio_api.c
 extern hal_aon_gpio_comm_adapter_t mbd_aon_gpio_comm_adp;
 extern hal_pon_gpio_comm_adapter_t mbd_pon_gpio_comm_adp;
@@ -289,5 +293,6 @@ int gpio_irq_debounce_set(gpio_irq_t *obj, uint32_t debounce_us, u8 enable)
 		return 0;
 	}
 }
+
 
 

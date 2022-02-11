@@ -32,11 +32,20 @@
 
 #include "fw_img_tlv.h"
 #include "rtl8735b_ramstart.h"
+#include "cmsis.h"
+#include "static_assert.h"
 
-#define NAND_PAGE_MAX_LEN           (2 * 0x800)
+/* Util macro */
+#define SIZE_ALIGN_TO(size, align)  (size % align > 0? (((size / align) + 1) * align): size)
 
-#define IMG_HDR_MAX                 64
-#define SECT_HDR_MAX                64
+/* End of util */
+
+#define NAND_PAGE_MAX_LEN           (2 * 0x840)
+
+#define NAND_TMP_DATA_MAX_LEN       0x1000
+
+#define IMG_HDR_MAX                 256
+#define SECT_HDR_MAX                256
 
 /// Fixed ctrl info start blk
 #define NAND_CTRL_INFO_START_BLK    0
@@ -51,6 +60,8 @@
 
 #define NAND_SPARE_TYPE_IDX         4
 
+#define SNAND_INVAL_PAR_TBL_IDX     ((u8)0xFF)
+
 #define SNAND_ADDR_INIT(PAGE, COL)  { .page = PAGE, .col = COL}
 #define SNAND_ADDR_BLK_INIT(BLK, COL)  { .page = (BLK) * NAND_PAGE_PER_BLK, .col = COL}
 
@@ -59,17 +70,22 @@
     {(addr_ptr)->page = (BLK) * NAND_PAGE_PER_BLK; \
      (addr_ptr)->col = COL; }
 
-#define SNAND_VADDR_SET(addr_ptr, PAGE, COL, SIZE, MAP) \
-    {(addr_ptr)->vpage = PAGE; \
+// Please use with
+#define SNAND_VADDR_SET(addr_ptr, PAGE, COL, SIZE) \
+    {(addr_ptr)->page = PAGE; \
     (addr_ptr)->col = COL; \
-    (addr_ptr)->map_size = SIZE; \
-    (addr_ptr)->vmap = MAP;}
+    (addr_ptr)->map_size = SIZE;}
 
-#define NAND_VBLK_START             (DBG_SNAND_START_BLK + NAND_CTRL_INFO.vblks_start)
-/// NAND flash page size in byte
-#define NAND_PAGE_LEN               (NAND_CTRL_INFO.page_size)
+/// NAND flash page data size in byte
+#define NAND_PAGE_LEN               ((const u32)NAND_CTRL_INFO.page_size)
+/// NAND flash page spare size in byte
+#define NAND_SPARE_LEN              ((const u32)NAND_CTRL_INFO.spare_size)
 /// NAND flash page count per block
-#define NAND_PAGE_PER_BLK           (NAND_CTRL_INFO.page_per_blk)
+#define NAND_PAGE_PER_BLK           ((const u32)NAND_CTRL_INFO.page_per_blk)
+/// Total block count in flash
+#define NAND_BLK_CNT                ((const u32)NAND_CTRL_INFO.blk_cnt)
+/// NAND flash block size in byte
+#define NAND_BLK_LEN                (NAND_PAGE2ADDR(NAND_PAGE_PER_BLK))
 /// Get offset of address inside page
 #define NAND_PAGE_OFST(addr)        ((addr) & NAND_CTRL_INFO.page_mask)
 /// Get offset of page inside block
@@ -85,20 +101,26 @@
 /// Base address of simulated snand address
 #define NAND_SIM_ADDR_BASE          SPI_FLASH_BASE
 /// Convert page & col to simulated address, do not directly access the address
-#define NAND_SIM_ADDR(PAGE, COL)    ((void *)(NAND_PAGE2ADDR(PAGE) + COL + NAND_SIM_ADDR_BASE))
+#define NAND_SIM_ADDR(addr_ptr)    ((void *)(NAND_PAGE2ADDR((addr_ptr)->page) + (addr_ptr)->col + NAND_SIM_ADDR_BASE))
+
+#define CEILING_NBYTE(SIZE, N)      (SIZE + ((SIZE % N)  ? (N - (SIZE % N)) : 0))
+
+typedef u16 snand_vblk_idx_t;
 
 typedef struct snand_raw_ctrl_info {
 	u32 blk_cnt;
 	u32 page_per_blk;
 	u32 page_size;
 	u32 spare_size;
-	u32 rsvd1[4];
+	u32 vendor_info[4];
 	u32 par_tbl_start;
 	u32 par_tbl_dup_cnt;
-	u32 vblks_start;
-	u32 vblks_cnt;
-	u32 rsvd2[10];
+	u16 vrf_alg;            // verify image algorithm selection
+	u16 rsvd1;
+	u32 rsvd2[13];
 } snand_raw_ctrl_info_t;
+
+STATIC_ASSERT(sizeof(snand_raw_ctrl_info_t) % 32 == 0, struct_not_align);
 
 typedef struct snand_ctrl_info {
 	u32 blk_cnt;
@@ -109,14 +131,18 @@ typedef struct snand_ctrl_info {
 	u32 blk_mask;
 	u8 page2blk_shift;
 	u8 addr2page_shift;
-	u16 cache;
+	u8 cache_rsvd[6];
 	// cache line size
-	u32 par_tbl_start;
-	u32 par_tbl_dup_cnt;
-	u32 vblks_start;
-	u32 vblks_cnt;
-	u32 rsvd2[18];
+#if IS_AFTER_CUT_B(CONFIG_CHIP_VER)
+	snand_raw_ctrl_info_t raw;
+	u32 rsvd2[16];
+#else
+	u32 rsvd2[16 + (sizeof(snand_raw_ctrl_info_t) / sizeof(u32))];
+#endif
 } snand_ctrl_info_t;
+
+STATIC_ASSERT((offsetof(snand_ctrl_info_t, cache_rsvd) + sizeof(((snand_ctrl_info_t *)NULL)->cache_rsvd)) == 32, struct_not_align);
+STATIC_ASSERT(sizeof(snand_ctrl_info_t) % 32 == 0, struct_not_align);
 
 typedef struct snand_addr {
 	u32 page;
@@ -124,10 +150,10 @@ typedef struct snand_addr {
 } snand_addr_t;
 
 typedef struct snand_vaddr {
-	u16 *vmap;          // virtual block to physical block mapping
-	u32 vpage;
+	u32 page;
 	u16 col;
 	u8 map_size;
+	u16 vmap[SNAND_VMAP_MAX];          // virtual block to physical block mapping
 } snand_vaddr_t;
 
 // Partition record in NAND flash layout
@@ -136,55 +162,143 @@ typedef struct snand_part_record {
 	u16 type_id;
 	u16 blk_cnt;
 	u32 rsvd[6];
-	u16 vblk[48];
+	snand_vblk_idx_t vblk[SNAND_VMAP_MAX];
 } snand_part_record_t;
 
 // partition table info
-typedef struct snand_partition_entry {
+typedef struct snand_part_entry {
 	u16 type_id;
 	u16 blk_cnt;
 	snand_addr_t vmap_addr;
 	u32 rsvd[6];
-} snand_partition_entry_t;
+} snand_part_entry_t;
 
 typedef struct snand_partition_tbl {
 	part_fst_info_t mfst;
-	snand_partition_entry_t entrys[PARTITION_RECORD_MAX];
+	snand_part_entry_t entrys[PARTITION_RECORD_MAX];
 } snand_partition_tbl_t;
 
 typedef struct hal_snand_boot_stubs {
 	u8 *rom_snand_boot;
 	snand_ctrl_info_t *ctrl_info;
 	snand_partition_tbl_t *part_tbl;
-
-	hal_status_t (*snafc_init)(hal_snafc_adaptor_t *snafc_adpt, u8 spic_bit_mode, u8 io_pin_sel);
-	hal_status_t (*snafc_deinit)(hal_snafc_adaptor_t *snafc_adpt);
 	hal_status_t (*snand_memcpy_update)(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size);
 	hal_status_t (*snand_memcpy)(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_addr_t *snand_addr, u32 size);
 	hal_status_t (*snand_offset)(snand_addr_t *snand_addr, u32 offset);
-	u32 rsvd[40];
+	hal_status_t (*snand_vmemcpy_update)(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_vaddr_t *snand_addr, u32 size);
+	hal_status_t (*snand_vmemcpy)(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_vaddr_t *snand_addr, u32 size);
+	hal_status_t (*snand_voffset)(snand_vaddr_t *snand_addr, u32 offset);
+#if !IS_AFTER_CUT_B(CONFIG_CHIP_VER)
+	u32 rsvd[39];
+#else
+	u8(*snand_img_sel)(snand_partition_tbl_t *part_tbl, const u8 img_obj, const u8 img_sel_op);
+	u32 rsvd[38];
+#endif
 } hal_snand_boot_stubs_t;
 
-
-#if defined(ROM_REGION)
-#define NAND_CTRL_INFO              rom_snand_ctrl_info
-extern snand_ctrl_info_t rom_snand_ctrl_info;
-extern hal_crypto_adapter_t sb_rom_crypto_adtr;
-#else
-#define NAND_CTRL_INFO              snand_ctrl_info
-extern snand_ctrl_info_t snand_ctrl_info;
-#endif
+STATIC_ASSERT(sizeof(hal_snand_boot_stubs_t) == (48 * 4), stub_sz_changed);
 
 extern const hal_snand_boot_stubs_t hal_snand_boot_stubs;
 
-hal_status_t snand_memcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_addr_t *snand_addr, u32 size);
-hal_status_t snand_memcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size);
-u32 snand_flash_boot(PRAM_FUNCTION_START_TABLE *pram_start_func);
+#if defined(ROM_REGION)
 
-hal_status_t fw_snafc_init(hal_snafc_adaptor_t *snafc_adpt, u8 spic_bit_mode, u8 io_pin_sel);
+#define NAND_CTRL_INFO              rom_snand_ctrl_info
+extern snand_ctrl_info_t rom_snand_ctrl_info;
+extern u8 rom_snand_boot;
+extern snand_partition_tbl_t snand_part_tbl;
+extern u8 snand_page_buf[NAND_PAGE_MAX_LEN]; // must > 4K to store manifest
+extern hal_snafc_adaptor_t boot_snafc_adpt;
+
+hal_status_t fw_spic_pinmux_ctl(phal_spic_adaptor_t, flash_pin_sel_t *, u8);
 hal_status_t fw_snafc_deinit(hal_snafc_adaptor_t *pSnafcAdaptor);
-hal_status_t snand_memcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size);
+s32 snand_flash_boot(PRAM_FUNCTION_START_TABLE *pram_start_func);
+void init_ctrl_info(snand_ctrl_info_t *info);
+
 hal_status_t snand_memcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_addr_t *snand_addr, u32 size);
+hal_status_t snand_memcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size);
 hal_status_t snand_offset(snand_addr_t *snand_addr, u32 offset);
+hal_status_t snand_vmemcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_vaddr_t *snand_addr, u32 size);
+hal_status_t snand_vmemcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_vaddr_t *snand_addr, u32 size);
+hal_status_t snand_voffset(snand_vaddr_t *snand_addr, u32 offset);
+hal_status_t snand_sim_memcpy(void *dst, const void *src, u32 size);
+s32 sb_snand_hash_update(hal_crypto_adapter_t *crypto_adtr, uint32_t msglen, uint32_t auth_type, uint8_t *p_msg, uint8_t is_flash_dat);
+u8 snand_img_sel(snand_partition_tbl_t *part_tbl, const u8 img_obj, const u8 img_sel_op);
+hal_status_t fw_snafc_init_core(hal_snafc_adaptor_t *snafc_adpt, u8 spic_bit_mode, u8 io_pin_sel, u8 do_protect);
+
+__STATIC_FORCEINLINE
+hal_status_t fw_snafc_init_wr(hal_snafc_adaptor_t *snafc_adpt, u8 spic_bit_mode, u8 io_pin_sel)
+{
+	// Write Proect disable
+	return fw_snafc_init_core(snafc_adpt, spic_bit_mode, io_pin_sel, DISABLE);
+}
+
+__STATIC_FORCEINLINE
+hal_status_t fw_snafc_init(hal_snafc_adaptor_t *snafc_adpt, u8 spic_bit_mode, u8 io_pin_sel)
+{
+	return fw_snafc_init_core(snafc_adpt, spic_bit_mode, io_pin_sel, ENABLE);
+}
+
+#elif defined(CONFIG_BUILD_BOOT) && (CONFIG_BUILD_BOOT == 1) // Boor laoder only
+
+//#define NAND_CTRL_INFO              snand_ctrl_info
+//extern snand_ctrl_info_t snand_ctrl_info;
+#define NAND_CTRL_INFO              (*hal_snand_boot_stubs.ctrl_info)
+
+extern hal_snafc_adaptor_t bl_snafc_adpt;
+
+s32 snand_boot_loader(PRAM_FUNCTION_START_TABLE *ram_start_func);
+s32 snand_load_single_img(const fw_img_hdr_t *img_hdr, snand_vaddr_t *cur_addr,
+						  const snand_vaddr_t *img_base_addr, sec_boot_info_t *sb_info,
+						  PRAM_FUNCTION_START_TABLE *ram_start_func, u32 dec_base);
+
+#if 0
+__STATIC_FORCEINLINE hal_status_t snand_memcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_addr_t *snand_addr, u32 size)
+{
+	return hal_snand_boot_stubs.snand_memcpy(snafc_adpt, dest, snand_addr, size);
+}
+
+__STATIC_FORCEINLINE hal_status_t snand_memcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size)
+{
+	return hal_snand_boot_stubs.snand_memcpy_update(snafc_adpt, dest, snand_addr, size);
+}
+__STATIC_FORCEINLINE hal_status_t snand_vmemcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_vaddr_t *snand_addr, u32 size)
+{
+	return hal_snand_boot_stubs.snand_vmemcpy_update(snafc_adpt, dest, snand_addr, size);
+}
+
+__STATIC_FORCEINLINE hal_status_t snand_vmemcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_vaddr_t *snand_addr, u32 size)
+{
+	return hal_snand_boot_stubs.snand_vmemcpy(snafc_adpt, dest, snand_addr, size);
+}
+
+__STATIC_FORCEINLINE hal_status_t snand_offset(snand_addr_t *snand_addr, u32 offset)
+{
+	return hal_snand_boot_stubs.snand_offset(snand_addr, offset);
+}
+
+__STATIC_FORCEINLINE hal_status_t snand_voffset(snand_vaddr_t *snand_addr, u32 offset)
+{
+	return hal_snand_boot_stubs.snand_voffset(snand_addr, offset);
+}
+#else
+hal_status_t snand_memcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_addr_t *snand_addr, u32 size);
+hal_status_t snand_memcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_addr_t *snand_addr, u32 size);
+hal_status_t snand_vmemcpy_update(hal_snafc_adaptor_t *snafc_adpt, void *dest, snand_vaddr_t *snand_addr, u32 size);
+hal_status_t snand_vmemcpy(hal_snafc_adaptor_t *snafc_adpt, void *dest, const snand_vaddr_t *snand_addr, u32 size);
+hal_status_t snand_offset(snand_addr_t *snand_addr, u32 offset);
+hal_status_t snand_voffset(snand_vaddr_t *snand_addr, u32 offset);
+#endif
+
+#if IS_AFTER_CUT_C(CONFIG_CHIP_VER)
+// FIXME Update rom function
+__STATIC_FORCEINLINE u8 snand_img_sel(snand_partition_tbl_t *part_tbl, const u8 img_obj, const u8 img_sel_op)
+{
+	return hal_snand_boot_stubs.snand_img_sel(part_tbl, img_obj, img_sel_op);
+}
+#else
+u8 snand_img_sel(snand_partition_tbl_t *part_tbl, const u8 img_obj, const u8 img_sel_op);
+#endif
+
+#endif
 
 #endif  // end of "#define _FW_SNAND_BOOT_H_"

@@ -7,7 +7,7 @@
 *******************************************************************************/
 #ifndef MBED_EXT_POWER_MODE_API_EXT_H
 #define MBED_EXT_POWER_MODE_API_EXT_H
-#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))  ||  (defined(CONFIG_PLATFORM_8195BLP) && (CONFIG_PLATFORM_8195BLP == 1))  ||  (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
+#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))  ||  (defined(CONFIG_PLATFORM_8195BLP) && (CONFIG_PLATFORM_8195BLP == 1))  ||  (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))  ||  (defined(CONFIG_PLATFORM_8735B) && (CONFIG_PLATFORM_8735B == 1))
 ///@name AmebaPro Only
 ///@{
 #include "device.h"
@@ -258,6 +258,101 @@ void Standby(u16 Option, u32 SDuration, u8 Clock, u8 GpioOption);
 
 #endif
 
-#endif  // end of "#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))  ||  (defined(CONFIG_PLATFORM_8195BLP) && (CONFIG_PLATFORM_8195BLP == 1))  ||  (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))"
+#if defined(CONFIG_PLATFORM_8735B)
+#define     SLP_AON_TIMER   BIT0
+#define     SLP_AON_GPIO    BIT1
+#define     SLP_RTC         BIT2
+#define     SLP_COMP        BIT3
+#define     SLP_PON_GPIO    BIT4
+#define     SLP_PWM         BIT5
+#define     SLP_UART        BIT6
+#define     SLP_GTIMER      BIT7
+#define     SLP_WLAN        BIT8
+
+//DSTBY
+#define     DSTBY_AON_TIMER BIT0
+#define     DSTBY_AON_GPIO  BIT1
+#define     DSTBY_RTC       BIT2
+#define     DSTBY_COMP      BIT3
+#define     DSTBY_PON_GPIO  BIT4
+#define     DSTBY_PWM       BIT5
+#define     DSTBY_UART      BIT6
+#define     DSTBY_GTIMER    BIT7
+#define     DSTBY_WLAN      BIT8
+
+//DS wake event
+#define     DS_AON_TIMER    BIT0
+#define     DS_AON_GPIO     BIT1
+#define     DS_RTC          BIT2
+#define     DS_COMP         BIT3
+
+enum {
+	AON_100K = 0,   // AON CLK 250kHz
+	AON_4M = 1,     // AON CLK 4MHz
+};
+
+/**
+ *  @brief The function for sleep mode.
+ *
+ *  @param[in]  Option, To slect GTimer, GPIO and PWM...etc
+ *                - bit[8]: the WLAN Wake up event.
+ *                - bit[7]: the GTIMER0 Wake up event.
+ *                - bit[6]: the UART Wake up event.
+ *                - bit[5]: the PWM Wake up event.
+ *                - bit[4]: the PON GPIO Wake up event.
+ *                - bit[3]: the COMPWake up event.
+ *                - bit[2]: the RTC Wake up event.
+ *                - bit[1]: the AON GPIO Wake up event.
+ *                - bit[0]: the AON Timer Wake up event.
+ *  @param[in]  SDuration, wake up after SDuration value. Uint: us
+ *  @param[in]  Clock, 1: 4MHz, 0: 100kHz.
+ *  @param[in]  GpioOption, Select GPIO pin as a wake up trigger.
+ *
+ *  @returns void
+ */
+void SleepCG(u16 Option, u32 SDuration, u8 Clock, u8 SramOption);
+
+
+/**
+ *  @brief The function for Standby mode.
+ *
+ *  @param[in]  Option, To slect GTimer, GPIO and PWM...etc
+ *                - bit[8]: the WLAN Wake up event.
+ *                - bit[7]: the GTIMER0 Wake up event.
+ *                - bit[6]: the UART Wake up event.
+ *                - bit[5]: the PWM Wake up event.
+ *                - bit[4]: the PON GPIO Wake up event.
+ *                - bit[3]: the COMPWake up event.
+ *                - bit[2]: the RTC Wake up event.
+ *                - bit[1]: the AON GPIO Wake up event.
+ *                - bit[0]: the AON Timer Wake up event.
+ *  @param[in]  SDuration, wake up after SDuration value. Uint: us
+ *  @param[in]  Clock, 1: 4MHz, 0: 100kHz.
+ *  @param[in]  SramOption, Select SRAM1~SRAM2 state.
+ *                - 0: shutdown mode.
+ *                - 1: retention mode.
+ *                - 2: Normal mode.
+ *  @returns void
+ */
+void Standby(u16 Option, u32 SDuration, u8 Clock, u8 SramOption);
+
+/**
+ *  @brief The function for ls deep sleep mode.
+ *
+ *  @param[in]  Option, To slect AON Timer and GPIO...etc
+ *                - bit[3]: the COMP as a Wake up event.
+ *                - bit[2]: the RTC Wake up event.
+ *                - bit[1]: the AON GPIO as a Wake up event.
+ *                - bit[0]: the AON Timer Wake up event.
+ *  @param[in]  SDuration, wake up after SDuration value. Uint: us
+ *  @param[in]  Clock, 1: 4MHz, 0: 100kHz.
+ *
+ *  @returns void
+ */
+void DeepSleep(u8 Option, u32 SDuration, u8 Clock);
+
+#endif
+
+#endif  // end of "#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))  ||  (defined(CONFIG_PLATFORM_8195BLP) && (CONFIG_PLATFORM_8195BLP == 1))  ||  (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))  ||  (defined(CONFIG_PLATFORM_8735B) && (CONFIG_PLATFORM_8735B == 1))"
 
 #endif

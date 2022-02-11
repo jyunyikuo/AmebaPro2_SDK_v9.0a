@@ -1,7 +1,7 @@
 #ifndef __FREERTOS_PMU_H_
 #define __FREERTOS_PMU_H_
 
-#if (defined CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2)
+#if (defined CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 #include "ameba_soc.h"
 #endif
 

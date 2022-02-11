@@ -20,17 +20,22 @@
 #include "module_video.h"
 #include "mmf2_pro2_video_config.h"
 #include "example_media_uvcd.h"
+#include "platform_opts.h"
+#include "flash_api.h"
+#include "isp_ctrl_api.h"
 
+static int wdr_mode = 2;
 
 /*****************************************************************************
 * ISP channel : 0
 * Video type  : H264/HEVC
 *****************************************************************************/
 
+#define UVC_MD
 #define VIDEO_CHANNEL 0
-#define VIDEO_RESOLUTION VIDEO_HD//VIDEO_HD//VIDEO_FHD 
-#define VIDEO_FPS 10
-#define VIDEO_GOP 10
+#define VIDEO_RESOLUTION VIDEO_FHD//VIDEO_HD//VIDEO_FHD 
+#define VIDEO_FPS 20
+#define VIDEO_GOP 20
 #define VIDEO_BPS 1024*1024
 #define VIDEO_RCMODE 1 // 1: CBR, 2: VBR
 
@@ -57,8 +62,15 @@
 #define VIDEO_WIDTH	1280
 #define VIDEO_HEIGHT	720
 #elif VIDEO_RESOLUTION == VIDEO_FHD
+
+#if USE_SENSOR == SENSOR_GC4653
+#define VIDEO_WIDTH	2560
+#define VIDEO_HEIGHT	1440
+#else
 #define VIDEO_WIDTH	1920
 #define VIDEO_HEIGHT	1080
+#endif
+
 #endif
 
 static mm_context_t *video_v1_ctx			= NULL;
@@ -111,12 +123,57 @@ static array_params_t h264usb_array_params = {
 	}
 };
 
+extern void set_iq_heap(void *iq_heap);
+extern void set_max_resolution(int width, int height);
+void detect_iq_fw(int *iq_bin_start)
+{
+	flash_t flash;
+	int fw_size = 0;
+	set_iq_heap(iq_bin_start);
+	flash_stream_read(&flash, 0x500000, sizeof(int), (u8 *) &fw_size);
+	if (fw_size > 15 * 1024 && fw_size < 65536) {
+		flash_stream_read(&flash, 0x500000, sizeof(int) + fw_size, (u8 *) iq_bin_start);
+		printf("fw_size: %d.\r\n", fw_size);
+		printf("fw_size: %d.\r\n", fw_size);
+		printf("fw_size: %d.\r\n", fw_size);
+		printf("fw_size: %d.\r\n", fw_size);
+		printf("fw_size: %d.\r\n", fw_size);
+	} else {
+		printf("IQ is not in 0x500000\r\n");
+	}
+}
+
 void example_media_dual_uvcd_init(void)
 {
+#ifdef UVC_MD
+	int md_roi[6] = {0, 0, 320, 180, 6, 6};
+#endif
 	int voe_heap_size = video_voe_presetting(1, VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_BPS, 1,
-					0, 0, 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0);
+						0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0);
+	set_max_resolution(MAX_W, MAX_H);
+	if (USE_SENSOR == SENSOR_GC2053) {
+		extern int _binary_iq_gc2053_bin_start[];
+		detect_iq_fw(_binary_iq_gc2053_bin_start);
+	} else if (USE_SENSOR == SENSOR_PS5258) {
+		extern int _binary_iq_ps5258_bin_start[];
+		detect_iq_fw(_binary_iq_ps5258_bin_start);
+	} else if (USE_SENSOR == SENSOR_GC4653) {
+		extern int _binary_iq_gc4653_bin_start[];
+		detect_iq_fw(_binary_iq_gc4653_bin_start);
+	} else if (USE_SENSOR == SENSOR_MIS2008) {
+		extern int _binary_iq_mis2008_bin_start[];
+		detect_iq_fw(_binary_iq_mis2008_bin_start);
+	} else if (USE_SENSOR == SENSOR_IMX307) {
+		extern int _binary_iq_imx307_bin_start[];
+		detect_iq_fw(_binary_iq_imx307_bin_start);
+	} else if (USE_SENSOR == SENSOR_IMX307HDR) {
+		extern int _binary_iq_imx307hdr_bin_start[];
+		detect_iq_fw(_binary_iq_imx307hdr_bin_start);
+	} else {
+		printf("unkown sensor\r\n");
+	}
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
 
@@ -142,13 +199,15 @@ void example_media_dual_uvcd_init(void)
 	}
 	//
 
-	uvc_format_ptr->format = FORMAT_TYPE_H264;
+	vTaskDelay(2000);
+
+	uvc_format_ptr->format = FORMAT_TYPE_YUY2;
 	uvc_format_ptr->height = MAX_H;//video_v1_params.height;
 	uvc_format_ptr->width = MAX_W;//video_v1_params.width;
 	//uvc_format_ptr->uvcd_ext_get_cb = NULL;//RTKUSER_USB_GET;
 	//uvc_format_ptr->uvcd_ext_set_cb = NULL;//RTKUSER_USB_SET;
 
-	uvc_format_local->format = FORMAT_TYPE_H264;
+	uvc_format_local->format = FORMAT_TYPE_YUY2;
 	uvc_format_local->height = MAX_H;//video_v1_params.height;
 	uvc_format_local->width = MAX_W;//video_v1_params.width;
 
@@ -161,22 +220,17 @@ void example_media_dual_uvcd_init(void)
 		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, 1);//Default 30
 		mm_module_ctrl(video_v1_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 	} else {
 		rt_printf("video open fail\n\r");
 		//goto mmf2_video_exmaple_v1_fail;
 	}
-	
-#if (VIDEO_TYPE == VIDEO_JPEG)
-	mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SNAPSHOT, 0);
-#endif
 
-#if (VIDEO_TYPE == VIDEO_NV12)
-	mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 0);
-#endif
-
-#if (VIDEO_TYPE == VIDEO_NV16)
-	mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 0);
-#endif
+	vTaskDelay(2000);
 
 	siso_array_uvcd = siso_create();
 	if (siso_array_uvcd) {
@@ -201,83 +255,122 @@ void example_media_dual_uvcd_init(void)
 	mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 2);
 #endif
 
+	wdr_mode = 2;
+	printf("[uvcd]set wdr_mode:%d.\r\n", wdr_mode);
+	isp_set_wdr_mode(wdr_mode);
+	isp_get_wdr_mode(&wdr_mode);
+	printf("[uvcd]get wdr_mode:%d.\r\n", wdr_mode);
+
 	while (1) {
 		rtw_down_sema(&uvc_format_ptr->uvcd_change_sema);
 
 		printf("f:%d h:%d s:%d w:%d\r\n", uvc_format_ptr->format, uvc_format_ptr->height, uvc_format_ptr->state, uvc_format_ptr->width);
-#if 1
+
 		if ((uvc_format_local->format != uvc_format_ptr->format) || (uvc_format_local->width != uvc_format_ptr->width) ||
 			(uvc_format_local->height != uvc_format_ptr->height)) {
 			printf("change f:%d h:%d s:%d w:%d\r\n", uvc_format_ptr->format, uvc_format_ptr->height, uvc_format_ptr->state, uvc_format_ptr->width);
-			if (uvc_format_local->format == FORMAT_TYPE_MJPEG) {
-				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SNAPSHOT, 0);
-			}
-			if (uvc_format_local->format == FORMAT_TYPE_YUY2) {
-				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 0);
-			}
-			if (uvc_format_local->format == FORMAT_TYPE_NV12) {
-				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 0);
-			}
 
 			if (uvc_format_ptr->format == FORMAT_TYPE_YUY2) {
-				siso_pause(siso_array_uvcd);
-				vTaskDelay(1000);
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_STOP, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, 0);
+				vTaskDelay(1000);
+				siso_pause(siso_array_uvcd);
 				vTaskDelay(1000);
 				video_v1_params.type = VIDEO_NV16;
 				video_v1_params.use_static_addr = 1;
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 2);
 				siso_resume(siso_array_uvcd);
 			} else if (uvc_format_ptr->format == FORMAT_TYPE_NV12) {
-				siso_pause(siso_array_uvcd);
-				vTaskDelay(1000);
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_STOP, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, 0);
+				vTaskDelay(1000);
+				siso_pause(siso_array_uvcd);
 				vTaskDelay(1000);
 				video_v1_params.type = VIDEO_NV12;
 				video_v1_params.use_static_addr = 1;
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_YUV, 2);
 				siso_resume(siso_array_uvcd);
 			} else if (uvc_format_ptr->format == FORMAT_TYPE_H264) {
-				siso_pause(siso_array_uvcd);
-				vTaskDelay(1000);
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_STOP, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, 0);
 				vTaskDelay(1000);
+				printf("siso pause\r\n");
+				siso_pause(siso_array_uvcd);
+				vTaskDelay(100);
 				video_v1_params.type = VIDEO_H264;
 				video_v1_params.use_static_addr = 1;
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 				siso_resume(siso_array_uvcd);
 			} else if (uvc_format_ptr->format == FORMAT_TYPE_MJPEG) {
-				siso_pause(siso_array_uvcd);
-				vTaskDelay(1000);
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_STOP, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, 0);
 				vTaskDelay(1000);
+				siso_pause(siso_array_uvcd);
+				vTaskDelay(1000);
 				video_v1_params.type = VIDEO_JPEG;
-				video_v1_params.use_static_addr = 0;
+				video_v1_params.use_static_addr = 1;
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SNAPSHOT, 2);
 				siso_resume(siso_array_uvcd);
 			} else if (uvc_format_ptr->format == FORMAT_TYPE_H265) {
-				siso_pause(siso_array_uvcd);
-				vTaskDelay(1000);
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_STOP, 0);
+#endif
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_STREAM_STOP, 0);
 				vTaskDelay(1000);
+				printf("siso pause\r\n");
+				siso_pause(siso_array_uvcd);
+				vTaskDelay(100);
 				video_v1_params.type = VIDEO_HEVC;
 				video_v1_params.use_static_addr = 1;
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
 				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, VIDEO_CHANNEL);	// start channel 0
+#ifdef UVC_MD
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_ROI, md_roi);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_SET_SENSITIVITY, 7);
+				mm_module_ctrl(video_v1_ctx, CMD_VIDEO_MD_START, 0);
+#endif
 				siso_resume(siso_array_uvcd);
 			}
 			uvc_format_local->format = uvc_format_ptr->format;
 			uvc_format_local->width = uvc_format_ptr->width;
 			uvc_format_local->height = uvc_format_ptr->height;
 		}
-#endif
+
 	}
 
 mmf2_example_uvcd_fail:

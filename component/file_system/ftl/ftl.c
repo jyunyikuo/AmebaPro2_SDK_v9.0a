@@ -6,6 +6,7 @@
 /////////////////////////////////////////////////
 
 #include "platform_stdlib.h"
+#include "platform_opts.h"
 #include "device_lock.h"
 #include "freertos_service.h"
 #include "osdep_service.h"
@@ -59,6 +60,9 @@ uint8_t        g_cur_pageID;
 uint8_t        g_doingGarbageCollection = 0;
 uint8_t        g_PAGE_num = 0;
 uint8_t        g_free_page_count;
+uint8_t        g_active = 0;
+
+ALIGNMTO(64) _mutex ftl_mutex_lock;
 
 #if defined(FEATURE_WRITE_RECYCLE) && (FEATURE_WRITE_RECYCLE == 1)
 uint8_t  g_read_pageID;
@@ -111,59 +115,78 @@ extern bool ftl_page_erase(struct Page_T *p);
 void ftl_mapping_table_init(void);
 uint16_t read_mapping_table(uint16_t logical_addr);
 
-uint32_t ftl_page_read(struct Page_T *p, uint32_t index)
+uint8_t ftl_flash_read(uint32_t start_addr, uint32_t len, uint32_t *data)
 {
-	uint32_t rdata = 0;
+	uint8_t ret = 0;
+
+#if defined(CONFIG_FTL_EN) && CONFIG_FTL_EN
+	if (!ftl_common_read(start_addr, data, len)) {
+		ret = 1;
+	}
+#else
+	(void)len;
 	flash_t flash;
 
-	if (index < PAGE_element) {
-		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		if (flash_read_word(&flash, (uint32_t)&p->Data[index], &rdata)) {
-			device_mutex_unlock(RT_DEV_LOCK_FLASH);
-			return rdata;
-		}
-		device_mutex_unlock(RT_DEV_LOCK_FLASH);
-	} else {
-		FTL_ASSERT(0);
-	}
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
+	ret = flash_read_word(&flash, start_addr, data);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+#endif
 
-
-	return rdata;
+	return ret;
 }
 
-void ftl_flash_write(uint32_t start_addr, uint32_t data)
+void ftl_flash_write(uint32_t start_addr, uint32_t len, uint32_t data)
 {
+#if defined(CONFIG_FTL_EN) && CONFIG_FTL_EN
+	ftl_common_write(start_addr, &data, len);
+#else
+	(void)len;
 	flash_t flash;
 
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_write_word(&flash, start_addr, data);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+#endif
 }
 
 bool ftl_flash_erase_sector(uint32_t addr)
 {
+#if defined(CONFIG_FTL_EN) && CONFIG_FTL_EN
+	ftl_erase_sector(addr);
+#else
 	flash_t flash;
 
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_erase_sector(&flash, addr);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
-
+#endif
 	return TRUE;
+}
+
+uint32_t ftl_page_read(struct Page_T *p, uint32_t index)
+{
+	uint32_t rdata = 0;
+
+	if (index < PAGE_element) {
+		if (ftl_flash_read((uint32_t)&p->Data[index], 4, &rdata)) {
+			return rdata;
+		}
+	} else {
+		FTL_ASSERT(0);
+	}
+
+	return rdata;
 }
 
 uint32_t ftl_page_write(struct Page_T *p, uint32_t index, uint32_t data)
 {
-	flash_t flash;
-
 	if (index < PAGE_element) {
-		ftl_flash_write((uint32_t)&p->Data[index], data);
+		ftl_flash_write((uint32_t)&p->Data[index], 4, data);
 		uint32_t rdata = 0;
-		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		flash_read_word(&flash, (uint32_t)&p->Data[index], &rdata);
-		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+		ftl_flash_read((uint32_t)&p->Data[index], 4, &rdata);
 		if (data != rdata) {
-			FTL_PRINTF(FTL_LEVEL_ERROR, "[ftl](ftl_page_write) P: %x, idx: %d, D: 0x%08x, read back: %x \n",
-					   p, index, data, rdata);
+			FTL_PRINTF(FTL_LEVEL_ERROR, "[ftl](ftl_page_write) P: %x, idx: %x, D: 0x%08x, read back: %x \n",
+					   (unsigned int)p->Data, (unsigned int)index, (unsigned int)data, (unsigned int)rdata);
 			return FTL_WRITE_ERROR_READ_BACK;
 
 		}
@@ -482,8 +505,8 @@ L_retry:
 				ftl_write(addr, rdata);
 			}
 		} else {
-			FTL_PRINTF(FTL_LEVEL_ERROR, "ftl_page_garbage_collect_Imp:length != 1!recycle page:%x, retry_count:%x, index:%x, read value:%x",
-					   Recycle_page, retry_count, key_index, key);
+			FTL_PRINTF(FTL_LEVEL_ERROR, "ftl_page_garbage_collect_Imp:length != 1!recycle page:%02x, retry_count:%d, index:%04x, read value:%x",
+					   (unsigned int)Recycle_page, retry_count, (unsigned int)key_index, (unsigned int)key);
 
 			++RecycleNum;
 		}
@@ -531,8 +554,8 @@ uint8_t ftl_page_garbage_collect(uint32_t page_thresh, uint32_t cell_thresh)
 
 		if (g_free_page_count <= page_thresh) {
 			if (g_free_cell_index <= cell_thresh) {
-				FTL_PRINTF(FTL_LEVEL_INFO, "[ftl] doGarbageCollection: page thres %d, cell thres %d", page_thresh,
-						   cell_thresh);
+				FTL_PRINTF(FTL_LEVEL_INFO, "[ftl] doGarbageCollection: page thres %d, cell thres %d", (int)page_thresh,
+						   (int)cell_thresh);
 				ftl_page_garbage_collect_Imp();
 				result = 1;
 			}
@@ -581,7 +604,7 @@ bool ftl_page_erase(struct Page_T *p)
 	uint32_t data = 0xFFFF0000;
 	data |= FTL_MAGIC_PATTERN_VER02;
 	if ((info & 0xffff) == FTL_MAGIC_PATTERN_VER02) {
-		FTL_PRINTF(FTL_LEVEL_INFO, "  ftl_page_erase with already erased page: %x \n", p);
+		FTL_PRINTF(FTL_LEVEL_INFO, "  ftl_page_erase with already erased page: %x \n", (unsigned int)p->Data);
 		return TRUE;
 	}
 
@@ -595,7 +618,7 @@ bool ftl_page_erase(struct Page_T *p)
 
 bool ftl_page_format(struct Page_T *p, uint8_t sequence)
 {
-	FTL_PRINTF(FTL_LEVEL_INFO, "  ftl_page_format: %x seq: %d\n", p, sequence);
+	FTL_PRINTF(FTL_LEVEL_INFO, "  ftl_page_format: %x seq: %d\n", (unsigned int)p->Data, (int)sequence);
 
 	if (!ftl_page_erase(p)) {
 		return FALSE;
@@ -870,7 +893,7 @@ L_retry:
 		}
 	}
 
-	FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] r 0x%08x: 0x%08x (%d)\r\n", logical_addr, *value, ret);
+	FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] r 0x%08x: 0x%08x (%d)\r\n", logical_addr, (unsigned int)*value, (int)ret);
 
 	return  ret;
 }
@@ -958,7 +981,16 @@ uint32_t ftl_save_to_storage_i(void *pdata_tmp, uint16_t offset, uint16_t size)
 
 __WEAK uint32_t ftl_save_to_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
 {
-	return ftl_save_to_storage_i(pdata_tmp, offset, size);
+	u32 ret;
+	if (rtw_mutex_get_timeout(&ftl_mutex_lock, 100) != 0) {
+		return ERROR_MUTEX_GET_TIMEOUT;
+	}
+
+
+	ret = ftl_save_to_storage_i(pdata_tmp, offset, size);
+
+	rtw_mutex_put(&ftl_mutex_lock);
+	return ret;
 }
 
 // return 0 success
@@ -1000,12 +1032,19 @@ uint32_t ftl_write(uint16_t logical_addr, uint32_t w_data)
 	uint32_t ret = FTL_WRITE_SUCCESS;
 
 	uint8_t sem_flag = FALSE;
-
-	if (0 != __get_IPSR()) {
-		FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] FTL_write should not be called in interrupt handler!\n");
-		return FTL_WRITE_ERROR_IN_INTR;
-	}
-
+//#if defined (ARM_CORE_CA7)
+//	if (CPSR_M_IRQ == __get_mode()) {
+//		DBG_8195A("ARM_CORE_CA7\n");
+//		FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] FTL_write should not be called in interrupt handler!\n");
+//		return FTL_WRITE_ERROR_IN_INTR;
+//	}
+//#else
+//	if (0 != __get_IPSR()) {
+//		FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] FTL_write should not be called in interrupt handler!\n");
+//		return FTL_WRITE_ERROR_IN_INTR;
+//	}
+//
+//#endif
 	if (NULL != ftl_sem) {
 		if (xSemaphoreTakeRecursive(ftl_sem, portMAX_DELAY) == TRUE) {
 			sem_flag = TRUE;
@@ -1094,14 +1133,24 @@ L_retry:
 		xSemaphoreGiveRecursive(ftl_sem);
 	}
 
-	FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] w 0x%08x: 0x%08x (%d)\r\n", logical_addr, w_data, ret);
+	FTL_PRINTF(FTL_LEVEL_WARN, "[ftl] w 0x%08x: 0x%08x (%d)\r\n", logical_addr, (unsigned int)w_data, (int)ret);
 
 	return ret;
 }
 
 __WEAK uint32_t ftl_load_from_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
 {
-	return ftl_load_from_storage_i(pdata_tmp, offset, size);
+	u32 ret;
+	if (rtw_mutex_get_timeout(&ftl_mutex_lock, 100) != 0) {
+		return ERROR_MUTEX_GET_TIMEOUT;
+	}
+
+
+	ret = ftl_load_from_storage_i(pdata_tmp, offset, size);
+
+	rtw_mutex_put(&ftl_mutex_lock);
+
+	return ret;
 }
 
 uint32_t ftl_ioctl(uint32_t cmd, uint32_t p1, uint32_t p2)
@@ -1118,10 +1167,10 @@ uint32_t ftl_ioctl(uint32_t cmd, uint32_t p1, uint32_t p2)
 		FTL_PRINTF(FTL_LEVEL_INFO, "[ftl] PAGEnum: %d, PAGEelement: %d, PageFree: %d CurPage: %d, FreeCell_idx: %d\n",
 				   g_PAGE_num, PAGE_element, free_page, g_cur_pageID, g_free_cell_index);
 		FTL_PRINTF(FTL_LEVEL_INFO, "[FTL] PAGE HEAD(%x, %x, %x, %x), PAGE TAIL(%x, %x, %x, %x)",
-				   ftl_page_read(g_pPage, INFO_beg_index), ftl_page_read(g_pPage + 1, INFO_beg_index),
-				   ftl_page_read(g_pPage + 2, INFO_beg_index), ftl_page_read(g_pPage + 3, INFO_beg_index),
-				   ftl_page_read(g_pPage, INFO_end_index), ftl_page_read(g_pPage + 1, INFO_end_index),
-				   ftl_page_read(g_pPage + 2, INFO_end_index), ftl_page_read(g_pPage + 3, INFO_end_index));
+				   (unsigned int)ftl_page_read(g_pPage, INFO_beg_index), (unsigned int)ftl_page_read(g_pPage + 1, INFO_beg_index),
+				   (unsigned int)ftl_page_read(g_pPage + 2, INFO_beg_index), (unsigned int)ftl_page_read(g_pPage + 3, INFO_beg_index),
+				   (unsigned int)ftl_page_read(g_pPage, INFO_end_index), (unsigned int)ftl_page_read(g_pPage + 1, INFO_end_index),
+				   (unsigned int)ftl_page_read(g_pPage + 2, INFO_end_index), (unsigned int)ftl_page_read(g_pPage + 3, INFO_end_index));
 
 #if defined(MONITOR_STATUS_INFO) && (MONITOR_STATUS_INFO == 1)
 		{
@@ -1224,6 +1273,7 @@ uint32_t ftl_save(void *pdata, uint16_t offset, uint16_t size)
 
 uint32_t ftl_init(uint32_t u32PageStartAddr, uint8_t pagenum)
 {
+	rtw_mutex_init(&ftl_mutex_lock);
 	if (pagenum < 3) {
 		pagenum = 3;
 	}

@@ -9,13 +9,16 @@ Please follow the instructions for various options
 
 		--> FATFS_DISK_SD to 1 in platform_opts.h under CONFIG_EXAMPLE_FATFS and  FATFS_DISK_USB & FATFS_DISK_FLASH to 0
 		--> _MAX_SS to 512  for SD card in ffconf.h to define the maximum sector size supported
-		--> _USE_MKFS to 1 in ffconf.h  
+		--> _USE_MKFS to 1 in ffconf.h
+		--> For Ameba-Smart, r0.14b is used, set FF_USE_LFN to 3
 
 	3. To read and write on EMMC card, set the parameters as below
 
 		--> FATFS_DISK_SD to 1 in platform_opts.h under CONFIG_EXAMPLE_FATFS and  FATFS_DISK_USB & FATFS_DISK_FLASH to 0
 		--> _MAX_SS to 512  for EMMC card in ffconf.h to define the maximum sector size supported
 		--> _USE_MKFS to 1 in ffconf.h 
+		--> For Ameba-D and Ameba-Smart, micro SDIO in ameba_sd.h change from SD to EMMC
+		--> For Ameba-Smart, r0.14b is used, set FF_USE_LFN to 3
 
 	4. To read and write on USB, set the parameters as below [!! Only supports Ameba-1 !!]
 
@@ -61,6 +64,6 @@ Please follow the instructions for various options
 
 [Supported List]
 	Supported :
-	    Ameba-1, Ameba-pro, Ameba-z2，Ameba-D
+	    Ameba-1, Ameba-pro, Ameba-z2，Ameba-D，Ameba-Smart
 	Source code not in project:
 	    Ameba-z

@@ -173,7 +173,6 @@ void mmf2_example_array_vipnn_init(void)
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&yolov3_tiny);
 		//mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_IN_PARAMS, (int)&test_416);
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_IN_PARAMS, (int)&test_wvga);
-		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_DISPPOST, (int)NULL);
 
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_APPLY, 0);
 

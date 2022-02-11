@@ -23,8 +23,10 @@ uint8_t dram_access_long_run_test(void);
 void dram_odt_alwayson(void);
 void dram_scan_rd_dly(u32 reg_index, u32 byte_index);
 void dram_scan_rd_dly(u32 reg_index, u32 byte_index);
-void dram_calibration_dck_map(void);
-void dram_calibration_dcs_map(void);
+void dram_calibration_dck_hold_map(void);
+void dram_calibration_dck_setup_map(void);
+void dram_calibration_dcs_hold_map(void);
+void dram_calibration_dcs_setup_map(void);
 void dram_calibration_dqs_map(void);
 void dram_calibration_dq_map(void);
 void dram_calibration_rx_dqsen_map(void);
@@ -34,7 +36,7 @@ void dram_calibration_tx_dq_map(void);
 #endif
 void dram_r480_calibration(u8 dram_type);
 void dram_zq_calibration(u8 dram_type);
-void dram_set_pll_frequency(const unsigned short *pll_table);
+void dram_set_pll_frequency(u32 ddr_freq, unsigned short *pll_table);
 void dram_init_clk_frequency(uint32_t ddr_freq);
 #endif
 

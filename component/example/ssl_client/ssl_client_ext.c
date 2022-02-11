@@ -399,7 +399,11 @@ int ssl_client_ext_setup(mbedtls_ssl_config *conf)
 		return -1;
 	}
 #else
+#if defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER == 0x03000000)
+	if (mbedtls_pk_parse_key(_clikey_rsa, test_client_key, strlen((char const *)test_client_key) + 1, NULL, 0, NULL, NULL) != 0) {
+#else
 	if (mbedtls_pk_parse_key(_clikey_rsa, test_client_key, strlen((char const *)test_client_key) + 1, NULL, 0) != 0) {
+#endif
 		return -1;
 	}
 #endif

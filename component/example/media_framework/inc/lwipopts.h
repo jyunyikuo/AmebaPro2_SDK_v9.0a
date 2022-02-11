@@ -239,7 +239,7 @@ extern unsigned int sys_now(void);
 #define TCP_KEEPCNT_DEFAULT			10U
 #endif
 
-#if CONFIG_EXAMPLE_UART_ATCMD || CONFIG_EXAMPLE_SPI_ATCMD
+#if SUPPORT_UART_LOG_SERVICE || CONFIG_EXAMPLE_SPI_ATCMD
 #undef  LWIP_SO_SNDTIMEO
 #define LWIP_SO_SNDTIMEO                		1
 

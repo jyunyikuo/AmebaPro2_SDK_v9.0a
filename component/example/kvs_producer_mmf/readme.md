@@ -5,61 +5,27 @@
     ```
     cd project/realtek_amebapro2_v0_example/src/amazon_kvs/lib_amazon
     ```
-- Clone the following repository for KVS webrtc
-	- amazon-kinesis-video-streams-webrtc-sdk-c
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-webrtc-sdk-c.git
-    ```
-    - amazon-kinesis-video-streams-producer-c
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-producer-c.git
-    ```
-    - amazon-kinesis-video-streams-pic
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/amazon-kinesis-video-streams-pic.git
-    ```
-    - cisco/libsrtp
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/libsrtp.git
-    ```
-    - warmcat/libwebsockets
-    ```
-    git clone -b webrtc-on-freertos https://github.com/ambiot-mini/libwebsockets.git
-    ```
 - Clone the following repository for KVS producer
 	- amazon-kinesis-video-streams-producer-embedded-c
     ```
     cd project/realtek_amebapro2_v0_example/src/amazon_kvs/lib_amazon
     git clone --recursive https://github.com/aws-samples/amazon-kinesis-video-streams-producer-embedded-c.git producer
     cd producer
-    git reset --hard 8c9d4b29cb95ddcfad816e50a34e770222bb8ff5
+    git reset --hard c6114634437eb417487cd986fa7ba6ca2d188470
     ```
 
-## Add KVS demo code to your project
-- Add the KVS demo code to project, we do it in `project/realtek_amebapro2_v0_example/GCC-RELEASE/application_ntz/libkvs_amazon.cmake`:  
-```
-list(
-	APPEND app_ntz_sources
+## Set mbedtls version
+- In KVS producer project, we use some function in mbedtls-2.16.6, same as KVS webrtc  
+- Set mbedtls version to 2.16.6 in `project/realtek_amebapro2_v0_example/GCC-RELEASE/application/CMakeLists.txt`
+    ```
+    set(mbedtls "mbedtls-2.16.6")
+    ```
 
-    #kvs mmf module
-    ${sdk_root}/component/example/kvs_producer_mmf/module_kvs_producer.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/module_kvs_webrtc.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/module_kvs_webrtc_audio.c
-
-    #kvs example
-	${sdk_root}/component/example/kvs_producer_mmf/example_kvs_producer_mmf.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/Common.c
-    ${sdk_root}/component/example/kvs_webrtc_mmf/example_kvs_webrtc_mmf.c
-)
-```
-
-## Replace the file
-- replace the following file in SDK with the files in `project\realtek_amebapro2_v0_example\src\amazon_kvs\replace\`
-    - `project/realtek_amebapro2_v0_example/src/main.c`
-    - `project/realtek_amebapro2_v0_example/inc/FreeRTOSConfig.h`
-    - `component/os/freertos/freertos_cb.c`
-    - `component/os/freertos/freertos_v202012.00/Source/portable/MemMang/heap_4_2.c`
-    - `component/lwip/api/lwipopts.h`
+## Enlarge SKB buffer number
+- go to `component/wifi/driver/src/core/option/rtw_opt_skbuf_rtl8735b.c`  
+    ```
+    #define MAX_SKB_BUF_NUM      1024
+    ```
 
 ## No using the wrapper function for snprintf 
 - In `project/realtek_amebapro2_v0_example/GCC-RELEASE/toolchain.cmake`, comment the following wrapper function
@@ -88,25 +54,22 @@ list(
     #define V1_GOP 30
     #define V1_BPS 1024*1024
     ```
-- add following code to the end of example_entry.c:  
+    
+## Select camera sensor
+
+- Check your camera sensor model, and define it in <AmebaPro2_SDK>/project/realtek_amebapro2_v0_example/inc/platform_opts.h
     ```
-    #if CONFIG_EXAMPLE_KVS_PRODUCER_MMF
-        example_kvs_producer_mmf();
-    #endif
-    ```
-- define the demo you want to run in platform_opts.h  
-    ```
-    /* For KVS Producer mmf module example*/
-    #define CONFIG_EXAMPLE_KVS_PRODUCER_MMF         1
+    //SENSOR_GC2053, SENSOR_PS5258
+    #define USE_SENSOR SENSOR_PS5258
     ```
 
 ## Build the project
-- run following commands to build the image with option `-DBUILD_KVS_DEMO=ON`
+- run following commands to build the image with option `-DEXAMPLE=kvs_producer_mmf`
     ```
     cd project/realtek_amebapro2_v0_example/GCC-RELEASE
     mkdir build
     cd build
-    cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DBUILD_KVS_DEMO=ON
+    cmake .. -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake -DEXAMPLE=kvs_producer_mmf
     cmake --build . --target flash
     ```
 

@@ -21,9 +21,15 @@
 *****************************************************************************/
 
 #define V1_CHANNEL 0
+#if USE_SENSOR == SENSOR_GC4653
+#define V1_RESOLUTION VIDEO_2K
+#define V1_FPS 15
+#define V1_GOP 15
+#else
 #define V1_RESOLUTION VIDEO_FHD
 #define V1_FPS 30
 #define V1_GOP 30
+#endif
 #define V1_BPS 2*1024*1024
 #define V1_RCMODE 2 // 1: CBR, 2: VBR
 
@@ -46,6 +52,9 @@
 #elif V1_RESOLUTION == VIDEO_FHD
 #define V1_WIDTH	1920
 #define V1_HEIGHT	1080
+#elif V1_RESOLUTION == VIDEO_2K
+#define V1_WIDTH	2560
+#define V1_HEIGHT	1440
 #endif
 
 static mm_context_t *video_v1_ctx			= NULL;
@@ -77,6 +86,9 @@ static audio_params_t audio_params = {
 	.sample_rate = ASR_8KHZ,
 	.word_length = WL_16BIT,
 	.mic_gain    = MIC_40DB,
+	.dmic_l_gain    = DMIC_BOOST_24DB,
+	.dmic_r_gain    = DMIC_BOOST_24DB,
+	.use_mic_type   = USE_AUDIO_AMIC,
 	.channel     = 1,
 	.enable_aec  = 0
 };
@@ -125,9 +137,9 @@ static g711_params_t g711d_params = {
 void mmf2_video_example_2way_audio_pcmu_init(void)
 {
 	int voe_heap_size = video_voe_presetting(1, V1_WIDTH, V1_HEIGHT, V1_BPS, 0,
-					0, 0, 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0);
+						0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
 
@@ -136,7 +148,7 @@ void mmf2_video_example_2way_audio_pcmu_init(void)
 	if (video_v1_ctx) {
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
-		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, 60);
+		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, V1_FPS);
 		mm_module_ctrl(video_v1_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, V1_CHANNEL);	// start channel 0
 	} else {

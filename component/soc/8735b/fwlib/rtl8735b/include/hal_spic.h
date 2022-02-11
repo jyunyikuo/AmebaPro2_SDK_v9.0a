@@ -2,7 +2,7 @@
  * @file     hal_spic.h
  * @brief    The header file of hal_spic.c
  * @version  1.00
- * @date     2017-08-22
+ * @date     2021-11-22
  *
  * @note
  *
@@ -73,6 +73,7 @@ void spic_flush_fifo(SPIC_TypeDef *spic_dev);
 hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl);
 hal_status_t spic_init(phal_spic_adaptor_t phal_spic_adaptor, u8 spic_bit_mode, u8 io_pin_sel);
 hal_status_t spic_deinit(phal_spic_adaptor_t phal_spic_adaptor);
+hal_status_t spic_deinit_for_xip_img_deinit(phal_spic_adaptor_t phal_spic_adaptor);
 BOOL spic_calibration(phal_spic_adaptor_t phal_spic_adaptor, u32 default_dummy_cycle);
 
 /** *@} */ /* End of group hal_spic_ram_func */

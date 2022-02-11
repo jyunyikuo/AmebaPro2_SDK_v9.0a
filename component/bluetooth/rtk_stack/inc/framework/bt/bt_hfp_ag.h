@@ -79,14 +79,15 @@ extern "C" {
  *
  * \ingroup BT_HFP_AG
  */
-typedef enum t_bt_hfp_ag_call_status {
-	BT_HFP_AG_CALL_IDLE                     = 0x00,
-	BT_HFP_AG_INCOMING_CALL_ONGOING         = 0x01,
-	BT_HFP_AG_OUTGOING_CALL_ONGOING         = 0x02,
-	BT_HFP_AG_CALL_ACTIVE                   = 0x03,
-	BT_HFP_AG_CALL_HOLD                     = 0x04,
-	BT_HFP_AG_CALL_ACTIVE_WITH_CALL_WAITING = 0x05,
-	BT_HFP_AG_CALL_ACTIVE_WITH_CALL_HOLD    = 0x06,
+typedef enum t_bt_hfp_ag_call_status
+{
+    BT_HFP_AG_CALL_IDLE                     = 0x00,
+    BT_HFP_AG_INCOMING_CALL_ONGOING         = 0x01,
+    BT_HFP_AG_OUTGOING_CALL_ONGOING         = 0x02,
+    BT_HFP_AG_CALL_ACTIVE                   = 0x03,
+    BT_HFP_AG_CALL_HOLD                     = 0x04,
+    BT_HFP_AG_CALL_ACTIVE_WITH_CALL_WAITING = 0x05,
+    BT_HFP_AG_CALL_ACTIVE_WITH_CALL_HOLD    = 0x06,
 } T_BT_HFP_AG_CALL_STATUS;
 
 /**
@@ -96,9 +97,10 @@ typedef enum t_bt_hfp_ag_call_status {
  *
  * \ingroup BT_HFP_AG
  */
-typedef enum t_bt_hfp_ag_service_status {
-	BT_HFP_AG_SERVICE_STATUS_UNAVAILABLE  = 0x00,
-	BT_HFP_AG_SERVICE_STATUS_AVAILABLE    = 0x01,
+typedef enum t_bt_hfp_ag_service_status
+{
+    BT_HFP_AG_SERVICE_STATUS_UNAVAILABLE  = 0x00,
+    BT_HFP_AG_SERVICE_STATUS_AVAILABLE    = 0x01,
 } T_BT_HFP_AG_SERVICE_STATUS;
 
 /**
@@ -108,9 +110,10 @@ typedef enum t_bt_hfp_ag_service_status {
  *
  * \ingroup BT_HFP_AG
  */
-typedef enum t_bt_hfp_ag_codec_type {
-	BT_HFP_AG_CODEC_TYPE_CVSD = 0x01,
-	BT_HFP_AG_CODEC_TYPE_MSBC = 0x02,
+typedef enum t_bt_hfp_ag_codec_type
+{
+    BT_HFP_AG_CODEC_TYPE_CVSD = 0x01,
+    BT_HFP_AG_CODEC_TYPE_MSBC = 0x02,
 } T_BT_HFP_AG_CODEC_TYPE;
 
 /**
@@ -120,9 +123,10 @@ typedef enum t_bt_hfp_ag_codec_type {
  *
  * \ingroup BT_HFP_AG
  */
-typedef enum t_bt_hfp_ag_roam_status {
-	BT_HFP_AG_ROAM_INACTIVE = 0x00,
-	BT_HFP_AG_ROAM_ACTIVE   = 0x01,
+typedef enum t_bt_hfp_ag_roam_status
+{
+    BT_HFP_AG_ROAM_INACTIVE = 0x00,
+    BT_HFP_AG_ROAM_ACTIVE   = 0x01,
 } T_BT_HFP_AG_ROAM_STATUS;
 
 /**
@@ -150,10 +154,10 @@ typedef bool (*P_BT_HFP_AG_VND_AT_CMD_CALLBACK)(uint8_t *bd_addr, char *at_cmd);
  * \ingroup BT_HFP_AG
  */
 bool bt_hfp_ag_init(uint8_t                         link_num,
-					uint8_t                         rfc_hfp_ag_chann_num,
-					uint8_t                         rfc_hsp_ag_chann_num,
-					uint16_t                        ag_supported_features,
-					P_BT_HFP_AG_VND_AT_CMD_CALLBACK vendor_cmd_cback);
+                    uint8_t                         rfc_hfp_ag_chann_num,
+                    uint8_t                         rfc_hsp_ag_chann_num,
+                    uint16_t                        ag_supported_features,
+                    P_BT_HFP_AG_VND_AT_CMD_CALLBACK vendor_cmd_cback);
 
 /**
  * bt_hfp_ag.h
@@ -312,11 +316,11 @@ bool bt_hfp_ag_error_send(uint8_t *bd_addr);
  * \ingroup BT_HFP_AG
  */
 bool bt_hfp_ag_indicators_status_send(uint8_t                    *bd_addr,
-									  T_BT_HFP_AG_SERVICE_STATUS  service_status,
-									  T_BT_HFP_AG_CALL_STATUS     call_status,
-									  uint8_t                     signal_status,
-									  T_BT_HFP_AG_ROAM_STATUS     roam_status,
-									  uint8_t                     batt_chg_status);
+                                      T_BT_HFP_AG_SERVICE_STATUS  service_status,
+                                      T_BT_HFP_AG_CALL_STATUS     call_status,
+                                      uint8_t                     signal_status,
+                                      T_BT_HFP_AG_ROAM_STATUS     roam_status,
+                                      uint8_t                     batt_chg_status);
 
 /**
  * bt_hfp_ag.h
@@ -335,9 +339,9 @@ bool bt_hfp_ag_indicators_status_send(uint8_t                    *bd_addr,
  * \ingroup BT_HFP_AG
  */
 bool bt_hfp_ag_call_incoming(uint8_t *bd_addr,
-							 char    *call_num,
-							 uint8_t  call_num_length,
-							 uint8_t  call_num_type);
+                             char    *call_num,
+                             uint8_t  call_num_length,
+                             uint8_t  call_num_type);
 
 /**
  * bt_hfp_ag.h

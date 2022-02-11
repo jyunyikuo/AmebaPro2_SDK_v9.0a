@@ -62,6 +62,7 @@
 #include "rtl8735b_i2c.h"
 #include "rtl8735b_sgpio.h"
 #include "rtl8735b_sdhost.h"
+#include "rtl8735b_sdiohost.h"
 #include "rtl8735b_pwm.h"
 #include "rtl8735b_gpio.h"
 #include "rtl8735b_wdt.h"
@@ -78,6 +79,7 @@
 #include "rtl8735b_trng.h"
 #include "rtl8735b_rtc.h"
 #include "rtl8735b_ecdsa.h"
+#include "rtl8735b_sport.h"
 
 // Todo: Need to find place to include
 #include "rtl8735b_aon_type.h"
@@ -100,4 +102,3 @@
 #endif
 
 #endif  // end of "#ifndef MBED_CMSIS_H"
-

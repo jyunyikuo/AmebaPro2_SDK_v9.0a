@@ -136,15 +136,15 @@ enum rts_osd2_blk_fmt {
 
 enum rts_osd_time_fmt {
 	osd_time_fmt_no = 0,	/*not show time*/
-	osd_time_fmt_24,
-	osd_time_fmt_12,
-	osd_time_fmt_12_1,
-	osd_time_fmt_12_2,
-	osd_time_fmt_12_3,
-	osd_time_fmt_12_4,
-	osd_time_fmt_12_5,
-	osd_time_fmt_12_6,
-	osd_time_fmt_12_7,
+	osd_time_fmt_24,    //	hh:mm:ss	14:32:58
+	osd_time_fmt_12,    //	hh:mm:ss	02:32:58
+	osd_time_fmt_12_1,  //	Phh:mm:ss	P02:32:58
+	osd_time_fmt_12_2,  //	PMhh:mm:ss	PM02:32:58
+	osd_time_fmt_12_3,  //	PM~hh:mm:ss	PM~02:32:58
+	osd_time_fmt_12_4,  //	hh:mm:ssPM	02:32:58PM
+	osd_time_fmt_12_5,  //	hh:mm:ss~PM	02:32:58~PM
+	osd_time_fmt_12_6,  //	hh:mm:ss~~PM	02:32:58~~PM
+	osd_time_fmt_12_7,  //	hh:mm:ss~~~PM	02:32:58~~~PM
 	osd_time_fmt_reserved
 };
 
@@ -165,11 +165,18 @@ enum rts_osd_date_fmt {
 	osd_date_fmt_12,	/*yy/M/d, eg. 15/5/26*/
 	osd_date_fmt_13,	/*yy-M-d, eg. 15-5-26*/
 	osd_date_fmt_14,	/*yy/MM/dd, eg. 15/05/26*/
+	osd_date_fmt_15,	/*yyyy.mm.dd, eg. 2015.05.26*/
+	osd_date_fmt_16,	/*dd.mm.yyyy, eg. 26.05.2015*/
+	osd_date_fmt_17,	/*mm.dd.yyyy, eg. 05.26.2015*/
+	osd_date_fmt_18,	/*mm-dd-yyyy, eg. 05-26-2015*/
+	osd_date_fmt_19,	/*dd-mm-yyyy, eg. 26-05-2015*/
+	osd_date_fmt_20,	/*dd-mm-yyyy www, eg. 26-05-2015 Tue*/
+	osd_date_fmt_21,	/*dd/mm/yyyy www, eg. 26/05/2015 Tue*/
+	osd_date_fmt_22,	/*dd.mm.yyyy www, eg. 26.05.2015 Tue*/
 	osd_date_fmt_reserved
 };
 
-typedef enum
-{
+typedef enum {
 	OSD_FONT_ENG_CHI	= 0,
 	OSD_FONT_ENG		= 1,
 	OSD_FONT_SMALL_ENG	= 2,
@@ -255,11 +262,10 @@ typedef struct {
 	uint32_t hide_time;
 } rt_osd2_info_st;
 
-typedef struct
-{
+typedef struct {
 	BOOL	show;
 	int		chn_id;
-	rt_osd2_info_st osd2;
+	__attribute__((aligned(32))) rt_osd2_info_st osd2;
 } osd_pict_st;
 
 typedef struct RS_BITMAP_S {
@@ -289,8 +295,7 @@ typedef struct {
 	enum rts_osd_date_fmt date_fmt;
 } rt_font_st;
 
-typedef struct
-{
+typedef struct {
 	BOOL	show;
 	int		chn_id;
 	__attribute__((aligned(32)))  rt_osd2_info_st osd2;

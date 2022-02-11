@@ -69,9 +69,10 @@ extern "C" {
  *
  * \ingroup BT_PBAP
  */
-typedef enum {
-	BT_PBAP_REPOSITORY_LOCAL   = (1 << 0),
-	BT_PBAP_REPOSITORY_SIM1    = (1 << 1),
+typedef enum
+{
+    BT_PBAP_REPOSITORY_LOCAL   = (1 << 0),
+    BT_PBAP_REPOSITORY_SIM1    = (1 << 1),
 } BT_PBAP_REPOSITORY;
 
 /**
@@ -81,14 +82,15 @@ typedef enum {
  *
  * \ingroup BT_PBAP
  */
-typedef enum {
-	BT_PBAP_PATH_ROOT           = 0x00,
-	BT_PBAP_PATH_TELECOM        = 0x01,
-	BT_PBAP_PATH_PB             = 0x02,
-	BT_PBAP_PATH_ICH            = 0x03,
-	BT_PBAP_PATH_OCH            = 0x04,
-	BT_PBAP_PATH_MCH            = 0x05,
-	BT_PBAP_PATH_CCH            = 0x06,
+typedef enum
+{
+    BT_PBAP_PATH_ROOT           = 0x00,
+    BT_PBAP_PATH_TELECOM        = 0x01,
+    BT_PBAP_PATH_PB             = 0x02,
+    BT_PBAP_PATH_ICH            = 0x03,
+    BT_PBAP_PATH_OCH            = 0x04,
+    BT_PBAP_PATH_MCH            = 0x05,
+    BT_PBAP_PATH_CCH            = 0x06,
 } BT_PBAP_PATH;
 
 /**
@@ -98,14 +100,15 @@ typedef enum {
  *
  * \ingroup BT_PBAP
  */
-typedef enum {
-	BT_PBAP_PHONE_BOOK_PB        = 0x00,
-	BT_PBAP_PHONE_BOOK_ICH       = 0x01,
-	BT_PBAP_PHONE_BOOK_OCH       = 0x02,
-	BT_PBAP_PHONE_BOOK_MCH       = 0x03,
-	BT_PBAP_PHONE_BOOK_CCH       = 0x04,
-	BT_PBAP_PHONE_BOOK_SPD       = 0x05,
-	BT_PBAP_PHONE_BOOK_FAV       = 0x06,
+typedef enum
+{
+    BT_PBAP_PHONE_BOOK_PB        = 0x00,
+    BT_PBAP_PHONE_BOOK_ICH       = 0x01,
+    BT_PBAP_PHONE_BOOK_OCH       = 0x02,
+    BT_PBAP_PHONE_BOOK_MCH       = 0x03,
+    BT_PBAP_PHONE_BOOK_CCH       = 0x04,
+    BT_PBAP_PHONE_BOOK_SPD       = 0x05,
+    BT_PBAP_PHONE_BOOK_FAV       = 0x06,
 } BT_PBAP_PHONE_BOOK;
 
 /**
@@ -177,8 +180,8 @@ bool bt_pbap_disconnect_req(uint8_t *bd_addr);
  * \ingroup BT_PBAP
  */
 bool bt_pbap_phone_book_pull(uint8_t *bd_addr, BT_PBAP_REPOSITORY repos,
-							 BT_PBAP_PHONE_BOOK phone_book, uint16_t start_offset,
-							 uint16_t max_list_count, uint64_t filter);
+                             BT_PBAP_PHONE_BOOK phone_book, uint16_t start_offset,
+                             uint16_t max_list_count, uint64_t filter);
 
 /**
  * bt_pbap.h
@@ -196,7 +199,7 @@ bool bt_pbap_phone_book_pull(uint8_t *bd_addr, BT_PBAP_REPOSITORY repos,
  * \ingroup BT_PBAP
  */
 bool bt_pbap_phone_book_size_get(uint8_t *bd_addr, BT_PBAP_REPOSITORY repos,
-								 BT_PBAP_PHONE_BOOK phone_book);
+                                 BT_PBAP_PHONE_BOOK phone_book);
 
 /**
  * bt_pbap.h

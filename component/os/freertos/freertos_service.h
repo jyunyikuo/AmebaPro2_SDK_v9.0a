@@ -24,7 +24,7 @@
 extern VOID RtlUdelayOS(u32 us);
 #elif defined(CONFIG_PLATFORM_8711B)
 #include "platform_stdlib.h"
-#elif defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2)
+#elif defined(CONFIG_PLATFORM_8721D) || (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 #include "platform_stdlib.h"
 #elif defined(CONFIG_HARDWARE_8188F)
 #include "platform_stdlib.h"
@@ -42,7 +42,7 @@ extern VOID RtlUdelayOS(u32 us);
 
 #if (defined CONFIG_GSPI_HCI || defined CONFIG_SDIO_HCI) || defined(CONFIG_LX_HCI)
 /* For SPI interface transfer and us delay implementation */
-#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B) && !defined(CONFIG_PLATFORM_8721D)  && !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_8710C) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_8735B)
+#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B) && !defined(CONFIG_PLATFORM_8721D)  && !defined(CONFIG_PLATFORM_8195BHP) && !defined(CONFIG_PLATFORM_8710C) && !defined(CONFIG_PLATFORM_AMEBAD2) && !defined(CONFIG_PLATFORM_AMEBALITE) && !defined(CONFIG_PLATFORM_8735B)
 #include <rtwlan_bsp.h>
 #endif
 #endif
@@ -259,7 +259,7 @@ void cli(void);
 
 extern int rtw_if_wifi_thread(char *name);
 
-#if (defined CONFIG_PLATFORM_8711B) || (defined CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2)
+#if (defined CONFIG_PLATFORM_8711B) || (defined CONFIG_PLATFORM_8721D)|| (defined CONFIG_PLATFORM_AMEBAD2) || (defined CONFIG_PLATFORM_AMEBALITE)
 extern u32 random_seed;
 #endif
 

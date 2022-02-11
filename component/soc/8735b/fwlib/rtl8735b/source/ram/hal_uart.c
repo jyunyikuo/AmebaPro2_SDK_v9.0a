@@ -57,6 +57,15 @@ uint8_t hal_uart_check_uart_id(uint32_t tx_pin, uint32_t rx_pin)
 {
 	uint8_t uart_idx = NONESET_UART_IDX;
 
+#if !IS_AFTER_CUT_C(CONFIG_CHIP_VER)
+	//To fix UART4 idx erro in ROM code
+	if (tx_pin == PIN_UART4_TX) {
+		if (rx_pin == PIN_UART4_RX) {
+			return Uart4;
+		}
+	}
+#endif
+
 	if (tx_pin != PIN_NC) {
 		uart_idx = hal_uart_stubs.hal_uart_pin_to_idx(tx_pin, UART_Pin_TX);
 		if (uart_idx >= MAX_UART_PORT) {
@@ -112,7 +121,7 @@ hal_status_t hal_uart_init(phal_uart_adapter_t puart_adapter, uint32_t tx_pin, u
 	hal_status_t ret;
 	uint8_t uart_idx;
 
-	if (rx_pin != PIN_NC) {
+	if ((rx_pin != PIN_NC) && (rx_pin != PIN_UART4_RX)) {
 		// RX Pin pull-high to prevent this folating on this pin
 		hal_gpio_pull_ctrl(rx_pin, Pin_PullUp);
 		hal_delay_us(4);
@@ -124,7 +133,16 @@ hal_status_t hal_uart_init(phal_uart_adapter_t puart_adapter, uint32_t tx_pin, u
 		hal_uart_en_ctrl(Uart0, OFF);
 	}
 
+#if IS_AFTER_CUT_C(CONFIG_CHIP_VER)
 	ret = hal_uart_stubs.hal_uart_init(puart_adapter, tx_pin, rx_pin, pconfig);
+#else
+	//To fix UART4 idx error in ROM code
+	if (uart_idx == Uart4) {
+		ret = hal_rtl_uart_init_bt_patch(puart_adapter);
+	} else {
+		ret = hal_uart_stubs.hal_uart_init(puart_adapter, tx_pin, rx_pin, pconfig);
+	}
+#endif  //#if IS_AFTER_CUT_C(CONFIG_CHIP_VER)
 
 #if defined(CONFIG_BUILD_NONSECURE)
 	/* Only NS flow */
@@ -141,10 +159,19 @@ hal_status_t hal_uart_init(phal_uart_adapter_t puart_adapter, uint32_t tx_pin, u
 	ret = hal_uart_stubs.hal_uart_load_default_state(puart_adapter, pconfig);
 #endif
 
+#if !CONFIG_PXP
+	//PXP ROM already fixed using clk src = 40M, baud rate = 115200, so ignore below 40M->4M setting
+	//set UART0 SCLK= 4MHz
+	if (Uart0 == puart_adapter->uart_idx) {
+		hal_uart_lp_sclk_select(puart_adapter, UART_IRC_4M);
+		//calibration OSC 4M
+		hal_osc4m_cal();
+	}
+#endif
 	//pinmux control setting
 	if (ret == HAL_OK) {
 		uart_idx = puart_adapter->uart_idx;
-		if (uart_idx <= Uart4) {
+		if (uart_idx <= Uart3) {
 			// only UART0,1,2,3 has real IO pin
 			if (tx_pin != PIN_NC) {
 				ret = hal_pinmux_register(tx_pin, (PID_UART0 + uart_idx));
@@ -154,11 +181,9 @@ hal_status_t hal_uart_init(phal_uart_adapter_t puart_adapter, uint32_t tx_pin, u
 				ret |= hal_pinmux_register(rx_pin, (PID_UART0 + uart_idx));
 			}
 
-			//BT UART
-			if (uart_idx == Uart4) {
-				/* BT UART MUX selection*/
-				hal_sys_bt_uart_mux(BT_UART_MUX_INTERNAL);
-			}
+		} else if (uart_idx == Uart4) {
+			/* BT UART MUX selection*/
+			hal_sys_bt_uart_mux(BT_UART_MUX_INTERNAL);
 		}
 	} else {
 		if (rx_pin != PIN_NC) {
@@ -168,7 +193,7 @@ hal_status_t hal_uart_init(phal_uart_adapter_t puart_adapter, uint32_t tx_pin, u
 	return ret;
 }
 
-#if IS_CUT_TEST(CONFIG_CHIP_VER) // & defined(CONFIG_BUILD_NONSECURE)
+#if 0 //IS_CUT_TEST(CONFIG_CHIP_VER) // & defined(CONFIG_BUILD_NONSECURE)
 hal_status_t hal_uart_init_for_bt(phal_uart_adapter_t puart_adapter)
 {
 	uint8_t uart_idx = 4;
@@ -207,7 +232,7 @@ void hal_uart_deinit(phal_uart_adapter_t puart_adapter)
 
 	hal_uart_stubs.hal_uart_deinit(puart_adapter);
 
-	if (uart_idx <= Uart4) {
+	if (uart_idx <= Uart3) {
 		if (puart_adapter->tx_pin != PIN_NC) {
 			hal_pinmux_unregister(puart_adapter->tx_pin, (PID_UART0 + uart_idx));
 		}
@@ -226,6 +251,22 @@ void hal_uart_deinit(phal_uart_adapter_t puart_adapter)
 		}
 	}
 }
+
+/**
+ *  @brief Select low-power UART SCLK, and setting default baud-rate table.
+ *
+ *  @param[in]  puart_adapter   The UART adapter.
+ *  @param[in]  sclk_sel   The low-power UART SCLK source.
+ *
+ *  @returns    The UART index. If the given pin name didn't map to a valid UART, the return value is 0xFF.
+ */
+#if !defined(CONFIG_BUILD_NONSECURE)
+//for ntz & s
+hal_status_t hal_uart_lp_sclk_select(phal_uart_adapter_t puart_adapter, uint8_t sclk_sel)
+{
+	return hal_uart_stubs.hal_uart_lp_sclk_select(puart_adapter, sclk_sel);
+}
+#endif
 
 /**
  *  @brief Configures the UART hardware auto flow-control setting.
@@ -307,7 +348,8 @@ hal_status_t hal_uart_tx_gdma_init(phal_uart_adapter_t puart_adapter, phal_gdma_
 
 	if (ret == HAL_OK) {
 #if IS_CUT_TEST(CONFIG_CHIP_VER)
-		ret = hal_uart_tx_gdma_init_ram(puart_adapter, pgdma_chnl);
+		//ret = hal_uart_tx_gdma_init_ram(puart_adapter, pgdma_chnl);
+		ret = hal_rtl_uart_tx_gdma_init_patch(puart_adapter, pgdma_chnl);
 #else
 		ret = hal_uart_stubs.hal_uart_tx_gdma_init(puart_adapter, pgdma_chnl);
 #endif
@@ -359,7 +401,8 @@ hal_status_t hal_uart_rx_gdma_init(phal_uart_adapter_t puart_adapter, phal_gdma_
 
 	if (ret == HAL_OK) {
 #if IS_CUT_TEST(CONFIG_CHIP_VER)
-		ret = hal_uart_rx_gdma_init_ram(puart_adapter, pgdma_chnl);
+		//ret = hal_uart_rx_gdma_init_ram(puart_adapter, pgdma_chnl);
+		ret = hal_rtl_uart_rx_gdma_init_patch(puart_adapter, pgdma_chnl);
 #else
 		ret = hal_uart_stubs.hal_uart_rx_gdma_init(puart_adapter, pgdma_chnl);
 #endif
@@ -518,7 +561,7 @@ hal_status_t hal_uart_dma_send(phal_uart_adapter_t puart_adapter, uint8_t *ptx_b
 }
 /** @} */ /* End of group hs_hal_uart */
 
-#if IS_CUT_TEST(CONFIG_CHIP_VER) //ram patch
+#if 0// IS_CUT_TEST(CONFIG_CHIP_VER) //ram patch
 uint8_t uart_tx_gdma_hsk_id_tbl_ram[] = {
 	GDMA_HANDSHAKE_UART0_TX,        // GDMA hardware handshake number for UART0 TX
 	GDMA_HANDSHAKE_UART1_TX,        // GDMA hardware handshake number for UART1 TX
@@ -683,11 +726,322 @@ hal_status_t hal_uart_rx_gdma_init_ram(phal_uart_adapter_t puart_adapter, phal_g
 
 	return HAL_OK;
 }
-
-
 #endif
 
 
+#if defined(CONFIG_BUILD_NONSECURE)
+#if !IS_AFTER_CUT_B(CONFIG_CHIP_VER) || IS_CUT_B(CONFIG_CHIP_VER)
+/**
+  * @brief Over sampling table. The over sampling value for pre-defined
+  *        baud rate. It is base on the UART0 SCLK = 4M.
+  */
+const uint8_t def_ovsr_4m_patch[] = {
+	20, 17, 17, 17,
+	17, 17, 13, 12,
+	13, 17, 13, 17,
+	13, 17, 10, 13,
+	17,  5,  8,  8,
+	4,  4,  2,  2,
+	2,  2,  2,  1,
+	1,  1,  1,  1,
+	1,  1,  0
+};
+
+/**
+  * @brief Divisor table. The divisor value for pre-defined
+  *        baud rate. It is base on the UART0 SCLK = 4M.
+  */
+const uint16_t def_div_4m_patch[] = {
+	1818,    784,    392,    196,
+	98,     49,     32,     23,
+	16,      8,      8,      4,
+	4,      2,      3,      2,
+	1,      2,      1,      1,
+	1,      1,      1,      1,
+	1,      1,      1,      1,
+	1,      1,      1,      1,
+	1,      1,      1
+};
+
+/**
+  * @brief Bit adjustment table index for 10-bits frame.
+  *             It is base on the UART0 SCLK = 4M.
+  */
+const uint8_t def_ovsr_adj_bit_10b_4m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   1,
+	0,   4,   0,   4,
+	0,   4,   4,   0,
+	4,   2,   7,   0,
+	3,   0,   9,   8,
+	7,   2,   0,   9,
+	4,   3,   2,   1,
+	1,   0,   7
+};
+
+/**
+  * @brief Bit adjustment table index for 9-bits frame.
+  *             It is base on the UART0 SCLK = 4M.
+  */
+const uint8_t def_ovsr_adj_bit_9b_4m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   1,
+	0,   3,   0,   3,
+	0,   3,   4,   0,
+	3,   2,   6,   0,
+	3,   0,   8,   7,
+	6,   1,   0,   8,
+	4,   3,   2,   1,
+	1,   0,   6
+};
+
+/**
+  * @brief Bit adjustment table index for 8-bits frame.
+  *             It is base on the UART0 SCLK = 4M.
+  */
+const uint8_t def_ovsr_adj_bit_8b_4m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   1,
+	0,   3,   0,   3,
+	0,   3,   3,   0,
+	3,   2,   5,   0,
+	3,   0,   7,   6,
+	5,   1,   0,   7,
+	3,   3,   2,   1,
+	0,   0,   5
+};
+
+/**
+  * @brief Over sampling table. The over sampling value for pre-defined
+  *        baud rate. It is base on the UART SCLK = 26M.
+  */
+const uint8_t def_ovsr_26m_patch[] = {
+	20, 20, 20, 20,
+	19, 19, 11, 19,
+	11, 11, 13, 11,
+	13, 15, 10, 13,
+	14, 17, 14, 13,
+	14, 13,  9, 18,
+	17,  7, 13,  6,
+	9,  8,  8,  7,
+	6,  6,  4
+};
+
+/**
+  * @brief Divisor table. The divisor value for pre-defined
+  *        baud rate. It is base on the UART SCLK = 26M.
+  */
+const uint16_t def_div_26m_patch[] = {
+	11813,  4332,  2166,  1083,
+	570,   285,   246,    95,
+	123,    82,    52,    41,
+	26,    15,    20,    13,
+	8,     4,     4,     4,
+	2,     2,     2,     1,
+	1,     2,     1,     2,
+	1,     1,     1,     1,
+	1,     1,     1
+};
+
+/**
+  * @brief Bit adjustment table index for 10-bits frame.
+  *             It is base on the UART0 SCLK = 26M.
+  */
+const uint8_t def_ovsr_adj_bit_10b_26m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   1,   0,   0,
+	0,   0,   0,   2,
+	1,   0,   3,   7,
+	0,   3,   3,   4,
+	3,   2,   3
+};
+
+/**
+  * @brief Bit adjustment table index for 9-bits frame.
+  *             It is base on the UART0 SCLK = 26M.
+  */
+const uint8_t def_ovsr_adj_bit_9b_26m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   1,   0,   0,
+	0,   0,   0,   3,
+	1,   0,   3,   8,
+	0,   3,   3,   5,
+	3,   2,   3
+};
+
+/**
+  * @brief Bit adjustment table index for 8-bits frame.
+  *             It is base on the UART0 SCLK = 26M.
+  */
+const uint8_t def_ovsr_adj_bit_8b_26m_patch[] = {
+	0,  0,  0,  0,
+	0,  0,  0,  0,
+	0,  0,  0,  0,
+	0,  1,  0,  0,
+	2,  0,  3,  0,
+	4,  0,  4,  2,
+	3,  2,  0,  0,
+	2,  3,  1,  3,
+	3,  0,  5
+};
+
+
+/**
+  * @brief Over sampling table. The over sampling value for pre-defined
+  *        baud rate. It is base on the UART0 SCLK = 40M.
+  */
+const uint8_t def_ovsr_40m_patch[] = {
+	20, 20, 20, 20,
+	20, 17, 17, 15,
+	10, 11, 10, 11,
+	10, 15, 12, 10,
+	10, 15, 17, 20,
+	14, 20, 14,  9,
+	13,  7, 20, 19,
+	7, 13,  6,  5,
+	5, 10,  6
+};
+
+/**
+  * @brief Divisor table. The divisor value for pre-defined
+  *        baud rate. It is base on the UART0 SCLK = 40M.
+  */
+const uint16_t def_div_40m_patch[] = {
+	18173,  6664,  3332,  1666,
+	833,   490,   245,   185,
+	208,   126,   104,    63,
+	52,    23,    26,    26,
+	17,     7,     5,     4,
+	3,     2,     2,     3,
+	2,     3,     1,     1,
+	2,     1,     2,     2,
+	2,     1,     1
+};
+
+/**
+  * @brief Bit adjustment table index for 10-bits frame.
+  *             It is base on the UART0 SCLK = 40M
+  */
+const uint8_t def_ovsr_adj_bit_10b_40m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   1,   0,   0,
+	2,   0,   4,   0,
+	5,   0,   5,   2,
+	3,   2,   0,   0,
+	2,   3,   1,   4,
+	3,   0,   7
+};
+
+/**
+  * @brief Bit adjustment table index for 9-bits frame.
+  *             It is base on the UART0 SCLK = 40M
+  */
+const uint8_t def_ovsr_adj_bit_9b_40m_patch[] = {
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   0,   0,   0,
+	0,   1,   0,   0,
+	2,   0,   3,   0,
+	4,   0,   4,   2,
+	3,   2,   0,   0,
+	2,   3,   1,   4,
+	3,   0,   6
+};
+
+/**
+  * @brief Bit adjustment table index for 8-bits frame.
+  *             It is base on the UART0 SCLK = 40M
+  */
+const uint8_t def_ovsr_adj_bit_8b_40m_patch[] = {
+	0,  0,  0,  0,
+	0,  0,  0,  0,
+	0,  0,  0,  0,
+	0,  1,  0,  0,
+	2,  0,  3,  0,
+	4,  0,  4,  2,
+	3,  2,  0,  0,
+	2,  3,  1,  3,
+	3,  0,  5
+};
+
+
+hal_status_t hal_uart_lp_sclk_select_patch(phal_uart_adapter_t puart_adapter, uint8_t sclk_sel)
+{
+	/* NS flow */
+	hal_status_t ret = HAL_OK;
+	AON_TypeDef *aon_obj = AON;
+
+	if (Uart0 != puart_adapter->uart_idx) {
+		DBG_UART_ERR("%s: UART%d can not select SCLK\r\n", __func__, puart_adapter->uart_idx);
+		return HAL_ERR_PARA;
+	}
+
+	/* Disable func/bus/pclk/sclk */
+	hal_uart_en_ctrl(puart_adapter->uart_idx, OFF);
+
+	switch (sclk_sel) {
+	case UART_IRC_4M:
+		puart_adapter->pdef_ovsr_tbl = def_ovsr_4m_patch;
+		puart_adapter->pdef_div_tbl = def_div_4m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl10 = def_ovsr_adj_bit_10b_4m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl9 = def_ovsr_adj_bit_9b_4m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl8 = def_ovsr_adj_bit_8b_4m_patch;
+		puart_adapter->uart_sclk = UartSCLK_4M;
+		hal_sys_set_clk(UART0_SYS, UART_IRC_4M);
+		break;
+
+	case UART_XTAL:
+		if (0x0 == aon_obj->AON_REG_AON_OTP_SYSCFG5) {
+			//Xtal = 40MHz
+			puart_adapter->pdef_ovsr_tbl = def_ovsr_40m_patch;
+			puart_adapter->pdef_div_tbl = def_div_40m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl10 = def_ovsr_adj_bit_10b_40m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl9 = def_ovsr_adj_bit_9b_40m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl8 = def_ovsr_adj_bit_8b_40m_patch;
+			puart_adapter->uart_sclk = UartSCLK_40M;
+		} else if (0x5 == aon_obj->AON_REG_AON_OTP_SYSCFG5) {
+			//Xtal = 26MHz
+			puart_adapter->pdef_ovsr_tbl = def_ovsr_26m_patch;
+			puart_adapter->pdef_div_tbl = def_div_26m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl10 = def_ovsr_adj_bit_10b_26m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl9 = def_ovsr_adj_bit_9b_26m_patch;
+			puart_adapter->pdef_ovsradjbit_tbl8 = def_ovsr_adj_bit_8b_26m_patch;
+			puart_adapter->uart_sclk = UartSCLK_26M;
+		}
+		hal_sys_set_clk(UART0_SYS, UART_XTAL);
+		break;
+
+	case UART_PERI_40M:
+	default:
+		puart_adapter->pdef_ovsr_tbl = def_ovsr_40m_patch;
+		puart_adapter->pdef_div_tbl = def_div_40m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl10 = def_ovsr_adj_bit_10b_40m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl9 = def_ovsr_adj_bit_9b_40m_patch;
+		puart_adapter->pdef_ovsradjbit_tbl8 = def_ovsr_adj_bit_8b_40m_patch;
+		puart_adapter->uart_sclk = UartSCLK_40M;
+		hal_sys_set_clk(UART0_SYS, UART_PERI_40M);
+		break;
+	}
+
+	/* Enable func/bus/pclk/sclk */
+	hal_uart_en_ctrl(puart_adapter->uart_idx, ON);
+
+	/*  Set UART register default state*/
+	ret = hal_uart_stubs.hal_uart_load_default_state(puart_adapter, NULL);
+
+	DBG_UART_INFO("%s: UART%d SCLK= %d\r\n", __func__, puart_adapter->uart_idx, puart_adapter->uart_sclk);
+}
+#endif  // end of "#if !IS_AFTER_CUT_B(CONFIG_CHIP_VER) | IS_CUT_B(CONFIG_CHIP_VER)"
+
+#endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
 
 #endif  // end of "#if CONFIG_UART_EN"
 

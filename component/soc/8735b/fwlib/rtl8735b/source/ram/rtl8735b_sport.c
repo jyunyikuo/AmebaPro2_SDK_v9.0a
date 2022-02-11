@@ -31,6 +31,7 @@
 #include "rtl8735b_sport.h"
 #include "hal_cache.h"
 #include "hal_sys_ctrl.h"
+#include "hal_sys_ctrl_nsc.h"
 
 #if !defined(CONFIG_BUILD_NONSECURE)
 
@@ -51,6 +52,112 @@
   */
 hal_sport_group_adapter_t sport_group_adapter;
 
+/// @cond DOXYGEN_ROM_HAL_API
+
+/**
+ * @addtogroup hs_hal_sport_rom_func SPORT HAL ROM APIs.
+ * @ingroup hs_hal_sport
+ * @{
+ * @brief The SPORT HAL ROM APIs. The user application(in RAM space) should not call these APIs directly.
+ *        There is another set of SPORT HAL APIs in the RAM space is provided for the user application.
+ */
+
+/**
+  * @brief The stubs functions table to exports SPORT HAL functions in ROM.
+  */
+const hal_sport_func_stubs_t hal_sport_stubs = {
+	.hal_sport_irqhandler_ram = hal_rtl_sport_irqhandler_ram,
+	.hal_sport_irq_reg = hal_rtl_sport_irq_reg,
+	.hal_sport_irq_unreg = hal_rtl_sport_irq_unreg,
+	.hal_sport_init = hal_rtl_sport_init,
+	.hal_sport_deinit = hal_rtl_sport_deinit,
+	.hal_sport_reset = hal_rtl_sport_reset,
+	.hal_sport_reset_tx_fifo = hal_rtl_sport_reset_tx_fifo,
+	.hal_sport_reset_rx_fifo = hal_rtl_sport_reset_rx_fifo,
+	.hal_sport_bclk_reset = hal_rtl_sport_bclk_reset,
+	.hal_sport_dma_reset = hal_rtl_sport_dma_reset,
+	.hal_sport_clean_tx_page_own = hal_rtl_sport_clean_tx_page_own,
+	.hal_sport_clean_rx_page_own = hal_rtl_sport_clean_rx_page_own,
+	.hal_sport_set_master = hal_rtl_sport_set_master,
+	.hal_sport_set_loopback = hal_rtl_sport_set_loopback,
+	.hal_sport_mode = hal_rtl_sport_mode,
+	.hal_sport_tx_ch = hal_rtl_sport_tx_ch,
+	.hal_sport_rx_ch = hal_rtl_sport_rx_ch,
+	.hal_sport_format = hal_rtl_sport_format,
+	.hal_sport_rx_same_format = hal_rtl_sport_rx_same_format,
+	.hal_sport_rx_format = hal_rtl_sport_rx_format,
+	.hal_sport_tx0_mono = hal_rtl_sport_tx0_mono,
+	.hal_sport_tx1_mono =  hal_rtl_sport_tx1_mono,
+	.hal_sport_rx_same_mono_stereo = hal_rtl_sport_rx_same_mono_stereo,
+	.hal_sport_rx0_mono = hal_rtl_sport_rx0_mono,
+	.hal_sport_rx1_mono = hal_rtl_sport_rx1_mono,
+	.hal_sport_tx0_data_length = hal_rtl_sport_tx0_data_length,
+	.hal_sport_tx1_data_length = hal_rtl_sport_tx1_data_length,
+	.hal_sport_rx_same_data_length = hal_rtl_sport_rx_same_data_length,
+	.hal_sport_rx0_data_length = hal_rtl_sport_rx0_data_length,
+	.hal_sport_rx1_data_length = hal_rtl_sport_rx1_data_length,
+	.hal_sport_tx_channel_length = hal_rtl_sport_tx_channel_length,
+	.hal_sport_rx_same_channel_length = hal_rtl_sport_rx_same_channel_length,
+	.hal_sport_rx_channel_length = hal_rtl_sport_rx_channel_length,
+	.hal_sport_tx_rate = hal_rtl_sport_tx_rate,
+	.hal_sport_rx_rate = hal_rtl_sport_rx_rate,
+	.hal_sport_tx_data_dir = hal_rtl_sport_tx_data_dir,
+	.hal_sport_rx_data_dir = hal_rtl_sport_rx_data_dir,
+	.hal_sport_tx_lr_swap = hal_rtl_sport_tx_lr_swap,
+	.hal_sport_rx_lr_swap = hal_rtl_sport_rx_lr_swap,
+	.hal_sport_tx_byte_swap = hal_rtl_sport_tx_byte_swap,
+	.hal_sport_rx_byte_swap = hal_rtl_sport_rx_byte_swap,
+	.hal_sport_bclk_inverse = hal_rtl_sport_bclk_inverse,
+	.hal_sport_set_mclk = hal_rtl_sport_set_mclk,
+	.hal_sport_sel_tx_tdm = hal_rtl_sport_sel_tx_tdm,
+	.hal_sport_sel_rx_tdm = hal_rtl_sport_sel_rx_tdm,
+	.hal_sport_set_tx0_consum = hal_rtl_sport_set_tx0_consum,
+	.hal_sport_set_tx1_consum = hal_rtl_sport_set_tx1_consum,
+	.hal_sport_set_rx0_consum = hal_rtl_sport_set_rx0_consum,
+	.hal_sport_set_rx1_consum = hal_rtl_sport_set_rx1_consum,
+	.hal_sport_tx_fifo_0 = hal_rtl_sport_tx_fifo_0,
+	.hal_sport_tx_fifo_1 = hal_rtl_sport_tx_fifo_1,
+	.hal_sport_rx_fifo_0 = hal_rtl_sport_rx_fifo_0,
+	.hal_sport_rx_fifo_1 = hal_rtl_sport_rx_fifo_1,
+	.hal_sport_set_tx_lrck = hal_rtl_sport_set_tx_lrck,
+	.hal_sport_set_rx_lrck = hal_rtl_sport_set_rx_lrck,
+	.hal_sport_tx_params = hal_rtl_sport_tx_params,
+	.hal_sport_rx_params = hal_rtl_sport_rx_params,
+	.hal_sport_tx_fifo_th = hal_rtl_sport_tx_fifo_th,
+	.hal_sport_rx_fifo_th = hal_rtl_sport_rx_fifo_th,
+	.hal_sport_set_dma_burst = hal_rtl_sport_set_dma_burst,
+	.hal_sport_autoload_dma_burst = hal_rtl_sport_autoload_dma_burst,
+	.hal_sport_set_dma_intr = hal_rtl_sport_set_dma_intr,
+	.hal_sport_set_tx_fifo_intr = hal_rtl_sport_set_tx_fifo_intr,
+	.hal_sport_set_rx_fifo_intr = hal_rtl_sport_set_rx_fifo_intr,
+	.hal_sport_dma_params = hal_rtl_sport_dma_params,
+	.hal_sport_tx_start = hal_rtl_sport_tx_start,
+	.hal_sport_rx_start = hal_rtl_sport_rx_start,
+	.hal_sport_tx_dma_start = hal_rtl_sport_tx_dma_start,
+	.hal_sport_get_tx_dma_start_sta = hal_rtl_sport_get_tx_dma_start_sta,
+	.hal_sport_rx_dma_start = hal_rtl_sport_rx_dma_start,
+	.hal_sport_get_rx_dma_start_sta = hal_rtl_sport_get_rx_dma_start_sta,
+	.hal_sport_dma_buffer = hal_rtl_sport_dma_buffer,
+	.hal_sport_get_tx0_page = hal_rtl_sport_get_tx0_page,
+	.hal_sport_get_tx1_page = hal_rtl_sport_get_tx1_page,
+	.hal_sport_tx0_page_send = hal_rtl_sport_tx0_page_send,
+	.hal_sport_tx1_page_send = hal_rtl_sport_tx1_page_send,
+	.hal_sport_rx0_page_recv = hal_rtl_sport_rx0_page_recv,
+	.hal_sport_rx1_page_recv = hal_rtl_sport_rx1_page_recv,
+	.hal_sport_get_tx_fifo_err = hal_rtl_sport_get_tx_fifo_err,
+	.hal_sport_get_rx_fifo_err = hal_rtl_sport_get_rx_fifo_err,
+	.hal_sport_clr_tx_fifo_err = hal_rtl_sport_clr_tx_fifo_err,
+	.hal_sport_clr_rx_fifo_err = hal_rtl_sport_clr_rx_fifo_err,
+	.hal_sport_fifo_cb_handler = hal_rtl_sport_fifo_cb_handler,
+	.hal_sport_tx0_dma_cb_handler = hal_rtl_sport_tx0_dma_cb_handler,
+	.hal_sport_tx1_dma_cb_handler = hal_rtl_sport_tx1_dma_cb_handler,
+	.hal_sport_rx0_dma_cb_handler = hal_rtl_sport_rx0_dma_cb_handler,
+	.hal_sport_rx1_dma_cb_handler = hal_rtl_sport_rx1_dma_cb_handler,
+	.hal_sport_dma_err_cb_handler = hal_rtl_sport_dma_err_cb_handler,
+	.hal_sport_fixed_bclk = hal_rtl_sport_fixed_bclk,
+	.hal_sport_rx_same_fs = hal_rtl_sport_rx_same_fs
+};
+
 /**
  *  @brief This is the common interrupt handler for SPORT.
  *         It read the system register to know the interrupt event
@@ -58,7 +165,7 @@ hal_sport_group_adapter_t sport_group_adapter;
  *
  *  @returns void
  */
-void SPORT_IRQHandler_ram(void)
+void hal_rtl_sport_irqhandler_ram(void)
 {
 	hal_sport_adapter_t *psport_adapter;
 	SPORT_TypeDef *psport_reg;
@@ -282,7 +389,7 @@ void hal_rtl_sport_irq_reg(void)
 	__ISB();
 
 	// Register SPORT common IRQ handler
-	hal_irq_set_vector(SPORT_IRQn, (uint32_t)SPORT_IRQHandler_ram);
+	hal_irq_set_vector(SPORT_IRQn, (uint32_t)hal_rtl_sport_irqhandler_ram);
 	hal_irq_clear_pending(SPORT_IRQn);
 	hal_irq_enable(SPORT_IRQn);
 }
@@ -2068,6 +2175,11 @@ void hal_rtl_sport_autoload_dma_burst(hal_sport_adapter_t *psport_adapter)
 	} else {
 		DBG_SPORT_WARN(" hal_sport_autoload_dma_burst: fifo_th doesn't meet burst_size\r\n");
 	}
+
+	temp_reg = psport_reg->SPORT_SP_DMA_CON;
+	temp_reg &= ~(SPORT_BIT_SP_DMA_CTRL);
+	psport_reg->SPORT_SP_DMA_CON = temp_reg;
+
 }
 
 /**

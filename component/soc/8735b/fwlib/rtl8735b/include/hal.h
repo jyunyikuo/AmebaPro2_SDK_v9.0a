@@ -67,6 +67,7 @@
 
 //#include "hal_sce.h"
 #include "hal_audio.h"
+#include "hal_sport.h"
 
 
 /** @} */ /* End of group 8735b_hal */

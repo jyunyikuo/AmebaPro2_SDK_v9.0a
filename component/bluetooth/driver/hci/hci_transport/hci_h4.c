@@ -98,7 +98,8 @@ static void h4_rx_thread(void *context)
     (void)context;
     HCI_HDR hdr;
     uint8_t buffer[CONFIG_HCI_RX_BUF_LEN];
-    uint8_t type, hdr_len, body_len, discardable, sub_event, *buf;
+    uint8_t type, hdr_len, discardable, sub_event, *buf;
+    uint16_t body_len;
 
     osif_sem_give(hci_h4->rx_run_sema);
 
@@ -176,7 +177,7 @@ static void h4_rx_thread(void *context)
                 break;
             memcpy(buf, &hdr, hdr_len);
         }
-        else if (H4_ISO == type)
+        else if (H4_SCO == type)
         {
             body_len = hdr.sco.len;
             if (hci_h4->get_buf && hci_h4->recv)

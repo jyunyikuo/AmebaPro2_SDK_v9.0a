@@ -7,7 +7,7 @@
 #define MBED_ADC_EXAMPLE_PIN_0    PF_0
 #define MBED_ADC_EXAMPLE_PIN_1    PF_1
 #define MBED_ADC_EXAMPLE_PIN_2    PF_2
-#define MBED_ADC_EXAMPLE_PIN_3    PF_3
+#define MBED_ADC_EXAMPLE_PIN_3    PF_3 //log uart
 
 
 
@@ -53,15 +53,15 @@ VOID main(VOID)
 	analogin_init(&adc1, MBED_ADC_EXAMPLE_PIN_0);
 	analogin_init(&adc1, MBED_ADC_EXAMPLE_PIN_1);
 	analogin_init(&adc2, MBED_ADC_EXAMPLE_PIN_2);
-	analogin_init(&adc3, MBED_ADC_EXAMPLE_PIN_3);
+//    analogin_init(&adc3, MBED_ADC_EXAMPLE_PIN_3);
 
 	for (;;) {
 		adcdat0 = analogin_read_u16(&adc0);
 		adcdat1 = analogin_read_u16(&adc1);
 		adcdat2 = analogin_read_u16(&adc2);
-		adcdat3 = analogin_read_u16(&adc3);
+//        adcdat3 = analogin_read_u16(&adc3);
 		DBG_8735B("all channel\n");
-		DBG_8735B("AD0:%08x, AD1:%08x, AD2:%08x, AD3:%08x\n", adcdat0, adcdat1, adcdat2, adcdat3);
+		DBG_8735B("AD0:%08x, AD1:%08x, AD2:%08x\n", adcdat0, adcdat1, adcdat2);
 
 		wait_ms(2000);
 
@@ -69,7 +69,7 @@ VOID main(VOID)
 	analogin_deinit(&adc0);
 	analogin_deinit(&adc1);
 	analogin_deinit(&adc2);
-	analogin_deinit(&adc3);
+//	analogin_deinit(&adc3);
 
 	while (1) {;}
 }

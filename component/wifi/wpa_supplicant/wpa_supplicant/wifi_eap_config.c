@@ -90,7 +90,7 @@ void judge_station_disconnect(void)
 		wifi_on(RTW_MODE_STA);
 		break;
 	case RTW_MODE_STA:		//In STA mode
-		if (strlen(setting.ssid) > 0) {
+		if (strlen((char *)setting.ssid) > 0) {
 			wifi_disconnect();
 		}
 	}

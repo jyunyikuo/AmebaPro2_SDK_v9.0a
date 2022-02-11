@@ -37,6 +37,8 @@ extern "C" {
 #include "platform_stdlib_rtl8721d.h"
 #elif defined (CONFIG_PLATFORM_AMEBAD2)
 #include "platform_stdlib_amebad2.h"
+#elif defined (CONFIG_PLATFORM_AMEBALITE)
+#include "platform_stdlib_amebalite.h"
 #elif defined(CONFIG_PLATFORM_8195BHP)
 #include "platform_stdlib_rtl8195bhp.h"
 #elif defined(CONFIG_PLATFORM_8735B)

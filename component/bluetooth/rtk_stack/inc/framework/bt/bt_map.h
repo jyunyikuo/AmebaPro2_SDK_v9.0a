@@ -30,15 +30,16 @@ extern "C" {
  *
  * \ingroup BT_MAP
  */
-typedef enum {
-	BT_MAP_FOLDER_ROOT           = 0x00,
-	BT_MAP_FOLDER_TELECOM        = 0x01,
-	BT_MAP_FOLDER_MSG            = 0x02,
-	BT_MAP_FOLDER_INBOX          = 0x03,
-	BT_MAP_FOLDER_OUTBOX         = 0x04,
-	BT_MAP_FOLDER_SENT           = 0x05,
-	BT_MAP_FOLDER_DELETED        = 0x06,
-	BT_MAP_FOLDER_DRAFT          = 0x07,
+typedef enum
+{
+    BT_MAP_FOLDER_ROOT           = 0x00,
+    BT_MAP_FOLDER_TELECOM        = 0x01,
+    BT_MAP_FOLDER_MSG            = 0x02,
+    BT_MAP_FOLDER_INBOX          = 0x03,
+    BT_MAP_FOLDER_OUTBOX         = 0x04,
+    BT_MAP_FOLDER_SENT           = 0x05,
+    BT_MAP_FOLDER_DELETED        = 0x06,
+    BT_MAP_FOLDER_DRAFT          = 0x07,
 } BT_MAP_FOLDER;
 
 /**
@@ -48,14 +49,15 @@ typedef enum {
  *
  * \ingroup BT_MAP
  */
-typedef enum {
-	BT_MAP_RSP_CONTINUE             = 0x90,
-	BT_MAP_RSP_SUCCESS              = 0xA0,
-	BT_MAP_RSP_BAD_REQUEST          = 0xC0,
-	BT_MAP_RSP_UNAUTHORIZED         = 0xC1,
-	BT_MAP_RSP_FORBIDDEN            = 0xC3,
-	BT_MAP_RSP_NOT_IMPLEMENTED      = 0xD1,
-	BT_MAP_RSP_SERVICE_UNAVAILABLE  = 0xD3
+typedef enum
+{
+    BT_MAP_RSP_CONTINUE             = 0x90,
+    BT_MAP_RSP_SUCCESS              = 0xA0,
+    BT_MAP_RSP_BAD_REQUEST          = 0xC0,
+    BT_MAP_RSP_UNAUTHORIZED         = 0xC1,
+    BT_MAP_RSP_FORBIDDEN            = 0xC3,
+    BT_MAP_RSP_NOT_IMPLEMENTED      = 0xD1,
+    BT_MAP_RSP_SERVICE_UNAVAILABLE  = 0xD3
 } T_BT_MAP_RESPONSE_CODE;
 
 /**
@@ -75,7 +77,7 @@ typedef enum {
  * \ingroup BT_MAP
  */
 bool bt_map_init(uint8_t link_num, uint8_t mns_server_chann,
-				 uint16_t mns_l2c_psm, uint32_t support_feat);
+                 uint16_t mns_l2c_psm, uint32_t support_feat);
 
 /**
  * bt_map.h
@@ -190,7 +192,7 @@ bool bt_map_mas_folder_set(uint8_t *bd_addr, BT_MAP_FOLDER folder);
  * \ingroup BT_MAP
  */
 bool bt_map_mas_folder_listing_get(uint8_t *bd_addr, uint16_t max_list_count,
-								   uint16_t start_offset);
+                                   uint16_t start_offset);
 
 /**
  * bt_map.h
@@ -210,7 +212,7 @@ bool bt_map_mas_folder_listing_get(uint8_t *bd_addr, uint16_t max_list_count,
  * \ingroup BT_MAP
  */
 bool bt_map_mas_msg_listing_get(uint8_t *bd_addr, uint8_t *folder, uint16_t folder_len,
-								uint16_t max_list_count, uint16_t start_offset);
+                                uint16_t max_list_count, uint16_t start_offset);
 
 /**
  * bt_map.h
@@ -280,7 +282,7 @@ bool bt_map_mas_get_abort(uint8_t *bd_addr);
  * \ingroup BT_MAP
  */
 bool bt_map_mas_msg_push(uint8_t *bd_addr, uint8_t *folder, uint16_t folder_len,
-						 bool native, bool more_data, uint8_t *msg, uint16_t msg_len);
+                         bool native, bool more_data, uint8_t *msg, uint16_t msg_len);
 
 #ifdef __cplusplus
 }

@@ -183,7 +183,7 @@ extern void restore_flags(void);
 #endif
 
 
-#ifdef CONFIG_HIGH_TP_TEST
+#if defined(CONFIG_HIGH_TP_TEST) && !defined(CONFIG_INIC_IPC_HIGH_TP)
 #define MAX_SKB_BUF_SIZE			2104
 #else
 #define MAX_SKB_BUF_SIZE			(HAL_INTERFACE_OVERHEAD_SKB_DATA+RX_DRIVER_INFO+\

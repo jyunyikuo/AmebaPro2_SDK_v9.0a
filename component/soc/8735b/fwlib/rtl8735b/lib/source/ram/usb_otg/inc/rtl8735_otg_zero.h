@@ -10,6 +10,7 @@
 #ifndef RTL8735_OTG_ZERO_H
 #define RTL8735_OTG_ZERO_H
 
+#if 0
 #include "usb_ch9.h"
 #include "usb_gadget.h"
 
@@ -30,6 +31,6 @@ struct zero_dev {
 	/* autoresume timer */
 	//ModifiedByJD    struct timer_list resume;
 };
-
+#endif
 
 #endif

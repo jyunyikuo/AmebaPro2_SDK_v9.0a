@@ -85,6 +85,14 @@
 	    ]
       }
     },
+    "CONFIG_SNAND_FLASH_EN": {
+      "0" : {
+	    "Value": 0,
+		"excludeSource": [
+		  "snand_api.c"
+	    ]
+      }
+    },
     "CONFIG_GPIO_EN": {
       "0" : {
 	    "Value": 0,
@@ -139,6 +147,14 @@
 	    "Value": 0,
 		"excludeSource": [
 		  "sgpio_api.c"
+	    ]
+      }
+    },
+    "CONFIG_SPORT_EN": {
+      "0" : {
+	    "Value": 0,
+		"excludeSource": [
+		  "sport_api.c"
 	    ]
       }
     },

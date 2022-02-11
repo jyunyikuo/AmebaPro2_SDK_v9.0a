@@ -29,6 +29,9 @@ static audio_params_t audio_params = {
 	.sample_rate = ASR_8KHZ,
 	.word_length = WL_16BIT,
 	.mic_gain    = MIC_40DB,
+	.dmic_l_gain    = DMIC_BOOST_24DB,
+	.dmic_r_gain    = DMIC_BOOST_24DB,
+	.use_mic_type   = USE_AUDIO_AMIC,
 	.channel     = 1,
 #endif
 	.mix_mode = 0,

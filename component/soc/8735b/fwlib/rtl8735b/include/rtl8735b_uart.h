@@ -49,7 +49,11 @@ extern "C" {
 #define UART_UNIFY  (0)//ENABLE
 
 /// The number of UART port on this platform
+#if IS_AFTER_CUT_C(CONFIG_CHIP_VER)
+#define MAX_UART_PORT                   5
+#else
 #define MAX_UART_PORT                   4
+#endif
 
 /**
   \brief  Defines the FIFO size.

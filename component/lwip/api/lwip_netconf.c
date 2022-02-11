@@ -11,12 +11,24 @@
 #include "wifi_fast_connect.h"
 #endif
 
-/*Static IP ADDRESS*/
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
+/*Initial IP ADDRESS*/
 #ifndef IP_ADDR0
 #define IP_ADDR0   0
 #define IP_ADDR1   0
 #define IP_ADDR2   0
 #define IP_ADDR3   0
+#endif
+
+/*Static IP ADDRESS*/
+#ifndef STATIC_IP_ADDR0
+#define STATIC_IP_ADDR0   192
+#define STATIC_IP_ADDR1   168
+#define STATIC_IP_ADDR2   1
+#define STATIC_IP_ADDR3   80
 #endif
 
 /*NETMASK*/
@@ -391,20 +403,20 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 					/* Static address used */
 
 #if LWIP_VERSION_MAJOR >= 2
-					IP4_ADDR(ip_2_ip4(&ipaddr), IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+					IP4_ADDR(ip_2_ip4(&ipaddr), STATIC_IP_ADDR0, STATIC_IP_ADDR1, STATIC_IP_ADDR2, STATIC_IP_ADDR3);
 					IP4_ADDR(ip_2_ip4(&netmask), NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
 					IP4_ADDR(ip_2_ip4(&gw), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 					netif_set_addr(pnetif, ip_2_ip4(&ipaddr), ip_2_ip4(&netmask), ip_2_ip4(&gw));
 #else
-					IP4_ADDR(&ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+					IP4_ADDR(&ipaddr, STATIC_IP_ADDR0, STATIC_IP_ADDR1, STATIC_IP_ADDR2, STATIC_IP_ADDR3);
 					IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
 					IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 					netif_set_addr(pnetif, &ipaddr, &netmask, &gw);
 #endif
-					iptab[0] = IP_ADDR3;
-					iptab[1] = IP_ADDR2;
-					iptab[2] = IP_ADDR1;
-					iptab[3] = IP_ADDR0;
+					iptab[0] = STATIC_IP_ADDR3;
+					iptab[1] = STATIC_IP_ADDR2;
+					iptab[2] = STATIC_IP_ADDR1;
+					iptab[3] = STATIC_IP_ADDR0;
 					printf("\n\rInterface %d DHCP timeout", idx);
 					printf("\n\rStatic IP address : %d.%d.%d.%d", iptab[3], iptab[2], iptab[1], iptab[0]);
 
@@ -492,11 +504,17 @@ void LwIP_DHCP_stop(uint8_t idx)
 #endif
 }
 
-void LwIP_etharp_find_addr(uint8_t idx, const ip4_addr_t *ipaddr,
+s8_t LwIP_etharp_find_addr(uint8_t idx, const ip4_addr_t *ipaddr,
 						   struct eth_addr **eth_ret, const ip4_addr_t **ip_ret)
 {
 	struct netif *pnetif = &xnetif[idx];
-	etharp_find_addr(pnetif, ipaddr, eth_ret, ip_ret);
+	return etharp_find_addr(pnetif, ipaddr, eth_ret, ip_ret);
+}
+
+void LwIP_etharp_request(uint8_t idx, const ip4_addr_t *ipaddr)
+{
+	struct netif *pnetif = &xnetif[idx];
+	etharp_request(pnetif, ipaddr);
 }
 
 #if !defined(CONFIG_MBED_ENABLED)
@@ -514,6 +532,7 @@ int netif_get_idx(struct netif *pnetif)
 		return -1;
 	}
 #else
+	UNUSED(pnetif);
 	return -1;
 #endif
 }
@@ -618,16 +637,21 @@ int LwIP_netif_is_valid_IP(int idx, unsigned char *ip_dest)
 
 	//printf("invalid IP: %d.%d.%d.%d ",ip_dest[0],ip_dest[1],ip_dest[2],ip_dest[3]);
 #endif
+	UNUSED(idx);
+	UNUSED(ip_dest);
 	return 0;
 }
 
 uint8_t *LwIP_GetBC(uint8_t idx)
 {
-	struct netif *pnetif = &xnetif[idx];
+	/* To avoid gcc warnings */
+	UNUSED(idx);
+
 #if LWIP_VERSION_MAJOR >= 2
 	//struct dhcp *dhcp = ((struct dhcp*)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP));
 	return NULL;
 #else
+	struct netif *pnetif = &xnetif[idx];
 	return (uint8_t *) & (pnetif->dhcp->offered_bc_addr);
 #endif
 }
@@ -713,12 +737,12 @@ void LwIP_AUTOIP(uint8_t idx)
 
 		/* Static address used */
 #if LWIP_VERSION_MAJOR >= 2
-		IP4_ADDR(ip_2_ip4(&ipaddr), IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+		IP4_ADDR(ip_2_ip4(&ipaddr), STATIC_IP_ADDR0, STATIC_IP_ADDR1, STATIC_IP_ADDR2, STATIC_IP_ADDR3);
 		IP4_ADDR(ip_2_ip4(&netmask), NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
 		IP4_ADDR(ip_2_ip4(&gw), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 		netif_set_addr(pnetif, ip_2_ip4(&ipaddr), ip_2_ip4(&netmask), ip_2_ip4(&gw));
 #else
-		IP4_ADDR(&ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+		IP4_ADDR(&ipaddr, STATIC_IP_ADDR0, STATIC_IP_ADDR1, STATIC_IP_ADDR2, STATIC_IP_ADDR3);
 		IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
 		IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 		netif_set_addr(pnetif, &ipaddr, &netmask, &gw);
@@ -758,4 +782,41 @@ uint32_t LWIP_Get_Dynamic_Sleep_Interval()
 #else
 	return 0;
 #endif
+}
+
+uint32_t LwIP_GetXID(uint8_t idx)
+{
+	struct netif *pnetif = &xnetif[idx];
+	struct dhcp *dhcp = NULL;
+#if LWIP_VERSION_MAJOR >= 2
+	dhcp = ((struct dhcp *)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP));
+#else
+	dhcp = pnetif->dhcp;
+#endif
+	return dhcp->xid;
+}
+
+uint32_t LwIP_GetLEASETIME(uint8_t idx)
+{
+	struct netif *pnetif = &xnetif[idx];
+	struct dhcp *dhcp = NULL;
+#if LWIP_VERSION_MAJOR >= 2
+	dhcp = ((struct dhcp *)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP));
+#else
+	dhcp = pnetif->dhcp;
+#endif
+	return dhcp->offered_t0_lease;
+}
+
+uint32_t LwIP_GetRENEWTIME(uint8_t idx)
+{
+	struct netif *pnetif = &xnetif[idx];
+	struct dhcp *dhcp = NULL;
+#if LWIP_VERSION_MAJOR >= 2
+	dhcp = ((struct dhcp *)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP));
+#else
+	dhcp = pnetif->dhcp;
+#endif
+
+	return dhcp->t1_renew_time;
 }

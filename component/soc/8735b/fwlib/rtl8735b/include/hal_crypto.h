@@ -201,6 +201,8 @@ int hal_crypto_engine_init(void);
  */
 int hal_crypto_engine_deinit(void);
 
+void hal_crypto_engine_key_stg_deinit(void);
+
 //
 // Authentication
 //
@@ -999,6 +1001,8 @@ int hal_crypto_aes_cbc_decrypt(
  */
 int hal_crypto_aes_ecb_init(IN const u8 *key, IN const u32 keylen);
 
+int hal_crypto_aes_ecb_sk_init(uint8_t key_num, IN const u32 keylen);
+
 /**
  *  @brief AES-ECB buffer encryption.
  *  @param[in]  message  input buffer(Plaintext)
@@ -1430,6 +1434,8 @@ int hal_crypto_aes_gctr_decrypt(
  *  @return      value < 0      fail(Refer to ERRNO)
  */
 int hal_crypto_aes_gcm_init(IN const u8 *key, IN const u32 keylen);
+
+int hal_crypto_aes_gcm_sk_init(uint8_t key_num, IN const u32 keylen);
 
 /**
  *  @brief AES-GCM buffer encryption.
@@ -2024,6 +2030,10 @@ int hal_crypto_crc_cmd(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc)
  *  @return      value < 0      fail(Refer to ERRNO)
  */
 int hal_crypto_crc_dma(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc);
+
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+int hal_rtl_crypto_crc_dma_patch(hal_crypto_adapter_t *pcrypto_adapter, IN const u8 *message, IN const uint32_t msglen);
+#endif
 #endif
 
 //MIX-MODE

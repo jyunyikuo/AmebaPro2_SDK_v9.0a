@@ -28,11 +28,11 @@ bool hci_uart_tx(uint8_t *p_buf, uint16_t len, P_UART_TX_CB tx_cb);
 void hci_uart_set_baudrate(uint32_t baudrate);
 
 
-void set_hci_uart_out(bool flag);
+void hci_uart_bridge_open(bool flag);
 
-bool hci_uart_tx_bridge(uint8_t rc);
+void hci_uart_bridge_to_hci(uint8_t rc);
 
-bool hci_uart_rx_bridge(uint8_t rc);
+void hci_uart_hci_to_bridge(uint8_t rc);
 
 
 #ifdef __cplusplus

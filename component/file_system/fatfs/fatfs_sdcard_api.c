@@ -7,6 +7,7 @@
 #include "sdio_host.h"
 #include <disk_if/inc/sdcard.h>
 #include "fatfs_sdcard_api.h"
+#include "sd.h"
 //extern phal_sdio_host_adapter_t psdioh_adapter;
 
 static fatfs_sd_params_t fatfs_sd_param;
@@ -36,6 +37,17 @@ void sd_gpio_power_reset(void)
 	gpio_write(&gpio_sd_power, 1);
 	vTaskDelay(SD_POWER_RESET_DELAY_TIME);//The time is depend on drop speed oof your gpio, or we can read the gpio status
 	gpio_write(&gpio_sd_power, 0);
+	vTaskDelay(SD_POWER_RESET_DELAY_TIME);
+}
+
+void sd_reset_procedure(int reason)
+{
+	int ret = 0;
+	sd_gpio_power_reset();
+	SD_DeInit();
+	vTaskDelay(SD_POWER_RESET_DELAY_TIME);
+	ret = SD_Init();
+	printf("sd_reset_procedure ret = %d\r\n", ret);
 }
 
 void sd_gpio_power_off(void)
@@ -341,4 +353,51 @@ void fatfs_list_files(void)
 	}
 }
 
+/*For usb operation.........................................*/
+int usb_sd_init(void)
+{
+	SD_RESULT ret;
+	ret = SD_Init();
+	if (ret != SD_OK) {
+		return 1;
+	}
+	return ret;
+}
+int usb_sd_deinit(void)
+{
+	SD_RESULT ret;
+	ret = SD_DeInit();
+	if (ret != SD_OK) {
+		return 1;
+	}
+	return ret;
+}
+int usb_sd_getcapacity(u32 *sector_count)
+{
+	SD_RESULT ret;
+	ret = SD_GetCapacity(sector_count);
+	if (ret != SD_OK) {
+		return 1;
+	}
+	return 0;
+}
+int usb_sd_readblocks(u32 sector, u8 *data, u32 count)
+{
+	SD_RESULT ret;
+	ret = SD_ReadBlocks(sector, data, count);
+	if (ret != SD_OK) {
+		return 1;
+	}
+	return 0;
+}
+int usb_sd_writeblocks(u32 sector, const u8 *data, u32 count)
+{
+	SD_RESULT ret;
+	ret = SD_WriteBlocks(sector, data, count);
+	if (ret != SD_OK) {
+		return 1;
+	}
+	return 0;
+}
+/*For usb operation.........................................*/
 #endif //FATFS_DISK_SD

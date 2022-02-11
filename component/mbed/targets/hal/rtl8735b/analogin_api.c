@@ -39,10 +39,10 @@ static const PinMap PinMap_analogin[] = {
 	{PF_1,  RTL_PIN_PERI(PID_ADC1, 1, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
 	{PF_2,  RTL_PIN_PERI(PID_ADC2, 2, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
 	{PF_3,  RTL_PIN_PERI(PID_ADC3, 3, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
-	{PF_2,  RTL_PIN_PERI(PID_ADC2, 2, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
-	{PF_3,  RTL_PIN_PERI(PID_ADC3, 3, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
-	{PF_2,  RTL_PIN_PERI(PID_ADC2, 2, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
-	{PF_3,  RTL_PIN_PERI(PID_ADC3, 3, 0), RTL_PIN_FUNC(PID_ADC0, 0)},
+	{PA_0,  RTL_PIN_PERI(PID_COMP_ADC, 4, 0), RTL_PIN_FUNC(PID_COMP_ADC, 0)},
+	{PA_1,  RTL_PIN_PERI(PID_COMP_ADC, 5, 0), RTL_PIN_FUNC(PID_COMP_ADC, 0)},
+	{PA_2,  RTL_PIN_PERI(PID_COMP_ADC, 6, 0), RTL_PIN_FUNC(PID_COMP_ADC, 0)},
+	{PA_3,  RTL_PIN_PERI(PID_COMP_ADC, 7, 0), RTL_PIN_FUNC(PID_COMP_ADC, 0)},
 	{NC,    NC,     0}
 };
 
@@ -74,9 +74,10 @@ void analogin_init(analogin_t *obj, PinName pin)
 	} else {
 		/* module initialized but pin was NOT */
 		if ((analogin_con_adpt.plft_dat.pin_en.w & ((uint32_t)0x1 << obj->idx)) == 0) {
+			printf("module initialized; now initializing pin for ADC%d\r\n", obj->idx);
 			analogin_con_adpt.plft_dat.pin_en.w |= ((uint32_t)0x1 << obj->idx);
 			hal_adc_pin_init(&analogin_con_adpt);
-			printf("module initialized but pin was NOT \r\n");
+
 		}
 
 	}
@@ -210,4 +211,5 @@ uint8_t analogin_read_u16_dma(analogin_t *obj, uint16_t *buf, uint16_t length)
 }
 
 #endif //end of #if (defined(CONFIG_ADC_EN) && (CONFIG_ADC_EN == 1))
+
 

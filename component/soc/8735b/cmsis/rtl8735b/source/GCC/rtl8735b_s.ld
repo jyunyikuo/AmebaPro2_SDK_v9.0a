@@ -18,16 +18,16 @@ MEMORY
   DTCM_ROM (rx) 		: ORIGIN = 0x20010000, LENGTH = 0x20017800 - 0x20010000		/*  30KB     */
 
   /* Non-Secure Callable: for Non-Secure callable functions and secure gateway */  
-  NSC (rwx)             : ORIGIN = 0x2015E000, LENGTH = 0x20166000 - 0x2015E000		/*  32KB     */
+  NSC (rwx)             : ORIGIN = 0x2015E000, LENGTH = 0x2016C300 - 0x2015E000		/*  56.75KB  */
 
   /* RAM functions entry table */
-  RAM_FUN_TABLE (rwx)   : ORIGIN = 0x2016E300, LENGTH = 0x2016E3F0 - 0x2016E300     /* 240B 	 */
+  RAM_FUN_TABLE (rwx)   : ORIGIN = 0x2016C300, LENGTH = 0x2016C3F0 - 0x2016C300     /* 240B 	 */
   
   /* RAM image Signature */
-  RAM_IMG_SIGN (rwx)    : ORIGIN = 0x2016E3F0, LENGTH = 0x2016E400 - 0x2016E3F0		/*  16B      */
+  RAM_IMG_SIGN (rwx)    : ORIGIN = 0x2016C3F0, LENGTH = 0x2016C400 - 0x2016C3F0		/*  16B      */
     
   /* Internal SRAM for text, rodata & data */
-  RAM (rwx)             : ORIGIN = 0x2016E400, LENGTH = 0x20177800 - 0x2016E400		/*  37KB     */
+  RAM (rwx)             : ORIGIN = 0x2016C400, LENGTH = 0x20177800 - 0x2016C400		/*  45KB     */
   
   /* Non-Cacheable memory, defined by MPU configuration */
   /* RAM_NC (rwx)          : ORIGIN = 0x2017BB00, LENGTH = 0x2017DF00 - 0x2017BB00	*/	/*  9KB 	 */
@@ -495,7 +495,7 @@ SECTIONS
 		KEEP(*fw_uart_boot.o(.data*))
 		KEEP(*fw_flash_boot.o(.data*))
 		KEEP(*fw_vow_rom_boot.o(.data*))
-		KEEP(*fw_snand_boot.o(.data*))
+		KEEP(*(.rom.snand_boot.data))
 		KEEP(*(.rom.hal_uart.data))
 		KEEP(*(.rom.hal_i2c.data))
 		KEEP(*(.rom.hal_timer.data))
@@ -553,8 +553,8 @@ SECTIONS
 		KEEP(*strproc.o(.bss*))
 		KEEP(*(.rom.wlan.bss))
 		KEEP(*(.rom.ssl.bss))
-		KEEP(*fw_snand_boot.o(.bss*))
-		KEEP(*fw_snand_boot.o(COMMON))
+		KEEP(*(.rom.snand_boot.bss))
+		KEEP(*(.rom.hal_sys_ctrl.bss))
 		__rom_bss_end__ = .;
 
 	} > ROM_USED_RAM
@@ -603,7 +603,7 @@ SECTIONS
 		*hal_uart.o(.data*)
 		*hal_i2s.o(.data*)
 		*lib_a*(.data*)
-		*hal_dram_init.o(.data*)
+		*hal_dram*.o(.data*)
 		
 		. = ALIGN(4);
 		/* preinit data */
@@ -644,18 +644,26 @@ SECTIONS
 		
 		__ram_code_text_start__ = .;
 		*ram_start.o(.text*)
-		*hal_pinmux.o(.text*)
-		*hal_uart.o(.text*)
-		*hal_timer.o(.text*)
-		*hal_sys_ctrl.o(.text*)
-		*hal_dram_init.o(.text*)
-		*hal_spic.o(.text*)
-		*hal_gdma.o(.text*)
-		*hal_wdt.o(.text*)
-		*mpu_config.o(.text*)
 		*app_start.o(.text*)
+		*mpu_config.o(.text*)
+		*hal_sys_ctrl.o(.text*)
+		*hal_dram*.o(.text*)
+		*hal_gdma.o(.text*)
+		*hal_gpio.o(.text*)
+		*hal_flash.o(.text*)
+		*hal_timer.o(.text*)
+		*hal_uart.o(.text*)
+		*hal_wdt.o(.text*)
+		*hal_pinmux.o(.text*)
+		*hal_spic.o(.text*)
+		*(.ram.hal_pmc.text*)
+		*libc_wrap.o(.text*)
 		*lib_a*(.text*)
-		*(.text*)
+        /* contain NSC function */
+        *rtos_api_s.o(.text*)
+        *stack_s.o(.text*)
+        *task_s.o(.text*)
+        *cmse_nonsecure_call.o*(.text*)
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
 	} > RAM
@@ -675,8 +683,7 @@ SECTIONS
 		*hal_uart.o(.rodata*)
 		*lib_a*(.rodata*)
 		*mpu_config.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
-		*hal_dram_init.o(.rodata.str1*)
+		*hal_dram*.o(.rodata*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > RAM
@@ -692,7 +699,7 @@ SECTIONS
 		*(.ram.*.bss*)		
 		*ram_start.o(.bss*)
 		*ram_start.o(COMMON)
-		*hal_dram_init.o(.bss*)
+		*hal_dram*.o(.bss*)
 	} > RAM
 
 	.non_secure.bss :
@@ -733,7 +740,7 @@ SECTIONS
 		KEEP(*fw_flash_boot.o(.rom_temp.bss))
 		KEEP(*fw_voe_rom_boot.o(.rom_temp.bss))
 		KEEP(*fw_uart_boot.o(.rom_temp.bss))	
-		KEEP(*fw_snand_boot.o(.rom_temp.bss))
+		KEEP(*(.rom_temp.bss))
 		__rom_temp_bss_end__ = .;
 
 		. = ALIGN(32);

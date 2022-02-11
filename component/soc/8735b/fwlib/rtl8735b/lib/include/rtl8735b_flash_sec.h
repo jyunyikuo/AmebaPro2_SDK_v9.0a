@@ -283,6 +283,10 @@ hal_status_t hal_rtl_flash_sec_disable_rmp_region(hal_flash_sec_adapter_t *adtr,
 hal_status_t hal_rtl_flash_sec_calculate_tag_base(uint32_t cache_line_size, uint32_t tag_size,
 		uint32_t flash_addr, uint32_t region_size, uint32_t tag_region_addr,
 		uint32_t *tag_base, uint32_t *tag_region_size);
+hal_status_t hal_rtl_flash_sec_default_calculate_tag_base(uint32_t flash_addr, uint32_t region_size,
+		uint32_t tag_region_addr, uint32_t *tag_base,
+		uint32_t *tag_region_size);
+hal_status_t hal_rtl_flash_sec_disable_dec_region(hal_flash_sec_adapter_t *adtr, uint8_t dec_region_sel);
 
 #endif
 

@@ -2,7 +2,7 @@
  * @file     platform_conf_s_ns.h
  * @brief    The configuration for AmebaPro High Power(TM9) platform.
  * @version  V1.00
- * @date     2021-03-02
+ * @date     2022-01-12
  *
  * @note
  *
@@ -47,7 +47,7 @@
 #define CONFIG_OTG_EN                       1
 #define CONFIG_SDIO_HOST_EN                 1
 #define CONFIG_SDHOST_EN                    1
-#define CONFIG_MII_EN                       1
+#define CONFIG_MII_EN                       0
 #define CONFIG_WLAN_EN                      1
 #define CONFIG_CRYPTO_EN                    1
 #define CONFIG_ISP_EN                       1
@@ -68,7 +68,7 @@
 #define CONFIG_SNAND_FLASH_EN               1
 
 #if defined(CONFIG_OTG_EN)
-#if 1 //host
+#if 0 //host
 #undef DWC_DEVICE_ONLY
 #define DWC_HOST_ONLY
 #else   //device
@@ -113,16 +113,14 @@
 #define CONFIG_SEC_SDH                        SET_NS_STATE
 #define CONFIG_SEC_MII                        SET_NS_STATE
 #define CONFIG_SEC_WLAN                       SET_NS_STATE
-#define CONFIG_SEC_ISP                        SET_S_STATE
-#define CONFIG_SEC_ENC                        SET_S_STATE
+#define CONFIG_SEC_ISP                        SET_NS_STATE
+#define CONFIG_SEC_ENC                        SET_NS_STATE
 #define CONFIG_SEC_VOE                        SET_S_STATE
-#define CONFIG_SEC_NN                         SET_S_STATE
-#define CONFIG_SEC_ECDSA                      SET_NS_STATE
-#define CONFIG_SEC_ED25519                    SET_NS_STATE      //Rename EDDSA
-#define CONFIG_SEC_TRNG                       SET_NS_STATE
-#define CONFIG_SEC_RSA                        SET_NS_STATE
+#define CONFIG_SEC_NN                         SET_NS_STATE
+#define CONFIG_SEC_ECDSA                      SET_S_STATE
+#define CONFIG_SEC_ED25519                    SET_S_STATE      //Rename EDDSA
+#define CONFIG_SEC_RSA                        SET_S_STATE
 #define CONFIG_SEC_FlashCtrl                  SET_NS_STATE
-#define CONFIG_SEC_AON                        SET_S_STATE
 #define CONFIG_SEC_PonGPIO                    SET_NS_STATE
 #define CONFIG_SEC_GPIO                       SET_NS_STATE
 #define CONFIG_SEC_SPIC_NAND                  SET_NS_STATE

@@ -9,9 +9,8 @@
 #define CMD_FILELOADER_SET_PARAMS           MM_MODULE_CMD(0x00)  // set parameter
 #define CMD_FILELOADER_GET_PARAMS           MM_MODULE_CMD(0x01)  // get parameter
 #define CMD_FILELOADER_SET_TEST_FILE_PATH   MM_MODULE_CMD(0x02)  // set test file path
-#define CMD_FILELOADER_SET_TEST_DIR_PATH    MM_MODULE_CMD(0x03)  // set test files directory
-#define CMD_FILELOADER_SET_FILE_NUM         MM_MODULE_CMD(0x04)  // set tested file num
-#define CMD_FILELOADER_SET_DECODE_PROCESS   MM_MODULE_CMD(0x05)  // set the decode process function before data sent to next module
+#define CMD_FILELOADER_SET_FILE_NUM         MM_MODULE_CMD(0x03)  // set tested file num
+#define CMD_FILELOADER_SET_DECODE_PROCESS   MM_MODULE_CMD(0x04)  // set the decode process function before data sent to next module
 
 #define CMD_FILELOADER_APPLY                MM_MODULE_CMD(0x20)  // for hardware module
 
@@ -40,7 +39,6 @@ typedef struct fileloader_ctx_s {
 	fileloader_params_t params;
 
 	char sd_dataset_file_path_in[64];
-	char sd_dataset_dir_path_in[64];
 
 	int load_file_num;
 

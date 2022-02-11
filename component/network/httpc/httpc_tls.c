@@ -243,7 +243,11 @@ exit:
 				goto exit;
 			}
 #else
+#if defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER == 0x03000000)
+			if ((ret = mbedtls_pk_parse_key(&tls->key, (const unsigned char *) client_key, strlen(client_key) + 1, NULL, 0, NULL, NULL)) != 0) {
+#else
 			if ((ret = mbedtls_pk_parse_key(&tls->key, (const unsigned char *) client_key, strlen(client_key) + 1, NULL, 0)) != 0) {
+#endif
 				printf("\n[HTTPC] ERROR: mbedtls_pk_parse_key %d\n", ret);
 				ret = -1;
 				goto exit;
@@ -270,11 +274,13 @@ exit:
 			mbedtls_ssl_conf_verify(conf, _verify_func, NULL);
 		}
 
-		if (ret = mbedtls_ssl_conf_max_frag_len(conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
+		if ((ret = mbedtls_ssl_conf_max_frag_len(conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096)) < 0) {
 			printf("\n[HTTPC] ERROR: mbedtls_ssl_conf_max_frag_len %d\n", ret);
 			ret = -1;
 			goto exit;
 		}
+#endif
 
 		if ((ret = mbedtls_ssl_setup(ssl, conf)) != 0) {
 			printf("\n[HTTPC] ERROR: mbedtls_ssl_setup %d\n", ret);

@@ -53,7 +53,6 @@ void hal_uart_en_ctrl_nsc(uint8_t uart_idx, BOOL en);
 
 #define hal_uart_lp_sclk_select              hal_uart_lp_sclk_select_nsc
 #define hal_uart_en_ctrl                     hal_uart_en_ctrl_nsc
-
 #endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
 
 

@@ -258,7 +258,7 @@
  * @{
  *****************************************************************************/
 #define ADC_SHIFT_SW_TRIG                       0
-#define ADC_BIT_SW_TRIG                         ((u32)0x00000001 << 0)                              /*!<R/W 0  This bit controls the ADC module to do a conersion. Every time this bit is set to 1, ADC module would switch to a new channel and do one conversion. Therefore, this bit could be used as a start-convert event which is controlled by software. Every time a conversion is done, software MUST clear this bit manually. 0: Disable the analog module and analog mux. 1: Enable the analog module and analog mux. And then start a new channel conversion. */
+#define ADC_BIT_SW_TRIG                         ((u32)0x00000001 << 0)                              /*!<R/W 0  This bit controls the ADC module to do a conversion. Every time this bit is set to 1, ADC module would switch to a new channel and do one conversion. Therefore, this bit could be used as a start-convert event which is controlled by software. Every time a conversion is done, software MUST clear this bit manually. 0: Disable the analog module and analog mux. 1: Enable the analog module and analog mux. And then start a new channel conversion. */
 /** @} */
 
 /**************************************************************************//**
@@ -278,7 +278,7 @@
 #define ADC_SHIFT_STS_EMPTY                     2
 #define ADC_BIT_STS_EMPTY                       ((u32)0x00000001 << 2)                              /*!<R 0  This bit directly reflects the FIFO empty status. 0: FIFO is empty. 1: FIFO is NOT empty. */
 #define ADC_SHIFT_STS_FULL                      1
-#define ADC_BIT_STS_FULL                        ((u32)0x00000001 << 1)                              /*!<R 0  This bit directly reflects the FIFO full status. 0: FIFO is full. 1: FIFO is NOT full. */
+#define ADC_BIT_STS_FULL                        ((u32)0x00000001 << 1)                              /*!<R 0  This bit directly reflects the FIFO full status. 0: FIFO is NOT full. 1: FIFO is full. */
 #define ADC_SHIFT_STS_BUSY                      0
 #define ADC_BIT_STS_BUSY                        ((u32)0x00000001 << 0)                              /*!<R 0  This bit reflects the ADC is busy or not. If the ADC is processing a conversion of a channel, this bit remains 1 which indicates it's busy. Once a conversion is done, this bit becomes 0 which indicates its' ready to do another conversion. 0: The ADC is ready. 1: The ADC is busy. */
 /** @} */
@@ -608,22 +608,15 @@
  * @brief  ADC Delay Count Register                  (@ 0X0A0)
  * @{
  *****************************************************************************/
-#define ADC_SHIFT_SAMPLE_CLK_PHASE_SEL               8
-#define ADC_MASK_SAMPLE_CLK_PHASE_SEL                ((u32)0x00000003 << 8)                              /*!<R/W 0  This field defines the ADC sample clock phase selection. 00, 10: 90 degrees 01: 0 degrees 11: 180 degrees */
-#define ADC_SHIFT_DATA_DELAY                         2
-#define ADC_MASK_DATA_DELAY                          ((u32)0x00000003 << 2)                              /*!<R/W 0  This field define the ADC data capture delay selection. 00 : Data output from channel is delayed by 0 ADC clock cycle 01: Data output from channel is delayed by 1 ADC clock cycles 10: Data output from channel is delayed by 2 ADC clock cycles 11: Data output from channel is delayed by 3 ADC clock cycles */
-/** @} */
+/* Weide removed the auto-generated bitfields on Jason's advice, as these registers will not be used by customer.*/
 
 /**************************************************************************//**
  * @defgroup ADC_DBG_SEL
  * @brief  ADC Debug Select Register                 (@ 0X0A4)
  * @{
  *****************************************************************************/
-#define ADC_SHIFT_DBG_SEL                            2
-#define ADC_MASK_DBG_SEL                             ((u32)0x00000003 << 2)                              /*!<R/W 0  This field defines the signal select when ADC is in Debug Mode, and only used for debugging by the Designer during chip bring-up. */
-#define ADC_SHIFT_DBG_EN                             1
-#define ADC_BIT_DBG_EN                               ((u32)0x00000001 << 1)                              /*!<R/W 0  This field defines if the ADC is set the ADC operation mode - Normal Mode or Debug Mode. 0: ADC is not in Debug Mode. (Normal operation) 1: ADC is in Debug Mode. */
-/** @} */
+/* Weide removed the auto-generated bitfields on Jason's advice, as these registers will not be used by customer.*/
+
 
 /**************************************************************************//**
  * @defgroup ADC_VREF_SETTLE_TIME

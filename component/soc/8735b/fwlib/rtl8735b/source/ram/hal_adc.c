@@ -33,10 +33,7 @@
 #include "hal_pinmux.h"
 #include "hal_cache.h"
 //#include "hal_timer.h" // commented out unless hal_delay_us/hal_delay_ms is used here
-
-#if defined(CONFIG_BUILD_NONSECURE)
-#include "hal_otp.h"
-#endif
+#include "hal_gpio.h" // weide added to support use of hal_gpio_pull_ctrl() function
 
 #include "hal_irq.h"
 
@@ -98,17 +95,26 @@ hal_status_t hal_adc_pin_init(hal_adc_adapter_t *phal_adc_adapter)
 
 				if (adc_ch_cnt < 4) { // first 4 pins - pure ADC
 					retv = hal_pinmux_register((hal_adc_stubs.hal_adc_pin_list[adc_ch_cnt]).pin_name, (PID_ADC0 + adc_ch_cnt));
+
 				} else { // last 4 pins - share with comparator
+
+					if ((hal_adc_stubs.hal_adc_pin_list[adc_ch_cnt]).pin_name == PIN_A0) {
+						hal_pinmux_unregister(PIN_A0, PID_JTAG); // Unregister GPIO_A0 as JTAG/SWD
+						hal_gpio_pull_ctrl(PIN_A0, 0); // Set GPIO_A0 to High-Z
+						DBG_ADC_INFO("GPIO_A0: Unregister JTAG/SWD pinmux, set pull_ctrl = High-Z\r\n");
+					}
+
+					if ((hal_adc_stubs.hal_adc_pin_list[adc_ch_cnt]).pin_name == PIN_A1) {
+						hal_pinmux_unregister(PIN_A1, PID_JTAG); // Unregister GPIO_A1 as JTAG/SWD
+						hal_gpio_pull_ctrl(PIN_A1, 0); // Set GPIO_A1 to High-Z
+						DBG_ADC_INFO("GPIO_A1: Unregister JTAG/SWD pinmux, set pull_ctrl = High-Z\r\n");
+					}
+
 					retv = hal_pinmux_register((hal_adc_stubs.hal_adc_pin_list[adc_ch_cnt]).pin_name, FUNC_COMP_ADC);
 				}
 
 				if (retv != HAL_OK) {
 					DBG_ADC_ERR("retv post pwr down: %d\r\n", retv);
-					return retv;
-				}
-
-				if (retv != HAL_OK) {
-					DBG_ADC_ERR("retv before pin en sts: %d\r\n", retv);
 					return retv;
 				}
 
@@ -159,6 +165,72 @@ hal_status_t hal_adc_pin_deinit(hal_adc_adapter_t *phal_adc_adapter)
 	}
 
 	return HAL_OK;
+}
+
+/** \brief Description of hal_adc_reinit
+ *
+ *    hal_adc_reinit is used for adc RE-initialization, thus it excludes pinmux registration and pin power controls.
+ *
+ *   \param[in] hal_adc_adapter_t *phal_adc_adapter:      Pointer to ADC control adapter.
+ *   \return void        Void.
+ */
+void hal_adc_reinit(hal_adc_adapter_t *phal_adc_adapter)
+{
+
+	DBG_ADC_INFO("hal_adc_reinit\r\n");
+
+	*(hal_adc_stubs.phal_adc_irq_adpt) = phal_adc_adapter;
+
+	hal_adc_reg_irq(phal_adc_adapter, (irq_handler_t) hal_adc_stubs.hal_adc_irq_handler);
+	hal_irq_set_priority(ADC_IRQn, ADC_IRQPri);
+
+	/* read calibration params */
+	if (phal_adc_adapter->use_cali != 0) {
+		DBG_ADC_INFO("read cali param\r\n");
+		hal_adc_read_cali_param((uint16_t)HP_ADC_GAIN_DENO_ADDR, (uint8_t *)(&(hal_adc_stubs.hal_adc_cali_para->gain_deno)),
+								sizeof(hal_adc_stubs.hal_adc_cali_para->gain_deno));
+		DBG_ADC_INFO("gain deno: %x\r\n", hal_adc_stubs.hal_adc_cali_para->gain_deno);
+		if ((uint16_t)hal_adc_stubs.hal_adc_cali_para->gain_deno == 0xFFFF) {
+			DBG_ADC_ERR("Read gain deno failed\r\n");
+			DBG_ADC_ERR("Not to use calibration.\r\n");
+			phal_adc_adapter->use_cali = 0;
+		}
+		hal_adc_read_cali_param((uint16_t)HP_ADC_GAIN_MOLE_ADDR, (uint8_t *)(&(hal_adc_stubs.hal_adc_cali_para->gain_mole)),
+								sizeof(hal_adc_stubs.hal_adc_cali_para->gain_mole));
+		DBG_ADC_INFO("gain mole: %x\r\n", hal_adc_stubs.hal_adc_cali_para->gain_mole);
+		if ((uint16_t)hal_adc_stubs.hal_adc_cali_para->gain_mole == 0xFFFF) {
+			DBG_ADC_ERR("Read gain mole failed\r\n");
+			DBG_ADC_ERR("Not to use calibration.\r\n");
+			phal_adc_adapter->use_cali = 0;
+		}
+
+		hal_adc_read_cali_param((uint16_t)HP_ADC_OFFSET_DENO_ADDR, (uint8_t *)(&(hal_adc_stubs.hal_adc_cali_para->offset_deno)),
+								sizeof(hal_adc_stubs.hal_adc_cali_para->offset_deno));
+		DBG_ADC_INFO("offset deno: %x\r\n", hal_adc_stubs.hal_adc_cali_para->offset_deno);
+		if ((uint16_t)hal_adc_stubs.hal_adc_cali_para->offset_deno == 0xFFFF) {
+			DBG_ADC_ERR("Read offset deno failed\r\n");
+			DBG_ADC_ERR("Not to use calibration.\r\n");
+			phal_adc_adapter->use_cali = 0;
+		}
+		hal_adc_read_cali_param((uint16_t)HP_ADC_OFFSET_MOLE_ADDR, (uint8_t *)(&(hal_adc_stubs.hal_adc_cali_para->offset_mole)),
+								sizeof(hal_adc_stubs.hal_adc_cali_para->offset_mole));
+		DBG_ADC_INFO("offset mole: %x\r\n", hal_adc_stubs.hal_adc_cali_para->offset_mole);
+		if ((uint32_t)hal_adc_stubs.hal_adc_cali_para->offset_mole == 0xFFFFFFFF) {
+			DBG_ADC_ERR("Read offset mole failed\r\n");
+			DBG_ADC_ERR("Not to use calibration.\r\n");
+			phal_adc_adapter->use_cali = 0;
+		}
+
+		hal_adc_read_cali_param((uint16_t)HP_ADC_BATT_INTERNAL_R_ADDR, (uint8_t *)(&(hal_adc_stubs.hal_adc_cali_para->batt_internal_r)),
+								sizeof(hal_adc_stubs.hal_adc_cali_para->batt_internal_r));
+		DBG_ADC_INFO("batt internal R mole: %x\n", hal_adc_stubs.hal_adc_cali_para->batt_internal_r);
+		if ((uint16_t)hal_adc_stubs.hal_adc_cali_para->batt_internal_r == 0xFFFF) {
+			DBG_ADC_ERR("Read battery internal R failed\r\n");
+			DBG_ADC_ERR("Not to use calibration.\r\n");
+			phal_adc_adapter->use_cali = 0;
+		}
+	}
+
 }
 
 /** \brief Description of hal_adc_init
@@ -828,25 +900,6 @@ uint32_t hal_adc_calc_cali_val(uint16_t adc_read_val, hal_adc_cali_para_t *phal_
  */
 void hal_adc_read_cali_param(uint16_t addr, uint8_t *param_addr, uint8_t param_len)
 {
-#if defined(CONFIG_BUILD_NONSECURE)
-	uint8_t rd_cnt;
-	uint8_t cali_param_readback[8] = {0};
-
-	hal_otp_init();
-	for (rd_cnt = 0; rd_cnt < param_len; rd_cnt++) {
-		if (!hal_otp_rd_syss(1, addr, (uint8_t *)cali_param_readback, param_len)) { // if function is normal, it returns 0
-			DBG_ADC_INFO("val: %x\r\n", cali_param_readback[rd_cnt]);
-		} else {
-			DBG_ADC_ERR("Error!\r\n");
-		}
-	}
-
-	for (rd_cnt = 0; rd_cnt < param_len; rd_cnt++) {
-		DBG_ADC_INFO("read param (%x): %x\r\n", (addr + rd_cnt), *(param_addr + rd_cnt));
-	}
-
-	hal_otp_deinit();
-#endif
 	hal_adc_stubs.hal_adc_read_cali_param(addr, param_addr, param_len);
 }
 
@@ -861,21 +914,10 @@ void hal_adc_read_cali_param(uint16_t addr, uint8_t *param_addr, uint8_t param_l
  */
 void hal_adc_write_cali_param(uint16_t addr, uint8_t *param_addr, uint8_t param_len)
 {
-#if defined(CONFIG_BUILD_NONSECURE)
-	uint8_t wr_cnt;
-	hal_otp_init();
-
-	hal_otp_wr_syss(1, addr, param_addr, param_len);
-
-	for (wr_cnt = 0; wr_cnt < param_len; wr_cnt++) {
-		DBG_ADC_INFO("write param (%x): %x\r\n", (addr + wr_cnt), *(param_addr + wr_cnt));
-	}
-
-	hal_otp_deinit();
-#endif
 	hal_adc_stubs.hal_adc_write_cali_param(addr, param_addr, param_len);
 }
 /** @} */ /* End of group hs_hal_adc */
 
 #endif
+
 

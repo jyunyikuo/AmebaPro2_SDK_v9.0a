@@ -21,6 +21,7 @@
 #elif UPPER_STACK_VERSION == VERSION_2021
 #include "upperstack_config.h"
 #endif
+#include <app_common_flags.h>
 
 /** @defgroup  PERIPH_Config Peripheral App Configuration
     * @brief This file is used to config app functions.

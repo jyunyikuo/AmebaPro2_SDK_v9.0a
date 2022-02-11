@@ -61,6 +61,7 @@
 
 volatile int crypto_done;
 volatile int crc_done;
+volatile uint8_t sk_used;
 
 //#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
 #if !defined(CONFIG_BUILD_NONSECURE)
@@ -414,7 +415,16 @@ void hal_crypto_engine_init_platform_en_ctrl(const int en)
 
 	hal_crypto_adapter_t *pcrypto_adapter = &g_rtl_cryptoEngine_s;
 	if (!((pcrypto_adapter->initmap) & INITMAP_S_REG)) {
-		hal_crypto_stubs_s.hal_crypto_engine_platform_en_ctrl(en);
+		if (ENABLE == sk_used) {
+			hal_sys_lxbus_shared_en(LXBUS_CTRL_CRYPTO, en);
+		} else {
+#if IS_CUT_TEST(CONFIG_CHIP_VER) || IS_CUT_A(CONFIG_CHIP_VER)
+			hal_sys_peripheral_en(CRYPTO_SYS, en);
+			hal_sys_lxbus_shared_en(LXBUS_CTRL_CRYPTO, en);
+#else
+			hal_crypto_stubs_s.hal_crypto_engine_platform_en_ctrl(en);
+#endif
+		}
 	}
 	if (en) {
 		(pcrypto_adapter->initmap) |= INITMAP_REG_NS_PLATFORM; //register non_s init
@@ -444,7 +454,16 @@ void hal_crypto_engine_init_platform(void *adapter, const int en)
 {
 	phal_crypto_adapter_t pcrypto_adapter = (phal_crypto_adapter_t)adapter;
 	if (!((pcrypto_adapter->initmap) & INITMAP_NS_REG)) {
-		hal_crypto_stubs_s.hal_crypto_engine_platform_en_ctrl(en);
+		if (ENABLE == sk_used) {
+			hal_sys_lxbus_shared_en(LXBUS_CTRL_CRYPTO, en);
+		} else {
+#if IS_CUT_TEST(CONFIG_CHIP_VER) || IS_CUT_A(CONFIG_CHIP_VER)
+			hal_sys_peripheral_en(CRYPTO_SYS, en);
+			hal_sys_lxbus_shared_en(LXBUS_CTRL_CRYPTO, en);
+#else
+			hal_crypto_stubs_s.hal_crypto_engine_platform_en_ctrl(en);
+#endif
+		}
 	}
 	if (en) {
 		(pcrypto_adapter->initmap) |= INITMAP_REG_S_PLATFORM;   //register s init
@@ -503,7 +522,6 @@ int hal_crypto_engine_init(void)
 {
 	int ret = SUCCESS;
 	hal_crypto_adapter_t *pcrypto_adapter = &HAL_CRYPTO_ADAPTER;
-
 	if (pcrypto_adapter->isInit) {
 		DBG_CRYPTO_WARN("Crypto engine has initialized!\r\n");
 		return SUCCESS;
@@ -542,7 +560,6 @@ int hal_crypto_engine_deinit(void)
 {
 	int ret = SUCCESS;
 	hal_crypto_adapter_t *pcrypto_adapter = &HAL_CRYPTO_ADAPTER;
-
 	if (pcrypto_adapter->isInit == 0) {
 		DBG_CRYPTO_WARN("Crypto engine doesn't initialize!\r\n");
 		return SUCCESS;
@@ -568,6 +585,11 @@ int hal_crypto_engine_deinit(void)
 	return ret;
 }
 
+void hal_crypto_engine_key_stg_deinit(void)
+{
+	hal_sys_peripheral_en(CRYPTO_SYS, DISABLE);
+	sk_used = DISABLE;
+}
 
 //
 // IRQ
@@ -2556,6 +2578,10 @@ int hal_crypto_hmac_sha2_256_sk_init(IN const u8 *key, IN const u32 sk_cfg)
 #if CRYPTO_THREAD_MODE
 		critical_leave();
 #endif
+	} else {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
 	}
 	return ret;
 }
@@ -2963,6 +2989,64 @@ int hal_crypto_hmac_sha2_512_final(OUT u8 *pDigest)
 	return ret;
 }
 
+int hal_crypto_aes_sk_init_core(const u32 cipher_type, uint8_t key_num, IN const u32 keylen)
+{
+	int ret;
+	uint32_t sk_cfg = 0x0;
+	hal_crypto_key_cfg_t key_cfg;
+	hal_crypto_wb_cfg_t wb_cfg;
+#if IS_CUT_TEST(CONFIG_CHIP_VER)
+	DBG_CRYPTO_ERR("Test-chip NON-support\r\n");
+	ret = SUCCESS;
+	return ret;
+#else
+
+#if CRYPTO_THREAD_MODE
+	critical_enter();
+#endif
+	hal_crypto_adapter_t *pcrypto_adapter = &HAL_CRYPTO_ADAPTER;
+
+	if (pcrypto_adapter->isInit != _TRUE) {
+		return _ERRNO_CRYPTO_ENGINE_NOT_INIT; // not init yet
+	}
+	if ((keylen != CRYPTO_AES128_KEY_LENGTH) && (keylen != CRYPTO_AES192_KEY_LENGTH) &&
+		(keylen != CRYPTO_AES256_KEY_LENGTH)) {
+		return _ERRNO_CRYPTO_KEY_OutRange;
+	}
+#if defined (CONFIG_EXRAM_PSRAM_EN) && (CONFIG_EXRAM_PSRAM_EN == 1)
+	psram_check = 0;
+	crypto_buf_addr_t crypto_buf_list[1] = {
+		{.buf_addr = key}
+	};
+	exram_psram_addr_check(pcrypto_adapter, &crypto_buf_list[0], 1);
+#endif
+
+	if (pcrypto_adapter->isInit != _TRUE) {
+		return _ERRNO_CRYPTO_ENGINE_NOT_INIT; // not init yet
+	}
+
+	key_cfg.b.sel = (KEY_STG_SKTYPE_LD_SK & 0xF);
+	key_cfg.b.idx = (key_num & 0xF);
+	HAL_CRYPTO_FUNC_STUBS.hal_crypto_set_sk_cfg_info(&sk_cfg, (key_cfg.w), CRYPTO_KEY_STG_ROLE_KEYCFG);
+
+	wb_cfg.b.sel = (KEY_STG_WBTYPE_WB_ONLY_BUF & 0xF);
+	wb_cfg.b.idx = (KEY_STG_SK_IDX_NONE & 0xF);
+	HAL_CRYPTO_FUNC_STUBS.hal_crypto_set_sk_cfg_info(&sk_cfg, (wb_cfg.w), CRYPTO_KEY_STG_ROLE_WBCFG);
+	if (sk_cfg == 0x0) {
+		ret = FAIL;
+		dbg_printf("get sk_cfg fail:0x%x\r\n", sk_cfg);
+		return ret;
+	}
+
+	ret =  HAL_CRYPTO_FUNC_STUBS.hal_crypto_cipher_sk_init(pcrypto_adapter, cipher_type, sk_cfg, keylen);
+	if (SUCCESS == ret) {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
+	}
+	return ret;
+#endif
+}
 
 // AES-CBC
 
@@ -3138,6 +3222,14 @@ int hal_crypto_aes_ecb_init(IN const u8 *key, IN const u32 keylen)
 #endif
 
 	ret =  HAL_CRYPTO_FUNC_STUBS.hal_crypto_cipher_init(pcrypto_adapter, CIPHER_TYPE_AES_ECB, key, keylen);
+	return ret;
+}
+
+int hal_crypto_aes_ecb_sk_init(uint8_t key_num, IN const u32 keylen)
+{
+	int ret;
+
+	ret = hal_crypto_aes_sk_init_core(CIPHER_TYPE_AES_ECB, key_num, keylen);
 	return ret;
 }
 
@@ -4129,6 +4221,14 @@ int hal_crypto_aes_gcm_init(IN const u8 *key, IN const u32 keylen)
 #endif
 
 	ret = HAL_CRYPTO_FUNC_STUBS.hal_crypto_cipher_init(pcrypto_adapter, CIPHER_TYPE_AES_GCM, key, keylen);
+	return ret;
+}
+
+int hal_crypto_aes_gcm_sk_init(uint8_t key_num, IN const u32 keylen)
+{
+	int ret;
+
+	ret = hal_crypto_aes_sk_init_core(CIPHER_TYPE_AES_GCM, key_num, keylen);
 	return ret;
 }
 
@@ -5573,6 +5673,11 @@ int hal_crypto_key_storage_securekey(uint8_t key_num, bool _UseKey)
 	}
 
 	ret = HAL_CRYPTO_FUNC_STUBS.hal_crypto_key_storage_securekey(pcrypto_adapter, key_num, _UseKey);
+	if (SUCCESS == ret) {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
+	}
 	return ret;
 }
 
@@ -5586,6 +5691,11 @@ int hal_crypto_key_storage_writeback(uint8_t key_num, bool _IsWriteback)
 	}
 
 	ret = HAL_CRYPTO_FUNC_STUBS.hal_crypto_key_storage_writeback(pcrypto_adapter, key_num, _IsWriteback);
+	if (SUCCESS == ret) {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
+	}
 	return ret;
 }
 
@@ -5602,6 +5712,11 @@ int hal_crypto_key_storage_writekey(uint8_t *key, uint8_t keylen, uint8_t key_nu
 	}
 
 	ret = HAL_CRYPTO_FUNC_STUBS.hal_crypto_key_storage_writekey(pcrypto_adapter, key, keylen, key_num);
+	if (SUCCESS == ret) {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
+	}
 	return ret;
 }
 
@@ -5615,6 +5730,11 @@ int hal_crypto_key_storage_lock(uint8_t key_num, bool _Lock)
 	}
 
 	ret = HAL_CRYPTO_FUNC_STUBS.hal_crypto_key_storage_lock(pcrypto_adapter, key_num);
+	if (SUCCESS == ret) {
+		if (DISABLE == sk_used) {
+			sk_used = ENABLE;
+		}
+	}
 	return ret;
 }
 #endif
@@ -5770,7 +5890,7 @@ int hal_crypto_crc_dma(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc)
 	uint32_t loopWait;
 	volatile uint32_t crcstat_err;
 
-	loopWait = 10000;/* hope long enough */
+	loopWait = 1000000;/* hope long enough */
 
 	if (pcrypto_adapter->isInit != _TRUE) {
 		return _ERRNO_CRYPTO_ENGINE_NOT_INIT; // not init yet
@@ -5921,220 +6041,46 @@ int hal_crypto_crc32_dma(IN const u8 *message, IN const u32 msglen, OUT u32 *pCr
 	return ret;
 }
 
-
 int hal_crypto_crc_division(int order, unsigned long polynom,
 							unsigned long crcinit, unsigned long crcxor, int refin, int refout,
-							IN uint32_t *message, IN uint32_t msglen, OUT uint32_t *Result)
+							IN uint8_t *message, IN uint32_t msglen, OUT uint32_t *Result)
 {
-	uint32_t *nextmessage;
-	uint32_t *pAsicDigest;
-	u32 loop, remain, proceeded_CRC_init = 0;
-	int process_msglen = 8192;
-	int i = 0;
-	int ret;
-	//process_msglen = 32;
-	ret = SUCCESS;
-	loop = msglen / process_msglen;
-	if (msglen % process_msglen) {
-		loop++;
-	}
+	uint8_t *nextmessage;
+	uint32_t remain, process_msglen, proceeded_CRC_init, tmp_digest;
+	unsigned long tmp_crcxor;
+	int tmp_refout;
+	int ret = SUCCESS;
 	remain = msglen;
 	nextmessage = message;
-
-#if 1
-	uint8_t _asic_digest[1][64];
-	memset(&_asic_digest[0][0], 0, sizeof(_asic_digest[0]));
-	pAsicDigest = (uint32_t *)&_asic_digest[0][32];
-#endif
-
-	for (i = 0; i < loop; i++) {
-		if (i == 0) {
-			DBG_CRYPTO_INFO("First\r\n");
-			ret = hal_crypto_crc_setting(order, polynom, crcinit, 0, refin, 0);
-			if (ret != SUCCESS) {
-				DBG_CRYPTO_ERR("Error %x\r\n", ret);
-				return ret;
-			}
-
-			ret = hal_crypto_crc_dma((uint8_t *)message, process_msglen, pAsicDigest);
-			if (ret != SUCCESS) {
-				DBG_CRYPTO_ERR("Error %x\r\n", ret);
-				return ret;
-			}
-			remain = remain - process_msglen;
+	while (remain > 0) {
+		if (remain <= CRC_MAX_MSG_LENGTH) {
+			process_msglen = remain;
+			tmp_crcxor = crcxor;
+			tmp_refout = refout;
 		} else {
-			if (remain <= process_msglen) {
-				DBG_CRYPTO_INFO("Final\r\n");
-				ret = hal_crypto_crc_setting(order, polynom, proceeded_CRC_init, crcxor, refin, refout);
-				if (ret != SUCCESS) {
-					DBG_CRYPTO_ERR("Error %x\r\n", ret);
-					return ret;
-				}
-
-				ret = hal_crypto_crc_dma((uint8_t *)nextmessage, remain, Result);
-				if (ret != SUCCESS) {
-					DBG_CRYPTO_ERR("Error %x\r\n", ret);
-					return ret;
-				}
-			} else {
-				DBG_CRYPTO_INFO("Update\r\n");
-				ret = hal_crypto_crc_setting(order, polynom, proceeded_CRC_init, 0, refin, 0);
-				if (ret != SUCCESS) {
-					DBG_CRYPTO_ERR("Error %x\r\n", ret);
-					return ret;
-				}
-
-				ret = hal_crypto_crc_dma((uint8_t *)nextmessage, process_msglen, pAsicDigest);
-				if (ret != SUCCESS) {
-					DBG_CRYPTO_ERR("Error %x\r\n", ret);
-					return ret;
-				}
-				remain = remain - process_msglen;
-			}
+			process_msglen = CRC_MAX_MSG_LENGTH;
+			tmp_crcxor = 0;
+			tmp_refout = 0;
 		}
-		nextmessage = nextmessage + process_msglen / 4;
-		//__crypto_mem_dump(nextmessage, process_msglen, "nextmessage:");
-		proceeded_CRC_init = (
-								 (*((uint8_t *)pAsicDigest))       |
-								 (*((uint8_t *)pAsicDigest + 1) << 8)   |
-								 (*((uint8_t *)pAsicDigest + 2) << 16)  |
-								 (*((uint8_t *)pAsicDigest + 3) << 24));
-	}
+		ret = hal_crypto_crc_setting(order, polynom, proceeded_CRC_init, tmp_crcxor, refin, tmp_refout);
+		if (ret != SUCCESS) {
+			DBG_CRYPTO_ERR("crc set Error %x, remain size = %d\r\n", ret, remain);
+			goto hal_crypto_crc_division_end;
+		}
 
+		ret = hal_crypto_crc_dma((uint8_t *)nextmessage, process_msglen, &tmp_digest);
+		if (ret != SUCCESS) {
+			DBG_CRYPTO_ERR("crc dma Error %x, remain size = %d\r\n", ret, remain);
+			goto hal_crypto_crc_division_end;
+		}
+		remain      -= process_msglen;
+		nextmessage += process_msglen;
+		proceeded_CRC_init = tmp_digest;
+	}
+hal_crypto_crc_division_end:
+	*Result = tmp_digest;
 	return ret;
 }
 
-
 #endif
-
-//#else
-//
-//int hal_crypto_crc_cmd(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc, hal_crypto_adapter_t *pcrypto_adapter)
-//{
-//    //hal_crypto_adapter_t *pcrypto_adapter = &g_rtl_cryptoEngine_ns;
-//    //hal_crypto_adapter_t *pcrypto_adapter = &g_rtl_cryptoEngine_s;
-//    int ret = SUCCESS;
-//
-//    if (pcrypto_adapter->isInit != _TRUE) {
-//        return _ERRNO_CRYPTO_ENGINE_NOT_INIT; // not init yet
-//    }
-//    if (pCrc == NULL) {
-//        return _ERRNO_CRYPTO_NULL_POINTER;
-//    }
-//    if (message == NULL) {
-//        return _ERRNO_CRYPTO_NULL_POINTER;
-//    }
-//    if (msglen == 0) {
-//        return 0;
-//    }
-//    if (msglen > CRC_MAX_MSG_LENGTH) {
-//        return _ERRNO_CRYPTO_MSG_OutRange;
-//    }
-//
-//    (void)(pcrypto_adapter);
-//    //ret = hal_crypto_stubs_ns.hal_crypto_crc_cmd(pcrypto_adapter, message, msglen);
-//    ret = hal_rom_crypto_crc_cmd(pcrypto_adapter, message, msglen);
-//
-//    if (ret != SUCCESS) {
-//#if CRYPTO_THREAD_MODE
-//        critical_leave();
-//#endif
-//        return ret;
-//    }
-//    /*
-//     * Doesn't need to wait crc_done or signal, because of using polling way
-//     ***/
-//
-//    //*pCrc = hal_crypto_stubs_ns.hal_crypto_crc_get_result(pcrypto_adapter);
-//    //*pCrc = hal_crypto_stubs_ns.hal_crypto_crc_get_result();
-//
-//    *pCrc = hal_rom_crypto_crc_get_result(pcrypto_adapter);
-//
-//#if CRYPTO_THREAD_MODE
-//    critical_leave();
-//#endif
-//
-//    return ret;
-//}
-//
-//int hal_crypto_crc_dma(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc, hal_crypto_adapter_t *pcrypto_adapter)
-//{
-//    //hal_crypto_adapter_t *pcrypto_adapter = &g_rtl_cryptoEngine_ns;
-//
-//    int ret = SUCCESS;
-//    uint32_t loopWait;
-//    volatile uint32_t crcstat_err;
-//
-//    loopWait = 10000;/* hope long enough */
-//
-//    if (pcrypto_adapter->isInit != _TRUE) {
-//        return _ERRNO_CRYPTO_ENGINE_NOT_INIT; // not init yet
-//    }
-//    if (pCrc == NULL) {
-//        return _ERRNO_CRYPTO_NULL_POINTER;
-//    }
-//    if (message == NULL) {
-//        return _ERRNO_CRYPTO_NULL_POINTER;
-//    }
-//    if (msglen == 0) {
-//        return 0;
-//    }
-//    if (msglen > CRC_MAX_MSG_LENGTH) {
-//        return _ERRNO_CRYPTO_MSG_OutRange;
-//    }
-//
-//    (void)(pcrypto_adapter);
-//    //ret = hal_crypto_stubs_ns.hal_crypto_crc_dma(pcrypto_adapter, message, msglen);
-//    ret = hal_rom_crypto_crc_dma(pcrypto_adapter, message, msglen);
-//
-//    if (ret != SUCCESS) {
-//#if 0 //CRYPTO_THREAD_MODE
-//        critical_leave();
-//#endif
-//        return ret;
-//    }
-//
-//    //DBG_CRYPTO_INFO("wait\r\n");
-//#if 0 //CRYPTO_THREAD_MODE
-//    {
-//        osEvent evt;
-//
-//        //DBG_CRYPTO_INFO("wait for signal , curID: 0x%x\r\n", curID);
-//        evt = osSignalWait(CRYPTO_SIGNAL, osWaitForever); // wait for 100 ms
-//
-//        if ((evt.status != osOK) && (evt.status != osEventSignal)) {
-//            DBG_CRYPTO_ERR("osSignalWait failed, evt.status = 0x%x \r\n", evt.status);
-//            return -1;
-//        }
-//    }
-//#else
-//    if (pcrypto_adapter->isIntMode) {
-//        //while ( crc_done == 0 );
-//        //TODO: can add some Delay / and loops limitation
-//        while (crc_done == 0) {
-//            loopWait--;
-//            if (loopWait == 0) {
-//                crcstat_err = (CRYPTO_MODULE->crc_stat_reg);
-//                DBG_CRYPTO_ERR("CRC interrupt doesn't arrive.Wait Timeout crc status =0x%08x\r\n", crcstat_err);
-//                return FAIL; /* error occurs */
-//            }
-//        }
-//    }
-//#endif
-//
-//    //*pCrc = hal_crypto_stubs_ns.hal_crypto_crc_get_result(pcrypto_adapter);
-//    //*pCrc = hal_crypto_stubs_ns.hal_crypto_crc_get_result();
-//    *pCrc = hal_rom_crypto_crc_get_result(pcrypto_adapter);
-//
-//#if CRYPTO_THREAD_MODE
-//    critical_leave();
-//#endif
-//
-//    return ret;
-//}
-//#endif
-
-//#endif
-
-
 #endif  // end of "#if CONFIG_CRYPTO_EN"

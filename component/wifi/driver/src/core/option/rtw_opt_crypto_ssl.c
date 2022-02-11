@@ -352,6 +352,12 @@ int rtw_crypto_ecc_point_is_at_infinity(sae_ecc_point *point)
 	return mbedtls_ecp_is_zero(point);
 }
 
+
+static int _random(void *p_rng, unsigned char *output, size_t output_len)
+{
+	rtw_get_random_bytes(output, output_len);
+	return 0;
+}
 //***************************************************************************************************
 // \brief			R = m * P
 //
@@ -365,7 +371,7 @@ int rtw_crypto_ecc_point_is_at_infinity(sae_ecc_point *point)
 int rtw_crypto_ecc_point_mul_bignum(sae_ecc_crypto *ecc, sae_ecc_point *R, sae_crypto_bignum *m, sae_ecc_point *P)
 {
 	int ret = 0;
-	MBEDTLS_MPI_CHK(mbedtls_ecp_mul(ecc, R, m, P, NULL, NULL));
+	MBEDTLS_MPI_CHK(mbedtls_ecp_mul(ecc, R, m, P, _random, NULL));
 cleanup:
 	if (ret < 0) {
 		ret = -1;

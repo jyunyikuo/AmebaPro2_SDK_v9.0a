@@ -87,7 +87,7 @@ extern "C"
 #define GAP_MAX_LEGACY_ADV_LEN                   31
 
 #define GAP_INVALID_ADV_HANDLE   0xFF
-/** End of GAP_LE_EXTENDED_Exported_Macros
+/** End of GAP_LE_EXTENDED_ADV_Exported_Macros
   * @}
   */
 
@@ -99,37 +99,41 @@ extern "C"
   */
 
 /** @brief GAP extended advertising state. */
-typedef enum {
-	EXT_ADV_STATE_IDLE,         /**< Idle, no advertising. */
-	EXT_ADV_STATE_START,        /**< Start Advertising. A temporary state, haven't received the result. */
-	EXT_ADV_STATE_ADVERTISING,  /**< Advertising. */
-	EXT_ADV_STATE_STOP,         /**< Stop Advertising. A temporary state, haven't received the result. */
+typedef enum
+{
+    EXT_ADV_STATE_IDLE,         /**< Idle, no advertising. */
+    EXT_ADV_STATE_START,        /**< Start Advertising. A temporary state, haven't received the result. */
+    EXT_ADV_STATE_ADVERTISING,  /**< Advertising. */
+    EXT_ADV_STATE_STOP,         /**< Stop Advertising. A temporary state, haven't received the result. */
 } T_GAP_EXT_ADV_STATE;
 
 /** @brief Advertising Event Properties values for legacy advertising PDUs. */
-typedef enum {
-	LE_EXT_ADV_LEGACY_ADV_CONN_SCAN_UNDIRECTED           = 0x13, /**<  Connectable and scannable undirected. Advertising data or scan response data shall not exceed 31 bytes. */
-	LE_EXT_ADV_LEGACY_ADV_CONN_LOW_DUTY_DIRECTED         = 0x15, /**<  Connectable directed (low duty cycle). */
-	LE_EXT_ADV_LEGACY_ADV_CONN_HIGH_DUTY_DIRECTED        = 0x1D, /**<  Connectable directed (high duty cycle). */
-	LE_EXT_ADV_LEGACY_ADV_SCAN_UNDIRECTED                = 0x12, /**<  Scannable undirected. Advertising data or scan response data shall not exceed 31 bytes. */
-	LE_EXT_ADV_LEGACY_ADV_NON_SCAN_NON_CONN_UNDIRECTED   = 0x10, /**<  Non-connectable and non-scannable undirected. Advertising data shall not exceed 31 bytes. */
+typedef enum
+{
+    LE_EXT_ADV_LEGACY_ADV_CONN_SCAN_UNDIRECTED           = 0x13, /**<  Connectable and scannable undirected. Advertising data or scan response data shall not exceed 31 bytes. */
+    LE_EXT_ADV_LEGACY_ADV_CONN_LOW_DUTY_DIRECTED         = 0x15, /**<  Connectable directed (low duty cycle). */
+    LE_EXT_ADV_LEGACY_ADV_CONN_HIGH_DUTY_DIRECTED        = 0x1D, /**<  Connectable directed (high duty cycle). */
+    LE_EXT_ADV_LEGACY_ADV_SCAN_UNDIRECTED                = 0x12, /**<  Scannable undirected. Advertising data or scan response data shall not exceed 31 bytes. */
+    LE_EXT_ADV_LEGACY_ADV_NON_SCAN_NON_CONN_UNDIRECTED   = 0x10, /**<  Non-connectable and non-scannable undirected. Advertising data shall not exceed 31 bytes. */
 } T_LE_EXT_ADV_LEGACY_ADV_PROPERTY;
 
 /** @brief Advertising Event Properties values for extended advertising PDUs. */
-typedef enum {
-	LE_EXT_ADV_EXTENDED_ADV_NON_SCAN_NON_CONN_UNDIRECTED = 0x00, /**<  Non-connectable and non-scannable undirected. If only one advertising set is used, advertising data shall not exceed 1024 bytes. */
-	LE_EXT_ADV_EXTENDED_ADV_NON_SCAN_NON_CONN_DIRECTED   = 0x04, /**<  Non-connectable and non-scannable directed. If only one advertising set is used, advertising data shall not exceed 1024 bytes. */
-	LE_EXT_ADV_EXTENDED_ADV_CONN_UNDIRECTED              = 0x01, /**<  Connectable undirected. Advertising data shall not exceed 245 bytes. */
-	LE_EXT_ADV_EXTENDED_ADV_CONN_DIRECTED                = 0x05, /**<  Connectable directed. Advertising data shall not exceed 239 bytes. */
-	LE_EXT_ADV_EXTENDED_ADV_SCAN_UNDIRECTED              = 0x02, /**<  Scannable undirected. If only one advertising set is used, scan response data shall not exceed 991 bytes. */
-	LE_EXT_ADV_EXTENDED_ADV_SCAN_DIRECTED                = 0x06, /**<  Scannable directed. If only one advertising set is used, scan response data shall not exceed 991 bytes. */
+typedef enum
+{
+    LE_EXT_ADV_EXTENDED_ADV_NON_SCAN_NON_CONN_UNDIRECTED = 0x00, /**<  Non-connectable and non-scannable undirected. */
+    LE_EXT_ADV_EXTENDED_ADV_NON_SCAN_NON_CONN_DIRECTED   = 0x04, /**<  Non-connectable and non-scannable directed. */
+    LE_EXT_ADV_EXTENDED_ADV_CONN_UNDIRECTED              = 0x01, /**<  Connectable undirected. Advertising data shall not exceed 245 bytes. */
+    LE_EXT_ADV_EXTENDED_ADV_CONN_DIRECTED                = 0x05, /**<  Connectable directed. Advertising data shall not exceed 239 bytes. */
+    LE_EXT_ADV_EXTENDED_ADV_SCAN_UNDIRECTED              = 0x02, /**<  Scannable undirected. */
+    LE_EXT_ADV_EXTENDED_ADV_SCAN_DIRECTED                = 0x06, /**<  Scannable directed. */
 } T_LE_EXT_ADV_EXTENDED_ADV_PROPERTY;
 
 /** @brief Supported advertising parameters type. */
-typedef enum {
-	GAP_PARAM_EXT_ADV_MAX_DATA_LEN   = 0x330, /**<  Maximum length of supported data for use as advertisement data or scan
+typedef enum
+{
+    GAP_PARAM_EXT_ADV_MAX_DATA_LEN   = 0x330, /**<  Maximum length of supported data for use as advertisement data or scan
                                                     response data. Read only. Size is 2 bytes. */
-	GAP_PARAM_EXT_ADV_MAX_SETS       = 0x331, /**<  Maximum number of supported advertising sets. Read only. Size is 1 byte. */
+    GAP_PARAM_EXT_ADV_MAX_SETS       = 0x331, /**<  Maximum number of supported advertising sets. Read only. Size is 1 byte. */
 } T_LE_EXT_ADV_PARAM_TYPE;
 
 /** End of GAP_LE_EXTENDED_ADV_Exported_Types
@@ -327,13 +331,13 @@ uint8_t le_ext_adv_get_adv_handle_by_conn_id(uint8_t conn_id);
  * \endcode
  */
 T_GAP_CAUSE le_ext_adv_set_adv_param(uint8_t adv_handle, uint16_t adv_event_prop,
-									 uint32_t primary_adv_interval_min, uint32_t primary_adv_interval_max,
-									 uint8_t primary_adv_channel_map, T_GAP_LOCAL_ADDR_TYPE own_address_type,
-									 T_GAP_REMOTE_ADDR_TYPE peer_address_type, uint8_t *p_peer_address,
-									 T_GAP_ADV_FILTER_POLICY filter_policy, uint8_t tx_power,
-									 T_GAP_PHYS_PRIM_ADV_TYPE primary_adv_phy, uint8_t secondary_adv_max_skip,
-									 T_GAP_PHYS_TYPE secondary_adv_phy, uint8_t adv_sid,
-									 bool scan_req_notification_enable);
+                                     uint32_t primary_adv_interval_min, uint32_t primary_adv_interval_max,
+                                     uint8_t primary_adv_channel_map, T_GAP_LOCAL_ADDR_TYPE own_address_type,
+                                     T_GAP_REMOTE_ADDR_TYPE peer_address_type, uint8_t *p_peer_address,
+                                     T_GAP_ADV_FILTER_POLICY filter_policy, uint8_t tx_power,
+                                     T_GAP_PHYS_PRIM_ADV_TYPE primary_adv_phy, uint8_t secondary_adv_max_skip,
+                                     T_GAP_PHYS_TYPE secondary_adv_phy, uint8_t adv_sid,
+                                     bool scan_req_notification_enable);
 
 /**
  * @brief       Set GAP advertising data for an advertising set.
@@ -423,7 +427,7 @@ T_GAP_CAUSE le_ext_adv_set_adv_data(uint8_t adv_handle, uint16_t adv_data_len, u
  * \endcode
  */
 T_GAP_CAUSE le_ext_adv_set_scan_response_data(uint8_t adv_handle, uint16_t scan_data_len,
-		uint8_t *p_scan_data);
+                                              uint8_t *p_scan_data);
 
 /**
  * @brief       Set GAP random device address for an advertising set.
@@ -561,7 +565,7 @@ T_GAP_CAUSE le_ext_adv_start_setting(uint8_t adv_handle, uint8_t update_flags);
  * \endcode
  */
 T_GAP_CAUSE le_ext_adv_set_adv_enable_param(uint8_t adv_handle, uint16_t duration,
-		uint8_t max_ext_adv_evt);
+                                            uint8_t max_ext_adv_evt);
 
 /**
  * @brief       Enable extended advertising for one or more advertising sets.
@@ -829,6 +833,66 @@ T_GAP_CAUSE le_ext_adv_clear_set(void);
 T_GAP_CAUSE le_ext_adv_remove_set(uint8_t adv_handle);
 
 #if F_BT_LE_GAP_MSG_INFO_WAY
+/**
+* @brief  Set extended advertising gap message inform way.
+*
+*         Default value is True.
+*         If use_msg is True, gap will send the extended advertising gap message to io_queue registered by
+*         gap_start_bt_stack. Message type is @ref GAP_MSG_LE_EXT_ADV_STATE_CHANGE.
+*         If use_msg is False, gap will send the extended advertising gap message using callback function registered by
+*         @ref app_gap_callback. Message type is @ref GAP_MSG_LE_EXT_ADV_STATE_CHANGE_INFO.
+*
+* @param[in] use_msg Whether to use message.
+* @retval void
+*
+* <b>Example usage</b>
+* \code{.c}
+    int test(void)
+    {
+        le_ext_adv_gap_msg_info_way(false);
+    }
+
+    void app_handle_ext_adv_state_evt(uint8_t adv_handle, T_GAP_EXT_ADV_STATE new_state, uint16_t cause)
+    {
+        ......
+        switch (new_state)
+        {
+        case EXT_ADV_STATE_IDLE:
+            {
+            }
+            break;
+
+        case EXT_ADV_STATE_ADVERTISING:
+            {
+            }
+            break;
+
+        default:
+            break;
+        }
+        ......
+    }
+
+    T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data)
+    {
+        T_APP_RESULT result = APP_RESULT_SUCCESS;
+        T_LE_CB_DATA *p_data = (T_LE_CB_DATA *)p_cb_data;
+
+        ......
+        switch (cb_type)
+        {
+        case GAP_MSG_LE_EXT_ADV_STATE_CHANGE_INFO:
+            {
+                app_handle_ext_adv_state_evt(p_data->p_le_ext_adv_state_change_info->adv_handle,
+                                            (T_GAP_EXT_ADV_STATE)p_data->p_le_ext_adv_state_change_info->state,
+                                            p_data->p_le_ext_adv_state_change_info->cause);
+            }
+            break;
+        }
+        ......
+    }
+* \endcode
+*/
 void le_ext_adv_gap_msg_info_way(bool use_msg);
 #endif
 

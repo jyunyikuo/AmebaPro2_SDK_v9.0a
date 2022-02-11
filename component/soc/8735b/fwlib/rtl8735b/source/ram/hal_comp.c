@@ -94,6 +94,11 @@ void hal_comp_init(void)
 {
 	memset((void *)&comp_adapter, 0, sizeof(hal_comp_adapter_t));
 	AON_TypeDef *aon = AON;
+	aon->AON_REG_AON_CLK_CTRL &= ~(AON_BIT_INT_CLK_SEL);
+	aon->AON_REG_AON_PLL_CTRL0 &= ~(AON_MASK_PLL_R1_TUNE_2_0);
+	aon->AON_REG_AON_PLL_CTRL0 |= (7 << AON_SHIFT_PLL_R1_TUNE_2_0);
+	aon->AON_REG_AON_PLL_CTRL0 &= ~(AON_MASK_PLL_R2_TUNE_2_0);
+	aon->AON_REG_AON_PLL_CTRL0 |= (3 << AON_SHIFT_PLL_R2_TUNE_2_0);
 	aon->AON_REG_AON_FUNC_CTRL |= AON_BIT_COMP_FEN;
 	aon->AON_REG_AON_SD_CTRL0 |= AON_BIT_POW_SD;
 	hal_comp_write(0x44, 0x4020404);
@@ -141,6 +146,7 @@ void hal_comp_sw_trigger(void)
 	AON_TypeDef *aon = AON;
 	aon->AON_REG_AON_FUNC_CTRL |= AON_BIT_COMP_FEN;
 	hal_comp_write(0x40, 0x1);
+	hal_delay_ms(100);
 	hal_comp_write(0x40, 0x3);
 	comp_adapter.comp_mode = 2;
 }
@@ -305,11 +311,11 @@ void hal_comp_set_intr_ctrl(u8 ch_num, u8 en, u8 ctrl)
 {
 	//AON_TypeDef *aon = AON;
 	/*
-		ctrl:	sts
-		0:		00
-		1:		11
-		2:		10
-		3:		00 or 11
+	    ctrl:   sts
+	    0:      00
+	    1:      11
+	    2:      10
+	    3:      00 or 11
 	*/
 	u32 buff = 0;
 	if (en == 1) {

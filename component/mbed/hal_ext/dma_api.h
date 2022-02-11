@@ -33,7 +33,7 @@ extern "C" {
 ///@{
 typedef struct gdma_s gdma_t;
 
-typedef void (*dma_irq_handler)(uint32_t id);
+typedef u32(*dma_irq_handler)(void *id);
 /**
  *  @brief Initial the GDMA
  *  @param dma_obj: the GDMA object

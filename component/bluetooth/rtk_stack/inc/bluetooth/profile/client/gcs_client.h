@@ -668,85 +668,95 @@ extern "C" {
   */
 
 /** @brief  Discovery result type.*/
-typedef enum {
-	GCS_ALL_PRIMARY_SRV_DISCOV, //!<Response type for gcs_all_primary_srv_discovery
-	GCS_BY_UUID128_SRV_DISCOV,  //!<Response type for gcs_by_uuid128_srv_discovery
-	GCS_BY_UUID_SRV_DISCOV,     //!<Response type for gcs_by_uuid_srv_discovery
-	GCS_ALL_CHAR_DISCOV,        //!<Response type for gcs_all_char_discovery
-	GCS_BY_UUID_CHAR_DISCOV,    //!<Response type for gcs_by_uuid_char_discovery
-	GCS_BY_UUID128_CHAR_DISCOV, //!<Response type for gcs_by_uuid128_char_discovery
-	GCS_ALL_CHAR_DESC_DISCOV,   //!<Response type for gcs_all_char_descriptor_discovery
+typedef enum
+{
+    GCS_ALL_PRIMARY_SRV_DISCOV, //!<Response type for gcs_all_primary_srv_discovery
+    GCS_BY_UUID128_SRV_DISCOV,  //!<Response type for gcs_by_uuid128_srv_discovery
+    GCS_BY_UUID_SRV_DISCOV,     //!<Response type for gcs_by_uuid_srv_discovery
+    GCS_ALL_CHAR_DISCOV,        //!<Response type for gcs_all_char_discovery
+    GCS_BY_UUID_CHAR_DISCOV,    //!<Response type for gcs_by_uuid_char_discovery
+    GCS_BY_UUID128_CHAR_DISCOV, //!<Response type for gcs_by_uuid128_char_discovery
+    GCS_ALL_CHAR_DESC_DISCOV,   //!<Response type for gcs_all_char_descriptor_discovery
 } T_GCS_DISCOV_TYPE;
 
 /** @brief  Discovery result element.*/
-typedef union {
-	T_GATT_SERVICE_ELEM16        srv_uuid16_disc_data;
-	T_GATT_SERVICE_ELEM128       srv_uuid128_disc_data;
-	T_GATT_SERVICE_BY_UUID_ELEM  srv_disc_data;
-	T_GATT_CHARACT_ELEM16        char_uuid16_disc_data;
-	T_GATT_CHARACT_ELEM128       char_uuid128_disc_data;
-	T_GATT_CHARACT_DESC_ELEM16   char_desc_uuid16_disc_data;
-	T_GATT_CHARACT_DESC_ELEM128  char_desc_uuid128_disc_data;
+typedef union
+{
+    T_GATT_SERVICE_ELEM16        srv_uuid16_disc_data;
+    T_GATT_SERVICE_ELEM128       srv_uuid128_disc_data;
+    T_GATT_SERVICE_BY_UUID_ELEM  srv_disc_data;
+    T_GATT_CHARACT_ELEM16        char_uuid16_disc_data;
+    T_GATT_CHARACT_ELEM128       char_uuid128_disc_data;
+    T_GATT_CHARACT_DESC_ELEM16   char_desc_uuid16_disc_data;
+    T_GATT_CHARACT_DESC_ELEM128  char_desc_uuid128_disc_data;
 } T_GCS_DISCOV_RESULT_DATA;
 
 /** @brief  GCS discovery table element.*/
-typedef struct {
-	T_DISCOVERY_RESULT_TYPE result_type;
-	T_GCS_DISCOV_RESULT_DATA result_data;
+typedef struct
+{
+    T_DISCOVERY_RESULT_TYPE result_type;
+    T_GCS_DISCOV_RESULT_DATA result_data;
 } T_GCS_DISCOV_RESULT;
 
 /** @brief GCS client discovery result */
-typedef struct {
-	bool is_success;
-	T_GCS_DISCOV_TYPE discov_type;
-	uint16_t result_num;
-	T_GCS_DISCOV_RESULT *p_result_table;
+typedef struct
+{
+    bool is_success;
+    T_GCS_DISCOV_TYPE discov_type;
+    uint16_t result_num;
+    T_GCS_DISCOV_RESULT *p_result_table;
 } T_GCS_DISCOVERY_RESULT;
 
 /** @brief GCS client read data, used to inform app read response data */
-typedef struct {
-	uint16_t cause;
-	uint16_t handle;
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    uint16_t cause;
+    uint16_t handle;
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_GCS_READ_RESULT;
 
 /** @brief GCS client write result, used to inform app write response data */
-typedef struct {
-	uint16_t cause;
-	uint16_t handle;
-	T_GATT_WRITE_TYPE type;
+typedef struct
+{
+    uint16_t cause;
+    uint16_t handle;
+    T_GATT_WRITE_TYPE type;
 } T_GCS_WRITE_RESULT;
 
 /** @brief GCS client notification/indication*/
-typedef struct {
-	bool notify;
-	uint16_t handle;
-	uint16_t value_size;
-	uint8_t *p_value;
+typedef struct
+{
+    bool notify;
+    uint16_t handle;
+    uint16_t value_size;
+    uint8_t *p_value;
 } T_GCS_NOTIF_IND;
 
 /** @brief GCS client callback type */
-typedef enum {
-	GCS_CLIENT_CB_TYPE_DISC_RESULT,          //!< Discovery procedure state, done or pending.
-	GCS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
-	GCS_CLIENT_CB_TYPE_WRITE_RESULT,
-	GCS_CLIENT_CB_TYPE_NOTIF_IND,
-	GCS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    GCS_CLIENT_CB_TYPE_DISC_RESULT,          //!< Discovery procedure state, done or pending.
+    GCS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
+    GCS_CLIENT_CB_TYPE_WRITE_RESULT,
+    GCS_CLIENT_CB_TYPE_NOTIF_IND,
+    GCS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
 } T_GCS_CLIENT_CB_TYPE;
 
 /** @brief GCS client callback content */
-typedef union {
-	T_GCS_DISCOVERY_RESULT discov_result;
-	T_GCS_READ_RESULT  read_result;
-	T_GCS_WRITE_RESULT write_result;
-	T_GCS_NOTIF_IND    notif_ind;
+typedef union
+{
+    T_GCS_DISCOVERY_RESULT discov_result;
+    T_GCS_READ_RESULT  read_result;
+    T_GCS_WRITE_RESULT write_result;
+    T_GCS_NOTIF_IND    notif_ind;
 } T_GCS_CLIENT_CB_CONTENT;
 
 /** @brief GCS client callback data */
-typedef struct {
-	T_GCS_CLIENT_CB_TYPE     cb_type;
-	T_GCS_CLIENT_CB_CONTENT  cb_content;
+typedef struct
+{
+    T_GCS_CLIENT_CB_TYPE     cb_type;
+    T_GCS_CLIENT_CB_CONTENT  cb_content;
 } T_GCS_CLIENT_CB_DATA;
 
 /** End of GCS_Client_Exported_Types * @} */
@@ -913,7 +923,7 @@ T_GAP_CAUSE gcs_all_char_discovery(uint8_t conn_id, uint16_t start_handle, uint1
   * \endcode
   */
 T_GAP_CAUSE gcs_by_uuid_char_discovery(uint8_t conn_id, uint16_t start_handle,
-									   uint16_t end_handle, uint16_t uuid16);
+                                       uint16_t end_handle, uint16_t uuid16);
 /**
   * @brief  Send discovery characteristics request by caracteristic uuid.
   * @param[in]  conn_id        Connection ID
@@ -947,7 +957,7 @@ T_GAP_CAUSE gcs_by_uuid_char_discovery(uint8_t conn_id, uint16_t start_handle,
   * \endcode
   */
 T_GAP_CAUSE gcs_by_uuid128_char_discovery(uint8_t conn_id, uint16_t start_handle,
-		uint16_t end_handle, uint8_t *p_uuid128);
+                                          uint16_t end_handle, uint8_t *p_uuid128);
 /**
   * @brief  Send discovery characteristics descriptor request.
   * @param[in]  conn_id        Connection ID
@@ -982,7 +992,7 @@ T_GAP_CAUSE gcs_by_uuid128_char_discovery(uint8_t conn_id, uint16_t start_handle
   * \endcode
   */
 T_GAP_CAUSE gcs_all_char_descriptor_discovery(uint8_t conn_id, uint16_t start_handle,
-		uint16_t end_handle);
+                                              uint16_t end_handle);
 /**
   * @brief  Read characteristic by handle request.
   * @param[in]  conn_id        Connection ID
@@ -1077,7 +1087,7 @@ T_GAP_CAUSE gcs_attr_read(uint8_t conn_id, uint16_t  handle);
   * \endcode
   */
 T_GAP_CAUSE gcs_attr_read_using_uuid16(uint8_t conn_id, uint16_t start_handle, uint16_t end_handle,
-									   uint16_t uuid16);
+                                       uint16_t uuid16);
 /**
   * @brief  Read characteristic by 128 bit UUID request.
   * @param[in]  conn_id       Connection ID
@@ -1122,7 +1132,7 @@ T_GAP_CAUSE gcs_attr_read_using_uuid16(uint8_t conn_id, uint16_t start_handle, u
   * \endcode
   */
 T_GAP_CAUSE gcs_attr_read_using_uuid128(uint8_t conn_id, uint16_t start_handle, uint16_t end_handle,
-										uint8_t *p_uuid128);
+                                        uint8_t *p_uuid128);
 /**
   * @brief  Confirm from application when receive indication from server.
   * @param[in]  conn_id       Connection ID indicate which link is.
@@ -1190,7 +1200,7 @@ T_GAP_CAUSE gcs_attr_ind_confirm(uint8_t conn_id);
   * \endcode
   */
 T_GAP_CAUSE gcs_attr_write(uint8_t conn_id, T_GATT_WRITE_TYPE write_type, uint16_t handle,
-						   uint16_t length, uint8_t *p_data);
+                           uint16_t length, uint8_t *p_data);
 
 /**
   * @brief  Add general services client to application.
@@ -1211,7 +1221,7 @@ T_GAP_CAUSE gcs_attr_write(uint8_t conn_id, T_GATT_WRITE_TYPE write_type, uint16
   * \endcode
   */
 T_CLIENT_ID gcs_add_client(P_FUN_GENERAL_APP_CB app_cb, uint8_t link_num,
-						   uint16_t max_discov_table_size);
+                           uint16_t max_discov_table_size);
 #endif
 /** @} End of GCS_Client_Exported_Functions */
 

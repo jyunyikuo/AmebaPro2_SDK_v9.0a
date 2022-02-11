@@ -29,15 +29,16 @@ extern "C" {
  *
  * \ingroup BT_AVRCP
  */
-typedef enum t_bt_avrcp_element_attr {
-	BT_AVRCP_ELEM_ATTR_TITLE             = 0x01,
-	BT_AVRCP_ELEM_ATTR_ARTIST            = 0x02,
-	BT_AVRCP_ELEM_ATTR_ALBUM             = 0x03,
-	BT_AVRCP_ELEM_ATTR_TRACK             = 0x04,
-	BT_AVRCP_ELEM_ATTR_TOTAL_TRACK       = 0x05,
-	BT_AVRCP_ELEM_ATTR_GENRE             = 0x06,
-	BT_AVRCP_ELEM_ATTR_PLAYING_TIME      = 0x07,
-	BT_AVRCP_ELEM_ATTR_DEFAULT_COVER_ART = 0x08,
+typedef enum t_bt_avrcp_element_attr
+{
+    BT_AVRCP_ELEM_ATTR_TITLE             = 0x01,
+    BT_AVRCP_ELEM_ATTR_ARTIST            = 0x02,
+    BT_AVRCP_ELEM_ATTR_ALBUM             = 0x03,
+    BT_AVRCP_ELEM_ATTR_TRACK             = 0x04,
+    BT_AVRCP_ELEM_ATTR_TOTAL_TRACK       = 0x05,
+    BT_AVRCP_ELEM_ATTR_GENRE             = 0x06,
+    BT_AVRCP_ELEM_ATTR_PLAYING_TIME      = 0x07,
+    BT_AVRCP_ELEM_ATTR_DEFAULT_COVER_ART = 0x08,
 } T_BT_AVRCP_ELEM_ATTR;
 
 /**
@@ -47,14 +48,15 @@ typedef enum t_bt_avrcp_element_attr {
  *
  * \ingroup BT_AVRCP
  */
-typedef enum t_bt_avrcp_play_status {
-	BT_AVRCP_PLAY_STATUS_STOPPED  = 0x00,
-	BT_AVRCP_PLAY_STATUS_PLAYING  = 0x01,
-	BT_AVRCP_PLAY_STATUS_PAUSED   = 0x02,
-	BT_AVRCP_PLAY_STATUS_FWD_SEEK = 0x03,
-	BT_AVRCP_PLAY_STATUS_REV_SEEK = 0x04,
-	BT_AVRCP_PLAY_STATUS_FAST_FWD = 0x05,
-	BT_AVRCP_PLAY_STATUS_REWIND   = 0x06,
+typedef enum t_bt_avrcp_play_status
+{
+    BT_AVRCP_PLAY_STATUS_STOPPED  = 0x00,
+    BT_AVRCP_PLAY_STATUS_PLAYING  = 0x01,
+    BT_AVRCP_PLAY_STATUS_PAUSED   = 0x02,
+    BT_AVRCP_PLAY_STATUS_FWD_SEEK = 0x03,
+    BT_AVRCP_PLAY_STATUS_REV_SEEK = 0x04,
+    BT_AVRCP_PLAY_STATUS_FAST_FWD = 0x05,
+    BT_AVRCP_PLAY_STATUS_REWIND   = 0x06,
 } T_BT_AVRCP_PLAY_STATUS;
 
 /**
@@ -64,11 +66,12 @@ typedef enum t_bt_avrcp_play_status {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint32_t attribute_id;
-	uint16_t character_set_id;
-	uint16_t length;
-	uint8_t *p_buf;
+typedef struct
+{
+    uint32_t attribute_id;
+    uint16_t character_set_id;
+    uint16_t length;
+    uint8_t *p_buf;
 } T_BT_AVRCP_ELEMENT_ATTR;
 
 /**
@@ -78,9 +81,10 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint8_t attr;
-	uint8_t value;
+typedef struct
+{
+    uint8_t attr;
+    uint8_t value;
 } T_BT_AVRCP_APP_SETTING;
 
 /**
@@ -90,11 +94,12 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint32_t attribute_id;
-	uint16_t character_set_id;
-	uint16_t length;
-	uint8_t *p_buf;
+typedef struct
+{
+    uint32_t attribute_id;
+    uint16_t character_set_id;
+    uint16_t length;
+    uint8_t *p_buf;
 } T_BT_AVRCP_ITEM_ATTR;
 
 /**
@@ -104,17 +109,18 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint8_t   item_type;
-	uint16_t  item_length;
-	uint16_t  player_id;
-	uint8_t   major_type;
-	uint32_t  sub_type;
-	uint8_t   play_status;
-	uint8_t   feature_bitmask[16];
-	uint16_t  character_set_id;
-	uint16_t  display_name_length;
-	uint8_t  *p_display_name;
+typedef struct
+{
+    uint8_t   item_type;
+    uint16_t  item_length;
+    uint16_t  player_id;
+    uint8_t   major_type;
+    uint32_t  sub_type;
+    uint8_t   play_status;
+    uint8_t   feature_bitmask[16];
+    uint16_t  character_set_id;
+    uint16_t  display_name_length;
+    uint8_t  *p_display_name;
 } T_BT_AVRCP_MEDIA_PLAYER_ITEM;
 
 /**
@@ -124,15 +130,16 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint8_t   item_type;
-	uint16_t  item_length;
-	uint64_t  folder_uid;
-	uint8_t   folder_type;
-	uint8_t   is_playable;
-	uint16_t  character_set_id;
-	uint16_t  display_name_length;
-	uint8_t  *p_display_name;
+typedef struct
+{
+    uint8_t   item_type;
+    uint16_t  item_length;
+    uint64_t  folder_uid;
+    uint8_t   folder_type;
+    uint8_t   is_playable;
+    uint16_t  character_set_id;
+    uint16_t  display_name_length;
+    uint8_t  *p_display_name;
 } T_BT_AVRCP_FOLDER_ITEM;
 
 /**
@@ -142,16 +149,17 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint8_t                  item_type;
-	uint16_t                 item_length;
-	uint64_t                 media_element_uid;
-	uint8_t                  media_type;
-	uint16_t                 character_set_id;
-	uint16_t                 display_name_length;
-	uint8_t                 *p_display_name;
-	uint8_t                  num_of_attr;
-	T_BT_AVRCP_ELEMENT_ATTR *p_attr;
+typedef struct
+{
+    uint8_t                  item_type;
+    uint16_t                 item_length;
+    uint64_t                 media_element_uid;
+    uint8_t                  media_type;
+    uint16_t                 character_set_id;
+    uint16_t                 display_name_length;
+    uint8_t                 *p_display_name;
+    uint8_t                  num_of_attr;
+    T_BT_AVRCP_ELEMENT_ATTR *p_attr;
 } T_BT_AVRCP_MEDIA_ELEMENT_ITEM;
 
 /**
@@ -161,9 +169,10 @@ typedef struct {
  *
  * \ingroup BT_AVRCP
  */
-typedef struct {
-	uint16_t name_length;
-	uint8_t *p_name;
+typedef struct
+{
+    uint16_t name_length;
+    uint8_t *p_name;
 } T_BT_AVRCP_FOLDER;
 
 /**
@@ -666,7 +675,7 @@ bool bt_avrcp_group_navigate(uint8_t *bd_addr, bool next);
  * \ingroup BT_AVRCP
  */
 bool bt_avrcp_browsing_folder_items_get(uint8_t *bd_addr, uint8_t scope, uint32_t start_item,
-										uint32_t end_item, uint8_t attr_num, uint8_t *p_attr);
+                                        uint32_t end_item, uint8_t attr_num, uint8_t *p_attr);
 
 /**
  * bt_avrcp.h
@@ -687,7 +696,7 @@ bool bt_avrcp_browsing_folder_items_get(uint8_t *bd_addr, uint8_t scope, uint32_
  * \ingroup BT_AVRCP
  */
 bool bt_avrcp_browsing_item_attrs_get(uint8_t *bd_addr, uint8_t scope, uint64_t uid,
-									  uint16_t uid_counter, uint8_t attr_num, uint8_t *p_attr);
+                                      uint16_t uid_counter, uint8_t attr_num, uint8_t *p_attr);
 
 /**
  * bt_avrcp.h
@@ -741,7 +750,7 @@ bool bt_avrcp_browsing_browsed_player_set(uint8_t *bd_addr, uint16_t player_id);
  * \ingroup BT_AVRCP
  */
 bool bt_avrcp_browsing_path_change(uint8_t *bd_addr, uint16_t uid_counter,
-								   uint8_t direction, uint64_t folder_uid);
+                                   uint8_t direction, uint64_t folder_uid);
 
 /**
  * bt_avrcp.h

@@ -85,8 +85,7 @@ void rt_res_from_str(char *str, int *w, int *h);
 
 // bit0: degree/90
 // bit4: 0 Right & 1 Left
-typedef enum
-{
+typedef enum {
 	RT_ROTATE_0		= 0x00,
 	RT_ROTATE_90R	= 0x01,
 	RT_ROTATE_180R	= 0x02,
@@ -98,8 +97,7 @@ typedef enum
 
 // ref: http://soundfile.sapp.org/doc/WaveFormat/
 // 44 Bytes
-typedef struct
-{
+typedef struct {
 	char	ChunkID[4];
 	long	ChunkSize;
 	char	Format[4];
@@ -151,8 +149,7 @@ enum enum_rts_audio_type_id {
 	RTS_AUDIO_TYPE_ID_WAV,		// our added.
 };
 //
-typedef enum
-{
+typedef enum {
 	RT_AV_NONE		= 0x00,
 	RT_AV_DONTCARE	= 0xFF,
 	//

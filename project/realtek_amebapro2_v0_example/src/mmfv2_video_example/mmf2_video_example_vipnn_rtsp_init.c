@@ -87,9 +87,9 @@ static rtsp2_params_t rtsp2_v1_params = {
 
 #define NN_CHANNEL 4
 #define NN_RESOLUTION VIDEO_VGA //VIDEO_WVGA
-#define NN_FPS 10   /* if NN target fps<=5, then set it to 5 */
+#define NN_FPS 10
 #define NN_GOP 10
-#define NN_BPS 256*1024
+#define NN_BPS 1024*1024
 #define NN_EXCUTE_FPS 5
 
 #define NN_TYPE VIDEO_RGB
@@ -108,6 +108,7 @@ static video_params_t video_v4_params = {
 	.resolution	 	= NN_RESOLUTION,
 	.width 			= NN_WIDTH,
 	.height 		= NN_HEIGHT,
+	.bps 			= NN_BPS,
 	.fps 			= NN_FPS,
 	.gop 			= NN_GOP,
 	.direct_output 	= 0,
@@ -128,19 +129,22 @@ static array_params_t h264_array_params = {
 	}
 };
 
-nn_data_param_t roi_wvga = {
+static nn_data_param_t roi_wvga = {
 	.img = {
-		.width = 640,
-		.height = 480,
+		.width = NN_WIDTH,
+		.height = NN_HEIGHT,
 		.rgb = 1,
 		.roi = {
-			.xmin = 0, //(640 - 416) / 2,
-			.ymin = 0, //(480 - 416) / 2,
-			.xmax = 640, //(640 + 416) / 2,
-			.ymax = 480, //(480 + 416) / 2,
+			.xmin = 0,
+			.ymin = 0,
+			.xmax = NN_WIDTH,
+			.ymax = NN_HEIGHT,
 		}
 	}
 };
+
+static float nn_confidence_thresh = 0.4;
+static float nn_nms_thresh = 0.3;
 
 #define V1_ENA 1
 #define V4_ENA 1
@@ -170,12 +174,12 @@ static void nn_set_object(void *p, void *img_param)
 		return;
 	}
 
-    int im_h = RTSP_HEIGHT;
+	int im_h = RTSP_HEIGHT;
 	int im_w = RTSP_WIDTH;
 	float ratio_h = (float)im_h / (float)im->img.height;
 	float ratio_w = (float)im_w / (float)im->img.width;
-	int roi_h = (int)((im->img.roi.ymax - im->img.roi.ymin) * ratio_h);	
-	int roi_w = (int)((im->img.roi.xmax - im->img.roi.xmin) * ratio_w); 
+	int roi_h = (int)((im->img.roi.ymax - im->img.roi.ymin) * ratio_h);
+	int roi_w = (int)((im->img.roi.xmax - im->img.roi.xmin) * ratio_w);
 	int roi_x = (int)(im->img.roi.xmin * ratio_w);	// 0
 	int roi_y = (int)(im->img.roi.ymin * ratio_h);	// 0
 
@@ -219,38 +223,35 @@ static void nn_set_object(void *p, void *img_param)
 
 			printf("%d,c%d:%d %d %d %d\n\r", i, (int)res->result[6 * i ], sw_object.objTopX[i], sw_object.objTopY[i], sw_object.objBottomX[i], sw_object.objBottomY[i]);
 		}
-
-		hal_video_obj_region(&sw_object, RTSP_CHANNEL);
 	} else {
 		sw_object.objDetectNumber = 0;
-		hal_video_obj_region(&sw_object, RTSP_CHANNEL);
-		//printf("object num = %d\r\n", sw_object.objDetectNumber);
 	}
 
+	if (sw_object.objDetectNumber == 0) {
+		sw_object.objDetectNumber = 1;
+		sw_object.objTopY[0] = 0;
+		sw_object.objTopX[0] = 0;
+		sw_object.objBottomY[0] = 0;
+		sw_object.objBottomX[0] = 0;
+	}
+	hal_video_obj_region(&sw_object, RTSP_CHANNEL);
 }
 
-void mmf2_example_vipnn_rtsp_init(void)
+void mmf2_video_example_vipnn_rtsp_init(void)
 {
 
 	int voe_heap_size = video_voe_presetting(V1_ENA, RTSP_WIDTH, RTSP_HEIGHT, RTSP_BPS, 0,
-						0, 0, 0, 0,
-						0, 0, 0, 0,
+						0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0,
 						V4_ENA, NN_WIDTH, NN_HEIGHT);
 
 	printf("\r\n voe heap size = %d\r\n", voe_heap_size);
-
-#if V1_ENA
-	//run_memory_scanner(&scan0);
-#endif
-#if V4_ENA	// move all code to SRAM?
-	//run_memory_scanner(&scan1);
-#endif
 #if V1_ENA
 	video_v1_ctx = mm_module_open(&video_module);
 	if (video_v1_ctx) {
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v1_params);
-		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, 60);
+		mm_module_ctrl(video_v1_ctx, MM_CMD_SET_QUEUE_LEN, RTSP_FPS);
 		mm_module_ctrl(video_v1_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
 		mm_module_ctrl(video_v1_ctx, CMD_VIDEO_APPLY, RTSP_CHANNEL);	// start channel 0
 	} else {
@@ -280,7 +281,7 @@ void mmf2_example_vipnn_rtsp_init(void)
 #if V4_SIM==0
 	video_rgb_ctx = mm_module_open(&video_module);
 	if (video_rgb_ctx) {
-		mm_module_ctrl(video_rgb_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
+		//mm_module_ctrl(video_rgb_ctx, CMD_VIDEO_SET_VOE_HEAP, voe_heap_size);
 		mm_module_ctrl(video_rgb_ctx, CMD_VIDEO_SET_PARAMS, (int)&video_v4_params);
 		mm_module_ctrl(video_rgb_ctx, MM_CMD_SET_QUEUE_LEN, 2);
 		mm_module_ctrl(video_rgb_ctx, MM_CMD_INIT_QUEUE_ITEMS, MMQI_FLAG_DYNAMIC);
@@ -290,6 +291,8 @@ void mmf2_example_vipnn_rtsp_init(void)
 		goto mmf2_example_vnn_rtsp_fail;
 	}
 	mm_module_ctrl(video_rgb_ctx, CMD_VIDEO_YUV, 2);
+	// VOE 0.7.0 work around, will removed
+	vTaskDelay(1000);
 #else
 	array_t array;
 	array.data_addr = (uint32_t) testRGB_640x360;
@@ -307,18 +310,20 @@ void mmf2_example_vipnn_rtsp_init(void)
 		goto mmf2_example_vnn_rtsp_fail;
 	}
 #endif
-
 #if 1
 	// VIPNN
 	vipnn_ctx = mm_module_open(&vipnn_module);
 	if (vipnn_ctx) {
 		//mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&mbnetssd);
 		//mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_IN_PARAMS, (int)&roi_wvga);
-		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&yolov3_tiny);
+		//mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&yolov3_tiny);
+		//mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&mbnetssd_fwfs);
+		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_MODEL, (int)&yolov3_tiny_fwfs);
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_IN_PARAMS, (int)&roi_wvga);
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_DISPPOST, (int)nn_set_object);
+		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_CONFIDENCE_THRES, (int)&nn_confidence_thresh);
+		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_SET_NMS_THRES, (int)&nn_nms_thresh);
 		mm_module_ctrl(vipnn_ctx, CMD_VIPNN_APPLY, 0);
-
 	} else {
 		rt_printf("VIPNN open fail\n\r");
 		goto mmf2_example_vnn_rtsp_fail;

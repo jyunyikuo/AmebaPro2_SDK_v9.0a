@@ -3,7 +3,7 @@
 * @brief       The HAL API implementation for SYSTEM CONTROL
 *
 * @version     V1.00
-* @date        2021-08-07
+* @date        2022-01-04
 *
 * @note
 *
@@ -41,6 +41,10 @@ extern "C"
 
 #define BOOT_INFO_SW_RESV_MAX_SIZE              (5)
 #define OTP_CHIP_ID_MAX_SIZE                    (4)
+#define OTP_UUID_MAX_DATA_SIZE                  (4)
+#define SJTAG_NONFIXED_KEY_MAX_SIZE             (32)
+
+#define LXBUS_SHARED_USED_NONE                  (0x0)
 
 typedef enum {
 	RMA_NORMAL_STATE   = 0x00,
@@ -48,6 +52,18 @@ typedef enum {
 	RMA_STATE1         = 0xA1,
 	RMA_STATE2         = 0xA2
 } RMA_STATE_T;
+
+typedef enum {
+	SJTAG_S_NONFIXED_K      = 0x1,
+	SJTAG_NS_NONFIXED_K     = 0x2
+} SJTAG_SET_NONFIXED_OBJ_T;
+
+typedef enum {
+	SJTAG_CTRL_DIS     = 0x0,
+	SJTAG_CTRL_PWD_EN  = 0x1,
+	SJTAG_CTRL_RESV    = 0x2,
+	SJTAG_CTRL_EN      = 0x3
+} SJTAG_CTRL_STATE_T;
 
 typedef enum {
 	VIDEO_INFO_NN   = 9,
@@ -64,6 +80,14 @@ typedef enum {
 	BOOT_INFO_IDX3  = 3,
 	BOOT_INFO_IDX4  = 4
 } BOOT_INFO_IDX_T;
+
+typedef enum {
+	LXBUS_CTRL_SNAND        = 0x0,
+	LXBUS_CTRL_CRYPTO       = 0x1,
+	LXBUS_CTRL_SDHOST       = 0x2,
+	LXBUS_CTRL_MII          = 0x3,
+	LXBUS_CTRL_I2S          = 0x4,
+} LXBUS_SHARE_USED_IDX_T;
 
 /**
 * @addtogroup N/A
@@ -129,6 +153,13 @@ typedef enum {
 	TRNG_32K = 50,
 	TRNG_128K = 51,
 	LDO_SDIO_3V3_EN = 52,
+	TRNG_SEC = 53,
+	SDHOST_SYS = 54,
+	SDHOST_CLK1_PHASE = 55,
+	SDHOST_CLK2_PHASE = 56,
+	LDO_SDIO_CTRL = 57,
+	OTG_SYS_CTRL = 58,
+
 } IPs_CLK_FUNC_t;
 
 typedef enum {
@@ -157,6 +188,18 @@ typedef enum {
 	NN_400M,       // CLK 400Mhz
 	NN_250M,       // CLK 2500Mhz
 } NN_CLK_SELECT_t;
+
+typedef enum {
+	TRNG_HI_XTAL40M_LO32K  = 0,
+	TRNG_HI_XTAL40M_LO128K = 1,
+	TRNG_HI_PLL40M_LO32K   = 2,
+	TRNG_HI_PLL40M_LO128K  = 3
+} TRNG_CLK_SELECT_t;
+
+typedef enum {
+	FLASH_CTRL_CLK_SEL250M  = 0,
+	FLASH_CTRL_CLK_SEL200M  = 1,
+} NOR_FLH_CTRL_CLK_SELECT_t;
 
 typedef union {
 	__IOM uint8_t byte;
@@ -231,13 +274,46 @@ typedef enum {
 	NN_ENG_CHIP_ID_ON_2     = 0x3,
 } NN_ENG_CHIP_ID_EN_CTRL_t;
 
+typedef enum {
+	HIGH_VAL_RNG_INIT_NONE   = 0x0,
+	HIGH_VAL_RNG_INIT_OK     = 0x5A,
+	HIGH_VAL_RNG_INIT_FAIL   = 0x6F
+} HIGH_VAL_RNG_STS_T;
+
+typedef enum {
+	HIGH_VAL_RNG_DELAYUNIT_SEL0   = 0x0,
+	HIGH_VAL_RNG_DELAYUNIT_SEL1   = 0x1,
+	HIGH_VAL_RNG_DELAYUNIT_SEL2   = 0x2,
+	HIGH_VAL_RNG_DELAYUNIT_SEL3   = 0x3,
+} HIGH_VAL_RNG_DELAY_T;
+
+typedef hal_status_t (*hv_prot_trng_init_func_t)(void);
+typedef hal_status_t (*hv_prot_trng_set_clk_func_t)(uint8_t sel_val);
+typedef hal_status_t (*hv_prot_trng_swrst_en_func_t)(void);
+typedef hal_status_t (*hv_prot_trng_ld_def_setting_func_t)(uint8_t selft_en);
+typedef hal_status_t (*hv_prot_trng_deinit_func_t)(void);
+typedef uint32_t (*hv_prot_trng_get_rand_func_t)(void);
+
+typedef struct high_val_prot_adapter_s {
+	volatile uint8_t init_sts;
+	uint8_t    resv1[3];
+	hv_prot_trng_init_func_t            trng_init_f;
+	hv_prot_trng_set_clk_func_t         trng_set_clk_f;
+	hv_prot_trng_swrst_en_func_t        trng_swrst_en_f;
+	hv_prot_trng_ld_def_setting_func_t  trng_ld_def_setting_f;
+	hv_prot_trng_deinit_func_t          trng_deinit_f;
+	hv_prot_trng_get_rand_func_t        trng_get_rand_f;
+	uint32_t   resv2[9];
+} high_val_prot_adapter_t, *phigh_val_prot_adapter_t;
+
+
 
 #if IS_AFTER_CUT_A(CONFIG_CHIP_VER)
-uint8_t hal_rtl_sys_get_rma_state(void);
 void hal_rtl_sys_en_rma_mgn_pg(void);
 #endif
 
 void hal_rtl_sys_peripheral_en(uint8_t id, uint8_t en);
+void hal_rtl_sys_lxbus_shared_en(uint8_t used_id, uint8_t en);
 void hal_rtl_sys_set_clk(uint8_t id, uint8_t sel_val);
 uint32_t hal_rtl_sys_get_clk(uint8_t id);
 
@@ -246,11 +322,29 @@ uint32_t hal_rtl_sys_boot_info_get_val(uint8_t info_idx);
 void hal_rtl_sys_boot_footpath_init(uint8_t info_idx);
 void hal_rtl_sys_boot_footpath_store(uint8_t info_idx, uint8_t fp_v);
 void hal_rtl_sys_boot_footpath_clear(uint8_t info_idx, uint8_t fp_v);
-void hal_rtl_vdr_s_jtag_key_write(uint8_t *pkey);
-void hal_rtl_vdr_ns_jtag_key_write(uint8_t *pkey);
+void hal_rtl_sys_sjtag_fixed_key_enable(void);
+void hal_rtl_sys_sjtag_non_fixed_key_set(uint8_t set_sjtag_obj, uint8_t *pkey);
 uint32_t hal_rtl_sys_get_video_info(uint8_t idx);
 void hal_rtl_sys_set_video_info(uint8_t idx, uint8_t en_ctrl);
 void hal_rtl_sys_get_chip_id(uint32_t *pchip_id);
+uint8_t hal_rtl_sys_get_rma_state(void);
+void hal_rtl_sys_high_value_assets_otp_lock(const uint8_t lock_obj);
+uint32_t hal_rtl_sys_get_uuid(void);
+
+hal_status_t hal_rtl_sys_high_val_protect_trng_init(void);
+hal_status_t hal_rtl_sys_high_val_protect_trng_set_clk(uint8_t sel_val);
+hal_status_t hal_rtl_sys_high_val_protect_trng_swrst_en(void);
+hal_status_t hal_rtl_sys_high_val_protect_trng_ld_def_setting(uint8_t selft_en);
+hal_status_t hal_rtl_sys_high_val_protect_trng_deinit(void);
+uint32_t hal_rtl_sys_high_val_protect_trng_get_rand(void);
+void hal_rtl_sys_high_val_protect_init_hook(hv_prot_trng_init_func_t trng_init_f, hv_prot_trng_deinit_func_t trng_deinit_f,
+		hv_prot_trng_ld_def_setting_func_t trng_ld_def_set_f, hv_prot_trng_get_rand_func_t trng_get_rand_f,
+		hv_prot_trng_set_clk_func_t trng_set_clk_f, hv_prot_trng_swrst_en_func_t trng_swrst_enf_f);
+void hal_rtl_sys_high_val_protect_init(void);
+void hal_rtl_sys_high_val_protect_deinit(void);
+void hal_rtl_sys_high_val_protect_ld(const uint32_t otp_addr, uint8_t *p_otp_v, const uint32_t ld_size);
+void hal_rtl_sys_high_val_protect_ld_delay(uint8_t delay_unit_sel);
+uint8_t hal_rtl_sys_check_high_val_protect_init(void);
 
 #define ROM_FOOTPH_INIT(idx)                hal_rtl_sys_boot_footpath_init(idx)
 #define ROM_FOOTPH_STORE(idx,fp_v)          hal_rtl_sys_boot_footpath_store(idx,fp_v)
@@ -268,17 +362,33 @@ typedef struct hal_sys_ctrl_func_stubs_s {
 	void (*hal_sys_boot_info_assign_val)(uint8_t info_idx, uint32_t info_v);
 	void (*hal_sys_boot_footpath_init)(uint8_t info_idx);
 	void (*hal_sys_boot_footpath_store)(uint8_t info_idx, uint8_t fp_v);
-	void (*hal_vdr_s_jtag_key_write)(uint8_t *pkey);
-	void (*hal_vdr_ns_jtag_key_write)(uint8_t *pkey);
+	void (*hal_sys_sjtag_fixed_key_enable)(void);
+	void (*hal_sys_sjtag_non_fixed_key_set)(uint8_t set_sjtag_obj, uint8_t *pkey);
 	uint32_t (*hal_sys_get_video_info)(uint8_t idx);
 	void (*hal_sys_set_video_info)(uint8_t idx, uint8_t en_ctrl);
 	void (*hal_sys_get_chip_id)(uint32_t *pchip_id);
 	void (*hal_sys_boot_footpath_clear)(uint8_t info_idx, uint8_t fp_v);
 	uint8_t (*hal_sys_get_rma_state)(void);
 	void (*hal_sys_high_value_assets_otp_lock)(const uint8_t lock_obj);
-	uint32_t reserved[9];  // reserved space for next ROM code version function table extending.
+	uint32_t (*hal_sys_get_uuid)(void);
+	void (*hal_sys_lxbus_shared_en)(uint8_t used_id, uint8_t en);
+	uint32_t reserved[7];  // reserved space for next ROM code version function table extending.
 } hal_sys_ctrl_func_stubs_t;
 
+/**
+  \brief  The data structure of the stubs function for the high value assets protect load functions of system ctrl in ROM
+*/
+typedef struct hal_sys_ctrl_high_val_prot_func_stubs_s {
+	void (*hal_sys_high_val_protect_init_hook)(hv_prot_trng_init_func_t trng_init_f, hv_prot_trng_deinit_func_t trng_deinit_f,
+			hv_prot_trng_ld_def_setting_func_t trng_ld_def_set_f, hv_prot_trng_get_rand_func_t trng_get_rand_f,
+			hv_prot_trng_set_clk_func_t trng_set_clk_f, hv_prot_trng_swrst_en_func_t trng_swrst_enf_f);
+	void (*hal_sys_high_val_protect_init)(void);
+	void (*hal_sys_high_val_protect_deinit)(void);
+	void (*hal_sys_high_val_protect_ld)(const uint32_t otp_addr, uint8_t *p_otp_v, const uint32_t ld_size);
+	void (*hal_sys_high_val_protect_ld_delay)(uint8_t delay_unit_sel);
+	uint8_t (*hal_sys_check_high_val_protect_init)(void);
+	uint32_t reserved[2];  // reserved space for next ROM code version function table extending.
+} hal_sys_ctrl_high_val_prot_func_stubs_t;
 
 
 /** @} */ /* End of group hs_hal_efuse */

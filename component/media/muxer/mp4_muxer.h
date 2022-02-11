@@ -54,6 +54,10 @@ struct BlockInfo {
 //SDRAM_DATA_SECTION struct BlockInfo block_info[MP4_DMA_BLOCK_NUM];
 #define AVCC_TYPE 0X00
 #define HVCC_TYPE 0X01
+
+#define AUDIO_AAC  0X00
+#define AUDIO_ULAW 0X01
+#define AUDIO_ALAW 0X02
 typedef struct _mp4_context {
 	FATFS       m_fs;
 	int         drv_num;
@@ -134,6 +138,8 @@ typedef struct _mp4_context {
 	void *fp_handle;
 	int mp4_user_callback;
 	int encoder_type;
+	int audio_format;
+	int audio_duration;//For g711
 } mp4_context, *pmp4_context;
 
 void mp4_muxer_init(pmp4_context mp4_ctx);

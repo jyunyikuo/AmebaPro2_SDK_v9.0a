@@ -3,7 +3,7 @@
  * @brief    The header file of the command shell.
  *
  * @version  V1.00
- * @date     2020-11-11
+ * @date     2021-08-07
  *
  * @note
  *
@@ -44,6 +44,17 @@ extern "C"
  *  @returns void
  */
 void shell_cmd_task_init(void);
+
+
+/**
+ *  @brief To initial the command shell task for RMA using.
+ *
+ *  @param uart_adapter The UART port adapter as the I/O of this command shell task.
+ *
+ *  @returns void
+ */
+void shell_cmd_without_rom_tbl_task_init(void);
+
 
 /**
  *  @brief The command shell main function. This function should be called periodically

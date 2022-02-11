@@ -1,6 +1,7 @@
-#include "FreeRTOS.h"
+#include "freertos_service.h"
 #include "task.h"
 #include "main.h"
+#include "osdep_service.h"
 
 #include <lwipconf.h>
 #include <platform_stdlib.h>
@@ -86,6 +87,22 @@ char *tcp_client_buffer = NULL;
 char *tcp_server_buffer = NULL;
 char *udp_client_buffer = NULL;
 char *udp_server_buffer = NULL;
+_mutex tptest_log_mutex = NULL;
+
+#define HAVE_NO_TPTEST_NOW()  ((NULL == g_tcp_server_task) && (NULL == g_tcp_client_task) && \
+                                (NULL == g_udp_client_task) && (NULL == g_udp_server_task))
+
+#define tptest_res_log(...)       do { \
+                                    if(NULL != tptest_log_mutex){\
+                                        rtw_mutex_get(&tptest_log_mutex); \
+                                        printf(__VA_ARGS__); \
+                                        rtw_mutex_put(&tptest_log_mutex); \
+                                    }\
+                                    else{\
+                                        printf(__VA_ARGS__); \
+                                    }\
+                                }while(0)
+
 
 static void udp_client_handler(void *param);
 static void tcp_client_handler(void *param);
@@ -171,8 +188,14 @@ int tcp_client_func(struct iperf_data_t iperf_data)
 			}
 
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((report_size * 8) / (end_time - report_start_time)));
+				//need to use _mutex to control log at the last time of the loop
+				if ((end_time - start_time) > configTICK_RATE_HZ * (iperf_data.time - 1)) {
+					tptest_res_log("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
 				report_start_time = end_time;
 				bandwidth_time = end_time;
 				report_size = 0;
@@ -202,8 +225,14 @@ int tcp_client_func(struct iperf_data_t iperf_data)
 			}
 
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((report_size * 8) / (end_time - report_start_time)));
+				if ((end_time - start_time) > configTICK_RATE_HZ * (iperf_data.time - 1)) {
+					tptest_res_log("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
+
 				report_start_time = end_time;
 				bandwidth_time = end_time;
 				report_size = 0;
@@ -212,13 +241,14 @@ int tcp_client_func(struct iperf_data_t iperf_data)
 		}
 	}
 
-	printf("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
-		   (int)((total_size * 8) / (end_time - start_time)));
+	tptest_res_log("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
+				   (int)((total_size * 8) / (end_time - start_time)));
+
 
 Exit1:
 	closesocket(iperf_data.client_fd);
 Exit2:
-	printf("\n\r%s: Close client socket", __func__);
+	tptest_res_log("\n\r%s: Close client socket", __func__);
 	if (tcp_client_buffer) {
 		vPortFree(tcp_client_buffer);
 		tcp_client_buffer = NULL;
@@ -326,14 +356,22 @@ int tcp_server_func(struct iperf_data_t iperf_data)
 		total_size += recv_size;
 		report_size += recv_size;
 		if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-			printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-				   (int)((report_size * 8) / (end_time - report_start_time)));
+			if ((end_time - start_time) > configTICK_RATE_HZ * (tcp_client_data.time - 1)) {
+				tptest_res_log("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+							   (int)((report_size * 8) / (end_time - report_start_time)));
+			} else {
+				printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+					   (int)((report_size * 8) / (end_time - report_start_time)));
+			}
+
 			report_start_time = end_time;
 			report_size = 0;
 		}
 	}
-	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
-		   (int)((total_size * 8) / (end_time - start_time)));
+
+	tptest_res_log("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
+				   (int)((total_size * 8) / (end_time - start_time)));
+
 
 Exit1:
 	// close the connected socket after receiving from connected TCP client
@@ -363,6 +401,10 @@ int udp_client_func(struct iperf_data_t iperf_data)
 	u32_t now;
 	uint32_t id_cnt = 0;
 	int tos_value = (int)iperf_data.tos_value;// fix optlen check fail issue in lwip_setsockopt_impl
+	extern int			skbbuf_used_num;
+	extern int			skbdata_used_num;
+	extern int			max_local_skb_num;
+	extern int			max_skb_buf_num;
 
 	udp_client_buffer = pvPortMalloc(iperf_data.buf_size);
 	if (!udp_client_buffer) {
@@ -421,6 +463,9 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			client_hdr.tv_sec  = htonl(now / 1000);
 			client_hdr.tv_usec = htonl((now % 1000) * 1000);
 			memcpy(udp_client_buffer, &client_hdr, sizeof(client_hdr));
+			while ((skbdata_used_num > (max_skb_buf_num - 5)) || (skbbuf_used_num > (max_local_skb_num - 5))) {
+				vTaskDelay(1);
+			}
 			if (sendto(iperf_data.client_fd, udp_client_buffer, iperf_data.buf_size, 0, (struct sockaddr *)&ser_addr, addrlen) < 0) {
 				//Add delay to avoid consuming too much CPU when data link layer is busy
 				vTaskDelay(2);
@@ -428,9 +473,10 @@ int udp_client_func(struct iperf_data_t iperf_data)
 				total_size += iperf_data.buf_size;
 				bandwidth_size += iperf_data.buf_size;
 				report_size += iperf_data.buf_size;
+				// increase id_cnt only send success
+				id_cnt++;
 			}
 			end_time = xTaskGetTickCount();
-			id_cnt++;
 			if ((bandwidth_size >= iperf_data.bandwidth) && ((end_time - bandwidth_time) < (configTICK_RATE_HZ * 1))) {
 				vTaskDelay(configTICK_RATE_HZ * 1 - (end_time - bandwidth_time));
 				end_time = xTaskGetTickCount();
@@ -439,8 +485,14 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			}
 
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((report_size * 8) / (end_time - report_start_time)));
+				if ((end_time - start_time) > configTICK_RATE_HZ * (iperf_data.time - 1)) {
+					tptest_res_log("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
+
 				report_start_time = end_time;
 				bandwidth_time = end_time;
 				report_size = 0;
@@ -459,15 +511,19 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			client_hdr.tv_sec  = htonl(now / 1000);
 			client_hdr.tv_usec = htonl((now % 1000) * 1000);
 			memcpy(udp_client_buffer, &client_hdr, sizeof(client_hdr));
+			while ((skbdata_used_num > (max_skb_buf_num - 5)) || (skbbuf_used_num > (max_local_skb_num - 5))) {
+				vTaskDelay(1);
+			}
 			if (sendto(iperf_data.client_fd, udp_client_buffer, iperf_data.buf_size, 0, (struct sockaddr *)&ser_addr, addrlen) < 0) {
 				//printf("\n\r[ERROR] %s: UDP client send data error",__func__);
 			} else {
 				total_size += iperf_data.buf_size;
 				bandwidth_size += iperf_data.buf_size;
 				report_size += iperf_data.buf_size;
+				// increase id_cnt only send success
+				id_cnt++;
 			}
 			end_time = xTaskGetTickCount();
-			id_cnt++;
 			if ((bandwidth_size >= iperf_data.bandwidth) && ((end_time - bandwidth_time) < (configTICK_RATE_HZ * 1))) {
 				vTaskDelay(configTICK_RATE_HZ * 1 - (end_time - bandwidth_time));
 				end_time = xTaskGetTickCount();
@@ -476,8 +532,13 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			}
 
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((report_size * 8) / (end_time - report_start_time)));
+				if ((end_time - start_time) > configTICK_RATE_HZ * (iperf_data.time - 1)) {
+					tptest_res_log("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
 				report_start_time = end_time;
 				bandwidth_time = end_time;
 				report_size = 0;
@@ -485,8 +546,10 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			}
 		}
 	}
-	printf("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
-		   (int)((total_size * 8) / (end_time - start_time)));
+
+	tptest_res_log("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
+				   (int)((total_size * 8) / (end_time - start_time)));
+
 
 	// send a final terminating datagram
 	i = 0;
@@ -535,7 +598,7 @@ int udp_client_func(struct iperf_data_t iperf_data)
 				if ((ntohl(hdr->flags) & 0x80000000) != 0) {
 					stop_ms = ntohl(hdr->stop_sec) * 1000 + ntohl(hdr->stop_usec) / 1000;
 					total_len = (((uint64_t) ntohl(hdr->total_len1)) << 32) + ntohl(hdr->total_len2);
-					printf("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_len / KB), (int)stop_ms, (int)(total_len * 8 / stop_ms));
+					tptest_res_log("\n\r%s: [END] Totally send %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_len / KB), (int)stop_ms, (int)(total_len * 8 / stop_ms));
 				}
 			}
 			break;
@@ -544,7 +607,7 @@ int udp_client_func(struct iperf_data_t iperf_data)
 Exit1:
 	close(iperf_data.client_fd);
 Exit2:
-	printf("\n\r%s: Close client socket", __func__);
+	tptest_res_log("\n\r%s: Close client socket", __func__);
 	if (udp_client_buffer) {
 		vPortFree(udp_client_buffer);
 		udp_client_buffer = NULL;
@@ -557,6 +620,7 @@ int udp_server_func(struct iperf_data_t iperf_data)
 	struct sockaddr_in   ser_addr, client_addr;
 	int                  addrlen = sizeof(struct sockaddr_in);
 	int                  n = 1;
+	int 				 datagram_id;
 	uint32_t             start_time, report_start_time, end_time;
 	int                  recv_size = 0;
 	uint64_t             total_size = 0, report_size = 0;
@@ -648,13 +712,23 @@ int udp_server_func(struct iperf_data_t iperf_data)
 			// ack data to client
 			// Not send ack to prevent send fail due to limited skb, but it will have warning at iperf client
 			//sendto(server_fd,udp_server_buffer,ret,0,(struct sockaddr*)&client_addr,sizeof(client_addr));
+			datagram_id = ntohl(((struct iperf_udp_datagram *) udp_server_buffer)->id);
+			if (datagram_id < 0) {
+				sendto(iperf_data.server_fd, udp_server_buffer, 0, 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
+			}
 
 			end_time = xTaskGetTickCount();
 			total_size += recv_size;
 			report_size += recv_size;
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((report_size * 8) / (end_time - report_start_time)));
+				if ((end_time - start_time) > configTICK_RATE_HZ * (udp_client_data.time - 1)) {
+					tptest_res_log("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
+
 				report_start_time = end_time;
 				report_size = 0;
 			}
@@ -670,20 +744,29 @@ int udp_server_func(struct iperf_data_t iperf_data)
 			// ack data to client
 			// Not send ack to prevent send fail due to limited skb, but it will have warning at iperf client
 			//sendto(server_fd,udp_server_buffer,ret,0,(struct sockaddr*)&client_addr,sizeof(client_addr));
+			datagram_id = ntohl(((struct iperf_udp_datagram *) udp_server_buffer)->id);
+			if (datagram_id < 0) {
+				sendto(iperf_data.server_fd, udp_server_buffer, 0, 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
+			}
 
 			end_time = xTaskGetTickCount();
 			total_size += recv_size;
 			report_size += recv_size;
 			if ((iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval))) {
-				printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
-					   (int)((uint64_t)(report_size * 8) / (end_time - report_start_time)));
+				if ((end_time - start_time) > configTICK_RATE_HZ * (udp_client_data.time - 1)) {
+					tptest_res_log("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+								   (int)((report_size * 8) / (end_time - report_start_time)));
+				} else {
+					printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(report_size / KB), (int)(end_time - report_start_time),
+						   (int)((report_size * 8) / (end_time - report_start_time)));
+				}
 				report_start_time = end_time;
 				report_size = 0;
 			}
 		}
 	}
-	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
-		   (int)((uint64_t)(total_size * 8) / (end_time - start_time)));
+	tptest_res_log("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec", __func__, (int)(total_size / KB), (int)(end_time - start_time),
+				   (int)((uint64_t)(total_size * 8) / (end_time - start_time)));
 
 Exit1:
 	// close the listening socket
@@ -704,15 +787,21 @@ static void tcp_client_handler(void *param)
 
 	vTaskDelay(100);
 
+	if (NULL == tptest_log_mutex) {
+		rtw_mutex_init(&tptest_log_mutex);
+	}
 	printf("\n\rTCP: Start TCP client!");
 	tcp_client_func(tcp_client_data);
 
 #if defined(INCLUDE_uxTaskGetStackHighWaterMark) && (INCLUDE_uxTaskGetStackHighWaterMark == 1)
-	printf("\n\rMin available stack size of %s = %d * %d bytes\n\r", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
+	tptest_res_log("\n\rMin available stack size of %s = %d * %d bytes\n\r", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
 #endif
-	printf("\n\rTCP: TCP client stopped!");
+	tptest_res_log("\n\rTCP: TCP client stopped!");
 
 	g_tcp_client_task = NULL;
+	if (HAVE_NO_TPTEST_NOW()) {
+		rtw_mutex_free(&tptest_log_mutex);
+	}
 	vTaskDelete(NULL);
 }
 
@@ -723,14 +812,20 @@ static void tcp_server_handler(void *param)
 
 	vTaskDelay(100);
 
+	if (NULL == tptest_log_mutex) {
+		rtw_mutex_init(&tptest_log_mutex);
+	}
 	printf("\n\rTCP: Start TCP server!");
 	tcp_server_func(tcp_server_data);
 
 #if defined(INCLUDE_uxTaskGetStackHighWaterMark) && (INCLUDE_uxTaskGetStackHighWaterMark == 1)
-	printf("\n\rMin available stack size of %s = %d * %d bytes\n\r", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
+	tptest_res_log("\n\rMin available stack size of %s = %d * %d bytes\n\r", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
 #endif
-	printf("\n\rTCP: TCP server stopped!");
+	tptest_res_log("\n\rTCP: TCP server stopped!");
 	g_tcp_server_task = NULL;
+	if (HAVE_NO_TPTEST_NOW()) {
+		rtw_mutex_free(&tptest_log_mutex);
+	}
 	vTaskDelete(NULL);
 }
 
@@ -740,17 +835,22 @@ static void udp_client_handler(void *param)
 	(void) param;
 
 	vTaskDelay(100);
-
+	if (NULL == tptest_log_mutex) {
+		rtw_mutex_init(&tptest_log_mutex);
+	}
 	printf("\n\rUDP: Start UDP client!");
 	udp_client_func(udp_client_data);
 
 #if defined(INCLUDE_uxTaskGetStackHighWaterMark) && (INCLUDE_uxTaskGetStackHighWaterMark == 1)
-	printf("\n\rMin available stack size of %s = %d * %d bytes", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
+	tptest_res_log("\n\rMin available stack size of %s = %d * %d bytes", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
 #endif
 
-	printf("\n\rUDP: UDP client stopped!");
+	tptest_res_log("\n\rUDP: UDP client stopped!");
 	memset(&udp_client_data, 0, sizeof(udp_client_data));
 	g_udp_client_task = NULL;
+	if (HAVE_NO_TPTEST_NOW()) {
+		rtw_mutex_free(&tptest_log_mutex);
+	}
 	vTaskDelete(NULL);
 }
 
@@ -761,16 +861,23 @@ static void udp_server_handler(void *param)
 
 	vTaskDelay(100);
 
+	if (NULL == tptest_log_mutex) {
+		rtw_mutex_init(&tptest_log_mutex);
+	}
+
 	printf("\n\rUDP: Start UDP server!");
 	udp_server_func(udp_server_data);
 
 #if defined(INCLUDE_uxTaskGetStackHighWaterMark) && (INCLUDE_uxTaskGetStackHighWaterMark == 1)
-	printf("\n\rMin available stack size of %s = %d * %d bytes", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
+	tptest_res_log("\n\rMin available stack size of %s = %d * %d bytes", __FUNCTION__, uxTaskGetStackHighWaterMark(NULL), sizeof(portBASE_TYPE));
 #endif
 
-	printf("\n\rUDP: UDP server stopped!");
+	tptest_res_log("\n\rUDP: UDP server stopped!");
 	memset(&udp_server_data, 0, sizeof(udp_server_data));
 	g_udp_server_task = NULL;
+	if (HAVE_NO_TPTEST_NOW()) {
+		rtw_mutex_free(&tptest_log_mutex);
+	}
 	vTaskDelete(NULL);
 }
 

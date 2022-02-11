@@ -43,14 +43,47 @@
 #include "bt_config_wifi.h"
 #include "platform_stdlib.h"
 
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+#include "bt_ipc_dev_api.h"
+#include "bt_mesh_provisioner_ces_demo_config.h"
+#endif
+
 T_SERVER_ID bt_config_srv_id; /**< BT Config Wifi service id*/
 T_GAP_DEV_STATE bt_config_gap_dev_state = {0, 0, 0, 0, 0};                 /**< GAP device state */
 T_GAP_CONN_STATE bt_config_gap_conn_state = GAP_CONN_STATE_DISCONNECTED; /**< GAP connection state */
 uint8_t bt_config_conn_id = 0;
 
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+uint32_t ip_address = 0;
+#endif
+
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+
+uint8_t *lwip_getip_intf(uint8_t idx)
+{
+#if defined(CONFIG_PLATFORM_AMEBAD2) && CONFIG_PLATFORM_AMEBAD2
+    int *ret = NULL;
+    bt_ipc_dev_request_message bt_dev_ipc_info;
+    uint32_t param_buf[1];
+
+    param_buf[1] = (uint32_t)idx;
+    ret = bt_ipc_api_dev_message_send(RTK_BT_MESH_CES_DEMO, MESH_DEMO_LWIP_GET_IP, param_buf, 1);
+    if (ret[0]) {
+        rtw_memcpy((void *)&ip_address, (void *)&ret[1], sizeof(uint32_t));
+        rtw_mfree((void *)ret, sizeof(bt_dev_ipc_info.ret));
+        return (uint8_t *)&ip_address;
+    } else {
+        BC_printf("get ip address fail.\r\n");
+        rtw_mfree((void *)ret, sizeof(bt_dev_ipc_info.ret));
+        return NULL;
+    }
+#else
+    return LwIP_GetIP(idx);
+#endif
+}
+
 void bt_config_app_handle_gap_msg(T_IO_MSG  *p_gap_msg);
 
 /**
@@ -194,7 +227,7 @@ void bt_config_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_s
 		}
 		bt_config_conn_id = 0;
 		BC_printf("Bluetooth Connection Disconnected\r\n");
-		if (!((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)LwIP_GetIP(0) != IP_ADDR_INVALID))) {
+		if (!((wifi_get_join_status() == RTW_JOINSTATUS_SUCCESS) && (*(u32 *)lwip_getip_intf(0) != IP_ADDR_INVALID))) {
 			bt_config_app_set_adv_data();
 			le_adv_start();
 			set_bt_config_state(BC_DEV_IDLE); // BT Config Ready

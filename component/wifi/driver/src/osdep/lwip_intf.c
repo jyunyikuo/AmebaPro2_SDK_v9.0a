@@ -196,7 +196,7 @@ void netif_rx(int idx, unsigned int len)
 
 #ifdef CONFIG_INIC_EN
 #if (CONFIG_INIC_IPC)
-	inic_ipc_dev_recv(idx, len);
+	inic_ipc_dev_recv(idx);
 #else
 	inic_netif_rx(idx, len);
 #endif

@@ -539,12 +539,18 @@ void rtw_free_sema(_sema *sema)
 int rtw_in_interrupt(void)
 {
 #ifdef ARM_CORE_CA7
-	return __get_mode() != CPSR_M_USR;
+	return (__get_mode() != CPSR_M_USR) && (__get_mode() != CPSR_M_SYS);
 #else
 #if defined(__ICCARM__)
 	return (__get_PSR() & 0x1FF) != 0;
 #elif defined(__GNUC__)
+
+#ifdef ARM_CORE_CM4
 	return (__get_xPSR() & 0x1FF) != 0;
+#else
+	return __get_IPSR() != 0;
+#endif
+
 #endif
 #endif
 }

@@ -1,45 +1,158 @@
-<02/24/2021 15:00 Raymond>
-Version : RTL8735B_VOE_0.0.0.1
+--------------------------------------------------------------------------	
+<11/29/2021 15:00 Raymond>
+Version : RTL8735B_VOE_1.0.0.0
+Modified Files:
+All
+Change Notes:
 
+	1. remove hal_video API used video_adp structure 
+    2. move cmsis/rtl8735b/lib/include/fw_voe_rom_boot.h --> hal/rtl8735b/lib/source/ram/video/rtl8735b_voe_status.h
+       boot_start.c & boot_loader.h include header need modify
+    3. rename hal_mtd_util.h --> hal_md_util.h on hal/rtl8735b/lib/source/ram/video/ 
+    4. move md2_result from DDR to fixed address
+    5. modify NN section to FCS Video used 16M-->20M 
+    6. hal_voe_init parameter modify & added hal_voe_cb for Freertos used
+    7. add ISP vHDR control SW(20211207)
+    8. Updated sensor driver for vHDR control code format
+    9. Update IQ for vHDR format (resulted from TEST_IQ)
+    10. Add IMX307 and IMX307HDR sensor driver
+    11. Add GC2053 fcs_data
+    12. confirm HDR raw path(14/15) workable
+    
+Reviewer:
+	Raymond 
+--------------------------------------------------------------------------	
+<11/18/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.7.0.0
+Modified Files:
+All
+Change Notes:
+	1. support RTL8735B b cut
+	2. fixed video_adp from TM malloc --> fixed address 0x7003A000
+	3. fixed Pic OSD cache issue --> 32 alignment
+	4. Move osd query function to KM, no need to call osd query function in video demo
+	5. Fix MD hang up when video stop issue
+
+
+
+Reviewer:
+	Raymond 	
+--------------------------------------------------------------------------	
+<10/19/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.6.0.0
+Modified Files:
+All
+Change Notes:
+	1. git source release from Branch --> Tag (Branch rule from prepare ready --> if need) 
+	2. Fixed VOE/hal_video firmware warring message
+	3. VOE DDR layout add IQ.bin 
+	4. redefine API hal_video_load_iq(v_adp, _binary_iq_bin_start); 
+	            --> hal_video_load_iq((voe_cpy_t)memcpy,  _binary_iq_bin_start, __voe_code_start__); 
+	5. modify control flow hal_video_load_iq/hal_video_load_sensor/hal_video_load_fw before hal_video_init()
+	6. remove check sensor version with voe version
+	7. support Motion detection
+	8. Add TTFF measure log
+	9. Add MTD API hal_video_md_cb_register/hal_video_mtd_start/hal_video_mtd_stop/hal_video_mtd_trigger
+	10. Add PS5258 sensor
+		       
+
+
+Reviewer:
+	Raymond 	
+
+--------------------------------------------------------------------------	
+<10/19/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.5.0.0
 Modified Files:
 All
 
 Change Notes:
-	1. draft version release
-
-Verification Before Checked-In:
-	1. build all OK.
-	2. FPGA stream test Pass.
-
+	1. modify JPEG/YUV output default is suspend 
+	2. API redefine hal_video_enc_buf() 
+	   allocat size from buf_size+rsvd_size --> bufsize
+	   rsvd_size can dynamic modify
+	3. Added API hal_video_jpg_buf() like hal_video_enc_buf() 
+	   jpeg buffer setting on cml.jpg_buf_size/cml.jpg_rsvd_size follow enc
+       if enc_rsvd_size/jpg_rsvd_size == 0 disable ring buffer,that will drop frame when non release buffer	      
+	4. API redefine	hal_video_buf_info()/hal_video_mem_info()
+	   remove non used parameter 
+	5. API merge hal_video_jpg()/hal_video_yuv() --> hal_video_out_mode(ch, type , mode)
+    6. fixed VOE memory leakage
+    7. hal_video_release(int ch, int len) --> hal_video_release(int ch, int type, int len)
+       type: CODEC_H264, CODEC_HEVC, CODEC_JPEG
+    8. add command "--mode" set default output mode 0: pause 1:one-shot 2: out
+       or set cml->EncMode cml->JpegMode cml->YuvMode
+	9. Add dynamic isp/mipi clock control
+	10. Add isp/mipi clock level set API: hal_video_clk_set(u32 type, u32 level)
+	11. fixed gc2053 sensor driver pclk
+	12. polish frame count overflow handling
+	13. add ready2update argument in hal_video_osd_update(int ch, rt_osd2_info_st *osd2, BOOL ready2update)           
+       
+       
 Reviewer:
-	Raymond 
+	Raymond 	
 --------------------------------------------------------------------------
-<04/01/2021 15:00 Raymond>
-Version : RTL8735B_VOE_0.0.0.2
-
+<09/22/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.4.0.4
 Modified Files:
 All
 
 Change Notes:
-	1. Added multi stream output
-	2. added JPEG format output support
-	3. added NV12 format output support
-	4. added RGB format output support
-	5. Added HEVC/H264 feature MaxQP/MinQP/GOP/ForceI/BPS paramter API
+	1. modify VOE code text address 0x72e00000 --> 0x70000000 	
+	2. reduce VOE default text code size 2MB --> 1MB
+	3. add hal_video_isp_tuning new cmd for vreg read/write: VOE_ISP_TUNING_READ_VREG, VOE_ISP_TUNING_WRITE_VREG
+	4. add hal_video_i2c_write/hal_video_i2c_read API for I2C rea/write
+	5. add osd API and flow
+    6. fixed VOE Usage fault/ no output stream issue
+    7. release flow form git TAG to git Branch
+Reviewer:
+	Raymond 	
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+<09/14/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.4.0.3
+Modified Files:
+All
 
-Verification Before Checked-In:
-	1. Draft test (Pass).
-	2. Regression test (Ongoing).
-	3. ISP memoery leak (issue).
-	4. ISP reopen issue (issue).
+Change Notes:
+	1. fixed reopen/restart fail issue
+	2. fixed YUV output fail issue
+	3. fixed channel 1 GOP fail issue
+	4. improve VOE FW stability
+	5. added debug message on VOE
+	6. modify hal_video_set_voe --> hal_video_voe_open 
+	7. add hal_video_voe_close 
 
-Test Command:
-	$8735b>vs 0 0 0 (channel 0 output HEVC/CIF)
-	$8735b>vs 1 2 1 (channel 1 output JPEG/QCIF) or	$8735b>vs 1 3 1 (channel 1 output NV12/QCIF)
-	$8735b>vs 4 4 1 (channel 4 output RGB/QCIF)
-	
+Reviewer:
+	Raymond 	
+
+
+--------------------------------------------------------------------------
+<09/05/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.4.0.0
+Modified Files:
+All
+
+Change Notes:
+	1. update release version.
+           ruls RTL8735B_VOE_A.B.C.D
+           A: software architecture modify
+           B: regular release/new feature
+           C: bug fix
+           D: rsvd
+        2. OSD feature implement
+        3. isp buffer release API
+        4. Added OSD/OBJ task on voe
+        5. added --osd, --obj set command
+        6. Added sensor SC2310
+        7. fixed printf issue
+        
+
+
+
 Reviewer:
 	Raymond 
+	
 --------------------------------------------------------------------------
 <08/04/2021 15:00 Raymond>
 Version : RTL8735B_VOE_0.0.0.3
@@ -73,61 +186,47 @@ Reviewer:
 	Raymond 
 
 --------------------------------------------------------------------------
-<09/05/2021 15:00 Raymond>
-Version : RTL8735B_VOE_0.4.0.0
+<04/01/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.0.0.2
+
 Modified Files:
 All
 
 Change Notes:
-	1. update release version.
-           ruls RTL8735B_VOE_A.B.C.D
-           A: software architecture modify
-           B: regular release/new feature
-           C: bug fix
-           D: rsvd
-        2. OSD feature implement
-        3. isp buffer release API
-        4. Added OSD/OBJ task on voe
-        5. added --osd, --obj set command
-        6. Added sensor SC2310
-        7. fixed printf issue
-        
+	1. Added multi stream output
+	2. added JPEG format output support
+	3. added NV12 format output support
+	4. added RGB format output support
+	5. Added HEVC/H264 feature MaxQP/MinQP/GOP/ForceI/BPS paramter API
 
+Verification Before Checked-In:
+	1. Draft test (Pass).
+	2. Regression test (Ongoing).
+	3. ISP memoery leak (issue).
+	4. ISP reopen issue (issue).
 
+Test Command:
+	$8735b>vs 0 0 0 (channel 0 output HEVC/CIF)
+	$8735b>vs 1 2 1 (channel 1 output JPEG/QCIF) or	$8735b>vs 1 3 1 (channel 1 output NV12/QCIF)
+	$8735b>vs 4 4 1 (channel 4 output RGB/QCIF)
+	
+Reviewer:
+	Raymond 
+--------------------------------------------------------------------------
+
+<02/24/2021 15:00 Raymond>
+Version : RTL8735B_VOE_0.0.0.1
+
+Modified Files:
+All
+
+Change Notes:
+	1. draft version release
+
+Verification Before Checked-In:
+	1. build all OK.
+	2. FPGA stream test Pass.
 
 Reviewer:
 	Raymond 
-	
---------------------------------------------------------------------------
-<09/14/2021 15:00 Raymond>
-Version : RTL8735B_VOE_0.4.0.3
-Modified Files:
-All
-
-Change Notes:
-	1. fixed reopen/restart fail issue
-	2. fixed YUV output fail issue
-	3. fixed channel 1 GOP fail issue
-	4. improve VOE FW stability
-	5. added debug message on VOE
-	6. modify hal_video_set_voe --> hal_video_voe_open 
-	7. add hal_video_voe_close 
-
-Reviewer:
-	Raymond 	
---------------------------------------------------------------------------
-<09/22/2021 15:00 Raymond>
-Version : RTL8735B_VOE_0.4.0.4
-Modified Files:
-All
-
-Change Notes:
-	1. modify VOE code text address 0x72e00000 --> 0x70000000 	
-	2. reduce VOE default text code size 2MB --> 1MB
-	3. add hal_video_isp_tuning new cmd for vreg read/write: VOE_ISP_TUNING_READ_VREG, VOE_ISP_TUNING_WRITE_VREG
-	4. add hal_video_i2c_write/hal_video_i2c_read API for I2C rea/write
-	5. add osd API and flow
-    6. fixed VOE Usage fault/ no output stream issue
-    7. release flow form git TAG to git Branch
-Reviewer:
-	Raymond 		
+		

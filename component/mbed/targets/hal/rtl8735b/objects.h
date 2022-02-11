@@ -174,6 +174,17 @@ struct ecdsa_s {
 };
 #endif
 
+#if defined(CONFIG_SPORT_EN) && (CONFIG_SPORT_EN == 1)
+struct sport_s {
+	hal_sport_adapter_t sport_adapter;
+};
+#endif
+
+#if defined(CONFIG_SNAND_FLASH_EN) && (CONFIG_SNAND_FLASH_EN == 1)
+struct snand_s {
+	hal_snafc_adaptor_t *psnand_adapter;
+};
+#endif
 
 #ifdef __cplusplus
 }

@@ -10,10 +10,10 @@
 #include "semphr.h"
 #include "main.h"
 #include "atcmd_wifi.h"
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD)
 #include "atcmd_lwip.h"
 #endif
-#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B)
+#if defined(CONFIG_PLATFORM_8721D) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_AMEBAD2) || defined(CONFIG_PLATFORM_8735B) || defined(CONFIG_PLATFORM_AMEBALITE)
 #include <platform_opts_bt.h>
 #endif
 #include "osdep_service.h"
@@ -33,6 +33,7 @@ extern void at_mp_init(void);
 extern void at_bt_init(void);
 extern void at_qr_code_init(void);
 extern void at_isp_init(void);
+extern void at_ftl_init(void);
 #ifdef CONFIG_MP_INCLUDED
 extern int wext_private_command(const char *ifname, char *cmd, int show_msg);
 #endif
@@ -98,7 +99,9 @@ log_init_t log_init_table[] = {
 #if defined(CONFIG_BT) && CONFIG_BT
 	at_bt_init,
 #endif
-
+#if defined(CONFIG_FTL) && CONFIG_FTL
+	at_ftl_init,
+#endif
 #if defined(CONFIG_ISP) && CONFIG_ISP
 	at_isp_init,
 #endif
@@ -268,7 +271,7 @@ int parse_param(char *buf, char **argv)
 	if (buf == NULL) {
 		goto exit;
 	}
-	strncpy(temp_buf, buf, LOG_SERVICE_BUFLEN);
+	strncpy(temp_buf, buf, LOG_SERVICE_BUFLEN - 1);
 
 	while ((argc < MAX_ARGC) && (*buf_pos != '\0')) {
 		while ((*buf_pos == ',') || (*buf_pos == '[') || (*buf_pos == ']')) {
@@ -437,7 +440,7 @@ void log_service(void *param)
 #endif
 		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\n\r[MEM] After do cmd, available heap %d\n\r", xPortGetFreeHeapSize());
 		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n#\r\n"); //"#" is needed for mp tool
-#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
+#if (defined(SUPPORT_UART_LOG_SERVICE) && SUPPORT_UART_LOG_SERVICE)
 		if (atcmd_lwip_is_tt_mode()) {
 			at_printf(STR_END_OF_ATDATA_RET);
 		} else {

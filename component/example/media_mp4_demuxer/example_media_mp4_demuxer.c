@@ -30,6 +30,10 @@ static void mp4_demuxer_thread(void *param)
 
 	fatfs_sd_params_t *fatfs_params = NULL;
 	fatfs_params = malloc(sizeof(fatfs_sd_params_t));
+	if (fatfs_params == NULL) {
+		printf("It can't be allocated the buffer\r\n");
+		goto mp4_create_fail;
+	}
 	if (fatfs_sd_init() < 0) {
 		goto mp4_create_fail;
 	}
@@ -38,6 +42,10 @@ static void mp4_demuxer_thread(void *param)
 
 
 	file_name = malloc(128);
+	if (file_name == NULL) {
+		printf("It can't be allocated the buffer\r\n");
+		goto mp4_create_fail;
+	}
 	memset(file_name, 0, 128);
 
 	strcpy(file_name, fatfs_params->drv);
@@ -53,6 +61,10 @@ static void mp4_demuxer_thread(void *param)
 	}
 
 	video_buf = (unsigned char *)malloc(mp4_demuxer_ctx->video_max_size);
+	if (video_buf == NULL) {
+		printf("It can't be allocated the buffer\r\n");
+		goto mp4_create_fail;
+	}
 	for (i = 0; i < mp4_demuxer_ctx->video_len; i++) {
 		size = get_video_frame(mp4_demuxer_ctx, video_buf, i, &key_frame, &video_duration, &video_timestamp);
 		f_write(&w_file, video_buf, size, &bw);
@@ -68,6 +80,10 @@ static void mp4_demuxer_thread(void *param)
 	}
 
 	audio_buf = (unsigned char *)malloc(mp4_demuxer_ctx->audio_max_size);
+	if (audio_buf == NULL) {
+		printf("It can't be allocated the buffer\r\n");
+		goto mp4_create_fail;
+	}
 	for (i = 0; i < mp4_demuxer_ctx->audio_len; i++) {
 		size = get_audio_frame(mp4_demuxer_ctx, audio_buf, i, &audio_duration, &audio_timestamp);
 		f_write(&w_file, audio_buf, size, &bw);
@@ -75,10 +91,15 @@ static void mp4_demuxer_thread(void *param)
 	}
 	printf("Write audio done\r\n");
 	f_close(&w_file);
-
-
+	printf("audio foramt %u\r\n", mp4_demuxer_ctx->audio_format_type);
+	if (mp4_demuxer_ctx->audio_format_type == AUDIO_ULAW) {
+		f_rename("ameba_audio.aac", "ameba_audio.ulaw");
+	} else if (mp4_demuxer_ctx->audio_format_type == AUDIO_ALAW) {
+		f_rename("ameba_audio.aac", "ameba_audio.alaw");
+	}
 	printf("mp4_demuxer_close\r\n");
-	mp4_demuxer_close(mp4_demuxer_ctx);
+EXIT:
+mp4_create_fail:
 	if (fatfs_params) {
 		free(fatfs_params);
 	}
@@ -91,9 +112,10 @@ static void mp4_demuxer_thread(void *param)
 	if (file_name) {
 		free(file_name);
 	}
-
-EXIT:
-mp4_create_fail:
+	if (mp4_demuxer_ctx) {
+		mp4_demuxer_close(mp4_demuxer_ctx);
+		free(mp4_demuxer_ctx);
+	}
 	vTaskDelete(NULL);
 }
 

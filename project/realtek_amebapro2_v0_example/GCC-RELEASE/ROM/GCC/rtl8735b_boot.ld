@@ -10,9 +10,12 @@ MEMORY
   DTCM_RAM (wrx)		: ORIGIN = 0x20000000, LENGTH = 0x20004000 - 0x20000000  /*  16KB */
   
   /* Use Secure RAM last 60KB for boot loader used */
-  VECTORS_RAM (rwx)		: ORIGIN = 0x20166000, LENGTH = 0x20166200 - 0x20166000  /* 512B */
-  RAM_FUN_TABLE (rwx)	: ORIGIN = 0x20166200, LENGTH = 0x20166300 - 0x20166200  /* 240B */ 
-  RAM (rwx)				: ORIGIN = 0x20166300, LENGTH = 0x2016E300 - 0x20166300  /* 32 KB */
+  VECTORS_RAM   (rwx)	: ORIGIN = 0x00018000, LENGTH = 0x00018200 - 0x00018000  /* 512B */
+  RAM_FUN_TABLE (rwx)	: ORIGIN = 0x00018200, LENGTH = 0x00018300 - 0x00018200  /* 240B */ 
+  ITCM_RAM      (rwx)	: ORIGIN = 0x00018300, LENGTH = 0x00028000 - 0x00018300  /* 63.25KB */
+  RAM           (rwx)	: ORIGIN = 0x20166300, LENGTH = 0x20172300 - 0x20166300  /* 48 KB */
+  VOE           (rwx)	: ORIGIN = 0x70000000, LENGTH = 0x70100000 - 0x70000000	/*  1MB */
+  
 }
 
 /* Library configurations */
@@ -55,6 +58,14 @@ ENTRY(_start_addr)
 
 SECTIONS
 {
+
+	.voe :
+	{
+		. = ALIGN(4);
+		__voe_code_start__ = .;
+		
+	} > VOE	
+
 	/* templary BSS for boot loader, it will be recycled
 	   and be used by FW code */
 	.boot_temp_use.bss :
@@ -101,10 +112,10 @@ SECTIONS
 		__bss_end__ = .;
 	} > RAM
 
-	.data : AT (__data_start__)
+	.ram.data :
 	{
-		. = ALIGN(16);
-		__fw_img_start__ = .;
+		. = ALIGN(4);
+		__fw_img_start__ = .;	/*	This locate define is important!!! erase boot loader will reference this as start */
 		__data_start__ = .;
 		*(vtable)
 		*(.data*)
@@ -135,38 +146,36 @@ SECTIONS
 		/* All data end */
 		__data_end__ = .;
 
-	} > RAM
+	} > ITCM_RAM
 
-	.ram.code_text : AT (__ram_code_text_start__)
+	.ram.code_text :
 	{
 		. = ALIGN(32);
 		__ram_code_text_start__ = .;
 
 		__ram_img_signature__ = .;
-		KEEP(*(.start.ram.sign*))		
-
+		KEEP(*(.start.ram.sign*))
 		*(.text*)
 		*hal_sys_ctrl.o(.text*)
 		*hal_dram_init.o(.text*)
 		*hal_flash.o(.text*)
 		*hal_timer.o(.text*)
-		*hal_uart.o(.text*)
-		
-		
+		*hal_uart.o(.text*)	
 		__ram_code_text_end__ = .;
-	} > RAM
+
+	} > ITCM_RAM
 
 	.ram.code_rodata :
 	{
 		__ram_code_rodata_start__ = .;
-
 		*(.rodata*)
 		*(.rodata.str1*)
 		*hal_sys_ctrl.o(.rodata*)
-		*hal_dram_init.o(.rodata*)
-		__ram_code_rodata_end__ = .;
-	} > RAM
+		*hal_dram_init.o(.rodata*)	
+		__ram_code_rodata_end__ = .;	/*	This locate define is important!!! erase boot loader will reference this as end */
 
+	} > ITCM_RAM
+	
 	.heap (COPY):
 	{
 		__HeapBase = .;
@@ -193,4 +202,73 @@ SECTIONS
 
 	/* Check if data + heap + stack exceeds RAM limit */
 /* TODO:	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack") */
+
+	/*-------------------------------------------------------------*/
+/* Debug Section : will drop in elf                            */
+/*-------------------------------------------------------------*/
+
+    /* DWARF debug sections.
+       Symbols in the DWARF debugging sections are relative to the beginning
+       of the section so we begin them at 0.  */
+    /* DWARF 1 */
+    .debug          0 : { *(.debug) }
+    .line           0 : { *(.line) }
+    /* GNU DWARF 1 extensions */
+    .debug_srcinfo  0 : { *(.debug_srcinfo) }
+    .debug_sfnames  0 : { *(.debug_sfnames) }
+    /* DWARF 1.1 and DWARF 2 */
+    .debug_aranges  0 : { *(.debug_aranges) }
+    .debug_pubnames 0 : { *(.debug_pubnames) }
+    /* DWARF 2 */
+    .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
+    .debug_abbrev   0 : { *(.debug_abbrev) }
+    .debug_line     0 : { *(.debug_line) }
+    .debug_frame    0 : { *(.debug_frame) }
+    .debug_str      0 : { *(.debug_str) }
+    .debug_loc      0 : { *(.debug_loc) }
+    .debug_macinfo  0 : { *(.debug_macinfo) }
+    /* SGI/MIPS DWARF 2 extensions */
+    .debug_weaknames 0 : { *(.debug_weaknames) }
+    .debug_funcnames 0 : { *(.debug_funcnames) }
+    .debug_typenames 0 : { *(.debug_typenames) }
+    .debug_varnames  0 : { *(.debug_varnames) }
+    /* DWARF 3 */
+    .debug_pubtypes 0 : { *(.debug_pubtypes) }
+    .debug_ranges   0 : { *(.debug_ranges) }
+    /* DWARF Extension.  */
+    .debug_macro    0 : { *(.debug_macro) }
+    .gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
+    .gptab.sdata : { *(.gptab.data) *(.gptab.sdata) }
+    .gptab.sbss : { *(.gptab.bss) *(.gptab.sbss) }
+    .mdebug.abi32 0 : { KEEP(*(.mdebug.abi32)) }
+    .mdebug.abiN32 0 : { KEEP(*(.mdebug.abiN32)) }
+    .mdebug.abi64 0 : { KEEP(*(.mdebug.abi64)) }
+    .mdebug.abiO64 0 : { KEEP(*(.mdebug.abiO64)) }
+    .mdebug.eabi32 0 : { KEEP(*(.mdebug.eabi32)) }
+    .mdebug.eabi64 0 : { KEEP(*(.mdebug.eabi64)) }
+    .gcc_compiled_long32 0 : { KEEP(*(.gcc_compiled_long32)) }
+    .gcc_compiled_long64 0 : { KEEP(*(.gcc_compiled_long64)) }
+    .ARM.attributes 0 : { *(.ARM.attributes) }
+
+    /DISCARD/ :
+    {
+        /* Stabs debugging sections.  */
+        *(.comment)
+        *(.stabstr)
+        /*
+        *(.pdr)
+        *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) *(.gnu.attributes)
+        *(.reginfo)
+        *(.rel.dyn)
+        *(.MIPS.abiflags)
+        *(.note.gnu.build-id)
+         */
+    }
+
+    /* Collect unexpected sections.  */
+    .trashcan :
+    {
+        *(*)
+    } > RAM
+    ASSERT(SIZEOF(.trashcan) == 0, "Some section is collect by trashcan.Check your map file.")
 }

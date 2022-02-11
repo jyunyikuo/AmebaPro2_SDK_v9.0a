@@ -400,79 +400,90 @@ extern "C" {
   */
 
 /** @brief BAS client handle type*/
-typedef enum {
-	HDL_BAS_SRV_START,           //!< start handle of battery service
-	HDL_BAS_SRV_END,             //!< end handle of battery service
-	HDL_BAS_BATTERY_LEVEL,       //!< battery level characteristic value handle
-	HDL_BAS_BATTERY_LEVEL_CCCD,  //!< battery level characteristic CCCD handle
-	HDL_BAS_CACHE_LEN            //!< handle cache length
+typedef enum
+{
+    HDL_BAS_SRV_START,           //!< start handle of battery service
+    HDL_BAS_SRV_END,             //!< end handle of battery service
+    HDL_BAS_BATTERY_LEVEL,       //!< battery level characteristic value handle
+    HDL_BAS_BATTERY_LEVEL_CCCD,  //!< battery level characteristic CCCD handle
+    HDL_BAS_CACHE_LEN            //!< handle cache length
 } T_BAS_HANDLE_TYPE;
 
 /** @brief BAS client discovery state*/
-typedef enum {
-	DISC_BAS_IDLE,
-	DISC_BAS_START,
-	DISC_BAS_DONE,
-	DISC_BAS_FAILED
+typedef enum
+{
+    DISC_BAS_IDLE,
+    DISC_BAS_START,
+    DISC_BAS_DONE,
+    DISC_BAS_FAILED
 } T_BAS_DISC_STATE;
 
 /** @brief BAS client notification data struct*/
-typedef struct {
-	uint8_t battery_level;
+typedef struct
+{
+    uint8_t battery_level;
 } T_BAS_NOTIFY_DATA;
 
 /** @brief BAS client write type*/
-typedef enum {
-	BAS_WRITE_NOTIFY_ENABLE,
-	BAS_WRITE_NOTIFY_DISABLE,
+typedef enum
+{
+    BAS_WRITE_NOTIFY_ENABLE,
+    BAS_WRITE_NOTIFY_DISABLE,
 } T_BAS_WRTIE_TYPE;
 
 /** @brief BAS client write result*/
-typedef struct {
-	T_BAS_WRTIE_TYPE type;
-	uint16_t cause;
+typedef struct
+{
+    T_BAS_WRTIE_TYPE type;
+    uint16_t cause;
 } T_BAS_WRITE_RESULT;
 
 /** @brief BAS client read data */
-typedef union {
-	uint8_t battery_level;
-	bool notify;
+typedef union
+{
+    uint8_t battery_level;
+    bool notify;
 } T_BAS_READ_DATA;
 
 /** @brief BAS client read type*/
-typedef enum {
-	BAS_READ_NOTIFY,
-	BAS_READ_BATTERY_LEVEL,
+typedef enum
+{
+    BAS_READ_NOTIFY,
+    BAS_READ_BATTERY_LEVEL,
 } T_BAS_READ_TYPE;
 
 /** @brief BAS client read result*/
-typedef struct {
-	T_BAS_READ_TYPE type;
-	T_BAS_READ_DATA data;
-	uint16_t cause;
+typedef struct
+{
+    T_BAS_READ_TYPE type;
+    T_BAS_READ_DATA data;
+    uint16_t cause;
 } T_BAS_READ_RESULT;
 
 /** @brief BAS client callback type*/
-typedef enum {
-	BAS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
-	BAS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
-	BAS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
-	BAS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
-	BAS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
+typedef enum
+{
+    BAS_CLIENT_CB_TYPE_DISC_STATE,          //!< Discovery procedure state, done or pending.
+    BAS_CLIENT_CB_TYPE_READ_RESULT,         //!< Read request's result data, responsed from server.
+    BAS_CLIENT_CB_TYPE_WRITE_RESULT,        //!< Write request result, success or fail.
+    BAS_CLIENT_CB_TYPE_NOTIF_IND_RESULT,    //!< Notification or indication data received from server.
+    BAS_CLIENT_CB_TYPE_INVALID              //!< Invalid callback type, no practical usage.
 } T_BAS_CLIENT_CB_TYPE;
 
 /** @brief BAS client callback content*/
-typedef union {
-	T_BAS_DISC_STATE disc_state;
-	T_BAS_READ_RESULT read_result;
-	T_BAS_NOTIFY_DATA notify_data;
-	T_BAS_WRITE_RESULT write_result;
+typedef union
+{
+    T_BAS_DISC_STATE disc_state;
+    T_BAS_READ_RESULT read_result;
+    T_BAS_NOTIFY_DATA notify_data;
+    T_BAS_WRITE_RESULT write_result;
 } T_BAS_CLIENT_CB_CONTENT;
 
 /** @brief BAS client callback data*/
-typedef struct {
-	T_BAS_CLIENT_CB_TYPE     cb_type;
-	T_BAS_CLIENT_CB_CONTENT  cb_content;
+typedef struct
+{
+    T_BAS_CLIENT_CB_TYPE     cb_type;
+    T_BAS_CLIENT_CB_CONTENT  cb_content;
 } T_BAS_CLIENT_CB_DATA;
 /** End of BAS_CLIENT_Exported_Types
 * @}
@@ -632,7 +643,6 @@ bool bas_set_hdl_cache(uint8_t conn_id, uint16_t *p_hdl_cache, uint8_t len);
 /** @} End of BAS_CLIENT_Exported_Functions */
 
 /** @} End of BAS_CLIENT */
-
 
 #endif
 

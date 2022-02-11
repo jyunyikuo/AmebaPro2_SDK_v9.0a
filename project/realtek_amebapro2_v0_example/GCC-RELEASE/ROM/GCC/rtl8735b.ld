@@ -15,8 +15,8 @@ MEMORY
   ROM_USED_RAM (rwx)    : ORIGIN = 0x20100200, LENGTH = 0x20101200 - 0x20100200  /* 4KB */
   RAM_FUN_TABLE (rwx)   : ORIGIN = 0x20101200, LENGTH = 0x201012F0 - 0x20101200  /* 240B */
   RAM_IMG_SIGN (rwx)    : ORIGIN = 0x201012F0, LENGTH = 0x20101300 - 0x201012F0  /*  16B */
-  RAM (rwx)             : ORIGIN = 0x20101300, LENGTH = 0x20178000 - 0x20101300  /* 475.25KB */
-  RAM_BOOT_TEMP (rwx)   : ORIGIN = 0x20178000, LENGTH = 0x2017C000 - 0x20178000  /*  16KB */
+  RAM (rwx)             : ORIGIN = 0x20101300, LENGTH = 0x20174800 - 0x20101300  /* 461.25KB */
+  RAM_BOOT_TEMP (rwx)   : ORIGIN = 0x20174800, LENGTH = 0x2017C000 - 0x20174800  /*  30KB */
   RAM_NC     (rwx)      : ORIGIN = 0x2017C000, LENGTH = 0x20180000 - 0x2017C000  /*  16KB*/
 
   ROM_STUB   (rx) 		: ORIGIN = 0x100BE000, LENGTH = 0x100C0000 - 0x100BE000  /* */
@@ -168,6 +168,8 @@ SECTIONS
 		KEEP(*fw_flash_boot.o(.text*))
 		KEEP(*fw_flash_boot.o(.rodata*))
 		KEEP(*fw_flash_boot.o(.rodata.str1*))
+		KEEP(*fw_snand_boot.o(.text*))
+		KEEP(*fw_snand_boot.o(.rodata*))
 
 		/**** WLAN ROM code ****/
 		KEEP(*(.rom.wlan.text))
@@ -501,7 +503,21 @@ SECTIONS
 		__rom_stubs_snand = .;
 		KEEP(*(.rom.hal_snand.stubs))
 
-	} > ROM_STUB /* ROM_STUB -->ROM Modify By Raymond */
+		/**** New stubs for A-Cut ROM start from here ****/
+		. = ALIGN(0x10);
+		__rom_stubs_hal_hkdf_extend = .;
+		KEEP(*(.rom.hal_hkdf_extend.stubs))
+
+		. = ALIGN(0x10);
+		__rom_stubs_hal_trng = .;
+		KEEP(*(.rom.hal_trng.stubs))
+
+		. = ALIGN(0x10);
+		__rom_stubs_snand_boot = .;
+		KEEP(*(.rom.snand_boot.stubs))
+
+		/**** New stubs for B-Cut ROM start from here ****/
+	} > ROM_STUB
 
 /************* End of ROM **************/
 
@@ -549,6 +565,7 @@ SECTIONS
 		KEEP(*system_rtl8735b.o(.data*))
 		KEEP(*fw_pg.o(.data*))
 		KEEP(*fw_uart_boot.o(.data*))
+		KEEP(*fw_snand_boot.o(.data*))
 		KEEP(*(.rom.hal_uart.data))
 		KEEP(*(.rom.hal_timer.data))
 		KEEP(*(.rom.hal_pwm.data))
@@ -611,6 +628,8 @@ SECTIONS
 		KEEP(*rtl8735b_i2c.o(.bss*))
 		KEEP(*rtl8735b_flash.o(.bss*))
 		KEEP(*(.rom.hal_snand.bss))
+		KEEP(*fw_snand_boot.o(.bss*))
+		KEEP(*fw_snand_boot.o(COMMON))
 
 		/* ??? Is it ok ??? Should remove becaure not all rtl8735b_xxx are ROM codes*/
 		KEEP(*rtl8735b_*.o(.bss*))
@@ -650,6 +669,7 @@ SECTIONS
 		
 		__ram_code_text_start__ = .;
 		*ram_start.o(.text*)
+		*hal_pinmux.o(.text*)
 		*app_start.o(.text*)
 		*hal_sys_ctrl.o(.text*)
 		*hal_dram_init.o(.text*)
@@ -673,6 +693,7 @@ SECTIONS
 
 		*hal_gdma.o(.text*)
 		*hal_gpio.o(.text*)
+		*hal_spic.o(.text*)
 		*hal_flash.o(.text*)
 		*hal_timer.o(.text*)
 		*hal_wdt.o(.text*)
@@ -698,6 +719,7 @@ SECTIONS
 		__data_start__ = .;
 		*(vtable)
 		*hal_sys_ctrl.o(.data*)
+		*hal_pinmux.o(.data*)
 		*hal_gdma.o(.data*)
 		*hal_gpio.o(.data*)
 		*hal_flash.o(.data*)
@@ -738,14 +760,18 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__ram_code_rodata_start__ = .;
+		*ram_start.o(.rodata*)
+		*hal_pinmux.o(.rodata*)
 		*hal_sys_ctrl.o(.rodata*)
 		*hal_gdma.o(.rodata*)
 		*hal_gpio.o(.rodata*)
+		*hal_spic.o(.rodata*)
 		*hal_flash.o(.rodata*)
 		*hal_timer.o(.rodata*)
 		*hal_uart.o(.rodata*)
 		*hal_i2s.o(.rodata*)
 		*lib_a*(.rodata*)
+		*mpu_config.o(.rodata*)
 		. = ALIGN(4);
 		*hal_dram_init.o(.rodata*)
 		*hal_dram_init.o(.rodata.str1*)
@@ -823,14 +849,23 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__bss_start__ = .;
-		*lib_a*(.bss*)
-		*(.bss*)
 		*(.ram.*.bss*)		
+		*hal_dram_init.o(.bss*)
+		*ram_start.o(.bss*)
+		*hal_pinmux.o(.bss*)
+		*hal_sys_ctrl.o(.bss*)
+		*hal_gdma.o(.bss*)
+		*hal_gpio.o(.bss*)
+		*hal_spic.o(.bss*)
+		*hal_flash.o(.bss*)
+		*hal_timer.o(.bss*)
+		*hal_uart.o(.bss*)
+		*hal_i2s.o(.bss*)
+		*lib_a*(.bss*)
 		
 		*main.o(COMMON)
 		*ram_start.o(COMMON)
 		*lib_a*(COMMON)
-		
 	} > RAM
 
 	.non_secure.bss :
@@ -868,6 +903,7 @@ SECTIONS
         KEEP(*fw_pg.o(.rom_temp.bss))
         KEEP(*fw_flash_boot.o(.rom_temp.bss))
         KEEP(*fw_uart_boot.o(.rom_temp.bss))
+        KEEP(*fw_snand_boot.o(.rom_temp.bss))
         __rom_temp_bss_end__ = .;
 
         . = ALIGN(32);
@@ -944,6 +980,7 @@ SECTIONS
 		. = ALIGN(4);
 		__eram_bss_start__ = .;
 		*(COMMON)		
+		*(.bss*)
 		__eram_bss_end__ = .;
 		__eram_heap_start__ = .;
 		
@@ -952,7 +989,7 @@ SECTIONS
 	.ddr_nc.bss :
 	{
 		. = ALIGN(4);
-		__eram_nc_heap_start__ = .;
+		__eram_ncnb_start__ = .;
 		
 	} > DDR_NC	
 	

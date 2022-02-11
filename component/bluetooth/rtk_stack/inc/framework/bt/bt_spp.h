@@ -73,7 +73,7 @@ bool bt_spp_service_register(uint8_t *service_uuid, uint8_t server_chann);
  * \ingroup BT_SPP
  */
 bool bt_spp_registered_uuid_check(T_GAP_UUID_TYPE type, T_GAP_UUID_DATA data,
-								  uint8_t *local_server_chann);
+                                  uint8_t *local_server_chann);
 
 /**
  * bt_spp.h
@@ -112,7 +112,7 @@ bool bt_spp_ertm_mode_set(bool enable);
  * \ingroup BT_SPP
  */
 bool bt_spp_connect_req(uint8_t *bd_addr, uint8_t rmt_server_chann, uint16_t frame_size,
-						uint8_t credits, uint8_t local_server_chann);
+                        uint8_t credits, uint8_t local_server_chann);
 
 /**
  * bt_spp.h
@@ -136,7 +136,7 @@ bool bt_spp_connect_req(uint8_t *bd_addr, uint8_t rmt_server_chann, uint16_t fra
  * \ingroup BT_SPP
  */
 bool bt_spp_connect_cfm(uint8_t *bd_addr, uint8_t local_server_chann, bool accept,
-						uint16_t frame_size, uint8_t credits);
+                        uint16_t frame_size, uint8_t credits);
 
 /**
  * bt_spp.h
@@ -189,7 +189,7 @@ bool bt_spp_disconnect_all_req(uint8_t *bd_addr);
  * \ingroup BT_SPP
  */
 bool bt_spp_data_send(uint8_t *bd_addr, uint8_t local_server_chann,
-					  uint8_t *data, uint16_t len, bool ack);
+                      uint8_t *data, uint16_t len, bool ack);
 
 /**
  * bt_spp.h

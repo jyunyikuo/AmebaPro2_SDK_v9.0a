@@ -51,6 +51,7 @@ static void sw_rtc_tick_handler(uint32_t id)
 
 static void rtc_init(void)
 {
+	gtimer_clock_sel(1);
 	// Initial a periodical timer
 	gtimer_init(&sw_rtc, SW_RTC_TIMER_ID);
 

@@ -10,10 +10,12 @@ MEMORY
   DTCM_RAM (wrx)		: ORIGIN = 0x20000000, LENGTH = 0x20004000 - 0x20000000  /*  16KB */
   
   /* Use Secure RAM last 60KB for boot loader used */
-  VECTORS_RAM (rwx)		: ORIGIN = 0x00018000, LENGTH = 0x00018200 - 0x00018000  /* 512B */
+  VECTORS_RAM   (rwx)	: ORIGIN = 0x00018000, LENGTH = 0x00018200 - 0x00018000  /* 512B */
   RAM_FUN_TABLE (rwx)	: ORIGIN = 0x00018200, LENGTH = 0x00018300 - 0x00018200  /* 240B */ 
-  ITCM_RAM (rwx) 		: ORIGIN = 0x00018300, LENGTH = 0x00028000 - 0x00018300  /* 63.25KB */
-  RAM (rwx)				: ORIGIN = 0x20166300, LENGTH = 0x20172300 - 0x20166300  /* 48 KB */
+  ITCM_RAM_BSS  (rwx)	: ORIGIN = 0x00018300, LENGTH = 0x00020300 - 0x00018300  /* 32 KB */
+  ITCM_RAM      (rwx)	: ORIGIN = 0x00020300, LENGTH = 0x00030000 - 0x00020300  /* 63.25KB */
+  VOE           (rwx)	: ORIGIN = 0x70000000, LENGTH = 0x70100000 - 0x70000000	/*  1MB */
+  
 }
 
 /* Library configurations */
@@ -56,6 +58,14 @@ ENTRY(_start_addr)
 
 SECTIONS
 {
+
+	.voe :
+	{
+		. = ALIGN(4);
+		__voe_code_start__ = .;
+		
+	} > VOE	
+
 	/* templary BSS for boot loader, it will be recycled
 	   and be used by FW code */
 	.boot_temp_use.bss :
@@ -94,18 +104,18 @@ SECTIONS
 	.bss :
 	{
 		. = ALIGN(4);
+		__fw_img_start__ = .;	/*	This locate define is important!!! erase boot loader will reference this as start */
 		__bss_start__ = .;
 		*(.bss*)
 		*(COMMON)
 		*hal_dram_init.o(.bss*)
 		. = ALIGN(4);
 		__bss_end__ = .;
-	} > RAM
+	} > ITCM_RAM_BSS
 
 	.ram.data :
 	{
 		. = ALIGN(4);
-		__fw_img_start__ = .;	/*	This locate define is important!!! erase boot loader will reference this as start */
 		__data_start__ = .;
 		*(vtable)
 		*(.data*)

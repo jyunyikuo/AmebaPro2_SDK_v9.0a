@@ -54,6 +54,7 @@ extern  "C" {
     * @}
     */
 
+#define ERROR_MUTEX_GET_TIMEOUT -2	/*get mutex fail. please try again*/
 typedef enum {
 	FTL_LEVEL_ERROR = 0, /**< Error */
 	FTL_LEVEL_WARN  = 1, /**< Warning */

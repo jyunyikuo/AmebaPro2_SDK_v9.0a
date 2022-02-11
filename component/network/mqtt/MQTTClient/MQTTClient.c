@@ -100,6 +100,7 @@ void MQTTClientInit(MQTTClient *c, Network *network, unsigned int command_timeou
 	c->next_packetid = 1;
 	c->ipstack->m2m_rxevent = 0;
 	c->mqttstatus = MQTT_START;
+	c->qos_limit = QOS2;
 	TimerInit(&c->cmd_timer);
 	TimerInit(&c->ping_timer);
 }
@@ -149,7 +150,7 @@ static int readPacket(MQTTClient *c, Timer *timer)
 	decodePacket(c, &rem_len, TimerLeftMS(timer));
 	len += MQTTPacket_encode(c->readbuf + 1, rem_len); /* put the original remaining length back into the buffer */
 
-	if (len + rem_len > c->readbuf_size) {
+	if (len + rem_len > (int)c->readbuf_size) {
 		mqtt_printf(MQTT_WARNING, "rem_len = %d, read buffer will overflow", rem_len);
 		rc = BUFFER_OVERFLOW;
 		goto exit;
@@ -432,11 +433,14 @@ exit:
 
 int MQTTSubscribe(MQTTClient *c, const char *topicFilter, enum QoS qos, messageHandler messageHandler)
 {
+	/* To avoid gcc warnings */
+	(void) messageHandler;
 	int rc = FAILURE;
 	Timer timer;
 	int len = 0;
 	MQTTString topic = MQTTString_initializer;
 	topic.cstring = (char *)topicFilter;
+	int qos_val[1] = {qos};
 
 	if (!c->isconnected) {
 		goto exit;
@@ -445,7 +449,7 @@ int MQTTSubscribe(MQTTClient *c, const char *topicFilter, enum QoS qos, messageH
 	TimerInit(&timer);
 	TimerCountdownMS(&timer, c->command_timeout_ms);
 
-	len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic, (int *)&qos);
+	len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic, qos_val);
 	if (len <= 0) {
 		goto exit;
 	}
@@ -630,9 +634,17 @@ int MQTTDataHandle(MQTTClient *c, fd_set *readfd, MQTTPacket_connectData *connec
 			c->isconnected = 0;
 		}
 		mqtt_printf(MQTT_INFO, "Connect Network \"%s\"", address);
-		if ((rc = NetworkConnect(c->ipstack, address, 1883)) != 0) {
-			mqtt_printf(MQTT_INFO, "Return code from network connect is %d\n", rc);
-			goto exit;
+
+		if (c->ipstack->use_ssl == 1) {
+			if ((rc = NetworkConnect(c->ipstack, address, 8883)) != 0) {
+				mqtt_printf(MQTT_INFO, "Return code from network connect is %d\n", rc);
+				goto exit;
+			}
+		} else {
+			if ((rc = NetworkConnect(c->ipstack, address, 1883)) != 0) {
+				mqtt_printf(MQTT_INFO, "Return code from network connect is %d\n", rc);
+				goto exit;
+			}
 		}
 		mqtt_printf(MQTT_INFO, "\"%s\" Connected", address);
 		mqtt_printf(MQTT_INFO, "Start MQTT connection");
@@ -672,7 +684,7 @@ int MQTTDataHandle(MQTTClient *c, fd_set *readfd, MQTTPacket_connectData *connec
 				mqtt_printf(MQTT_INFO, "MQTT Connected");
 				TimerInit(&c->cmd_timer);
 				TimerCountdownMS(&c->cmd_timer, c->command_timeout_ms);
-				if ((rc = MQTTSubscribe(c, topic, QOS2, messageHandler)) != 0) {
+				if ((rc = MQTTSubscribe(c, topic, c->qos_limit, messageHandler)) != 0) {
 					mqtt_printf(MQTT_INFO, "Return code from MQTT subscribe is %d\n", rc);
 				} else {
 					mqtt_printf(MQTT_INFO, "Subscribe to Topic: %s", topic);

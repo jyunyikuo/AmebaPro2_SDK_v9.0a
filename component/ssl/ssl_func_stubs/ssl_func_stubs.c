@@ -5,6 +5,8 @@
 #include "hal_crypto.h"
 #endif
 
+#include "mbedtls/version.h"
+
 extern const ssl_func_stubs_t __rom_stubs_ssl;
 
 /* ssl_ram_map */
@@ -65,6 +67,9 @@ int platform_set_malloc_free(
 	/* Variables */
 	rom_ssl_ram_map.use_hw_crypto_func = 1;
 
+#if defined(CONFIG_PLATFORM_8735B) && (MBEDTLS_VERSION_NUMBER==0x03000000 || MBEDTLS_VERSION_NUMBER==0x02100600)
+	rtl_cryptoEngine_init();
+#endif
 	init_rom_ssl_ram_map(ssl_calloc, ssl_free, NULL, rom_ssl_ram_map.use_hw_crypto_func);
 	init_rom_ssl_hw_crypto_aes_ecb(rtl_crypto_aes_ecb_init, rtl_crypto_aes_ecb_decrypt, rtl_crypto_aes_ecb_encrypt);
 	init_rom_ssl_hw_crypto_aes_cbc(rtl_crypto_aes_cbc_init, rtl_crypto_aes_cbc_decrypt, rtl_crypto_aes_cbc_encrypt);
@@ -80,6 +85,7 @@ int platform_set_malloc_free(
 	return 0;
 }
 
+#if !(defined(CONFIG_PLATFORM_8735B) && (MBEDTLS_VERSION_NUMBER==0x03000000 || MBEDTLS_VERSION_NUMBER==0x02100600))
 /* bignum */
 void mbedtls_mpi_init(mbedtls_mpi *X)
 {
@@ -1742,3 +1748,5 @@ int mbedtls_pk_write_key_pem(mbedtls_pk_context *key, unsigned char *buf, size_t
 	return __rom_stubs_ssl.mbedtls_pk_write_key_pem(key, buf, size);
 }
 #endif /* !((defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)) */
+
+#endif /* !(defined(CONFIG_PLATFORM_8735B) && (MBEDTLS_VERSION_NUMBER==0x03000000)) */

@@ -31,7 +31,9 @@
 
   "extraCCFlags": [
     "-DCTBRC_STRENGTH",
-    "-Wno-format -Wno-implicit-function-declaration"
+    "-Wno-format -Wno-implicit-function-declaration",
+    "-Werror"
+    
   ],
   
   "excludePath": [
@@ -57,8 +59,12 @@
 	"-cp -f voe_bin/voe.bin $(OBJCOPYDIR)/../output",
 	"-cp -f voe_bin/voe_fcs.bin $(OBJCOPYDIR)/../output",
 	"-cp -f voe_bin/fcs_data.bin $(OBJCOPYDIR)/../output",
+	"-cp -f voe_bin/fcs_data_dummy.bin $(OBJCOPYDIR)/../output",
 	"-cp -f voe_bin/sensor.bin $(OBJCOPYDIR)/../output",
-	"-cp -f voe_bin/iq.bin $(OBJCOPYDIR)/../output"
+	"-cp -f voe_bin/iq.bin $(OBJCOPYDIR)/../output",
+	"-cp -f voe_bin/fcs_data_ps5258.bin $(OBJCOPYDIR)/../output",
+	"-cp -f voe_bin/fcs_data_gc2053.bin $(OBJCOPYDIR)/../output",	
+	"-cp -f voe_bin/sensor_ps5258.bin $(OBJCOPYDIR)/../output"		
   ],
   
 

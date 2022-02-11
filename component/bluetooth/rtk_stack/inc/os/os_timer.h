@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2015, Realtek Semiconductor Corporation. All rights reserved.
  */
 

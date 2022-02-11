@@ -715,19 +715,6 @@ uint8_t hal_uart_pin_to_idx(uint8_t pin_name, uart_pin_func_t pin_type)
 	return hal_uart_stubs.hal_uart_pin_to_idx(pin_name, pin_type);
 }
 
-/**
- *  @brief Select low-power UART SCLK, and setting default baud-rate table.
- *
- *  @param[in]  puart_adapter   The UART adapter.
- *  @param[in]  sclk_sel   The low-power UART SCLK source.
- *
- *  @returns    The UART index. If the given pin name didn't map to a valid UART, the return value is 0xFF.
- */
-__STATIC_INLINE
-hal_status_t hal_uart_lp_sclk_select(phal_uart_adapter_t puart_adapter, uint8_t sclk_sel)
-{
-	return hal_uart_stubs.hal_uart_lp_sclk_select(puart_adapter, sclk_sel);
-}
 
 /**
  *  @brief Hooks a callback function for interrupt mode TX FIFO level low event.
@@ -757,6 +744,13 @@ void _uart_tx_dma_irq_handler_ram(phal_uart_adapter_t puart_adapter);
 void _uart_rx_dma_irq_handler_ram(phal_uart_adapter_t puart_adapter);
 #endif
 void hal_uart_deinit(phal_uart_adapter_t puart_adapter);
+#if !defined(CONFIG_BUILD_NONSECURE)
+hal_status_t hal_uart_lp_sclk_select(phal_uart_adapter_t puart_adapter, uint8_t sclk_sel);
+#else
+#if !IS_AFTER_CUT_B(CONFIG_CHIP_VER) || IS_CUT_B(CONFIG_CHIP_VER)
+hal_status_t hal_uart_lp_sclk_select_patch(phal_uart_adapter_t puart_adapter, uint8_t sclk_sel);
+#endif
+#endif
 hal_status_t hal_uart_set_flow_control(phal_uart_adapter_t puart_adapter, uint32_t flow_ctrl);
 hal_status_t hal_uart_rx_gdma_init(phal_uart_adapter_t puart_adapter, phal_gdma_adaptor_t pgdma_chnl);
 hal_status_t hal_uart_rx_gdma_deinit(phal_uart_adapter_t puart_adapter);
@@ -764,6 +758,7 @@ hal_status_t hal_uart_tx_gdma_init(phal_uart_adapter_t puart_adapter, phal_gdma_
 hal_status_t hal_uart_tx_gdma_deinit(phal_uart_adapter_t puart_adapter);
 hal_status_t hal_uart_dma_recv(phal_uart_adapter_t puart_adapter, uint8_t *prx_buf, uint32_t len);
 hal_status_t hal_uart_dma_send(phal_uart_adapter_t puart_adapter, uint8_t *ptx_buf, uint32_t len);
+
 
 /** @} */ /* End of group hs_hal_uart */
 

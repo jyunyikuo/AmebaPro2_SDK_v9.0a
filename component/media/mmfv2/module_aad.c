@@ -47,6 +47,7 @@ int aad_handle(void *p, void *input, void *output)
 	uint8_t *inbuf, *inbuf_backup;
 	int bytesLeft, bytesLeft_backup;
 	int ret = 0;
+	int process_times = 0;
 
 	if (input_item->size == 0)	{
 		return -1;
@@ -73,7 +74,8 @@ int aad_handle(void *p, void *input, void *output)
 			AACGetLastFrameInfo(ctx->aad, &frameInfo);
 
 			// TODO: it might need resample if use different sample rate & channel number
-			memcpy((void *)output_item->data_addr, ctx->decode_buf, frameInfo.outputSamps * 2);
+			memcpy((void *)output_item->data_addr + (process_times * frameInfo.outputSamps * 2), ctx->decode_buf, frameInfo.outputSamps * 2);
+			process_times ++;
 		} else {
 			if (ret == ERR_AAC_INDATA_UNDERFLOW) {
 				inbuf = inbuf_backup;
@@ -92,7 +94,7 @@ int aad_handle(void *p, void *input, void *output)
 		ctx->data_cache_len = 0;
 	}
 
-	output_item->size = frameInfo.outputSamps * 2;
+	output_item->size = frameInfo.outputSamps * 2 * process_times;
 	output_item->timestamp = input_item->timestamp;
 	output_item->index = 0;
 	output_item->type = 0;
@@ -181,7 +183,7 @@ void *aad_create(void *parent)
 		goto aad_create_fail;
 	}
 	// AAC_MAX_NCHANS (2) AAC_MAX_NSAMPS (1024) defined in aacdec.h
-	ctx->decode_buf = malloc(AAC_MAX_NCHANS * AAC_MAX_NSAMPS * sizeof(int16_t));
+	ctx->decode_buf = malloc(AAC_MAX_NCHANS * AAC_MAX_NSAMPS * sizeof(int16_t) * 2);
 	if (!ctx->decode_buf) {
 		goto aad_create_fail;
 	}
@@ -198,7 +200,7 @@ void *aad_new_item(void *p)
 {
 	//aad_ctx_t *ctx = (aad_ctx_t *)p;
 
-	return malloc(AAC_MAX_NCHANS * AAC_MAX_NSAMPS * sizeof(int16_t));
+	return malloc(AAC_MAX_NCHANS * AAC_MAX_NSAMPS * sizeof(int16_t) * 2);
 }
 
 void *aad_del_item(void *p, void *d)

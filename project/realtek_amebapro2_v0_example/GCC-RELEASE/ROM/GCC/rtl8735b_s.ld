@@ -27,13 +27,13 @@ MEMORY
   RAM_IMG_SIGN (rwx)    : ORIGIN = 0x2016E3F0, LENGTH = 0x2016E400 - 0x2016E3F0		/*  16B      */
     
   /* Internal SRAM for text, rodata & data */
-  RAM (rwx)             : ORIGIN = 0x2016E400, LENGTH = 0x2017B800 - 0x2016E400		/*  53KB     */
+  RAM (rwx)             : ORIGIN = 0x2016E400, LENGTH = 0x20177800 - 0x2016E400		/*  37KB     */
   
   /* Non-Cacheable memory, defined by MPU configuration */
   /* RAM_NC (rwx)          : ORIGIN = 0x2017BB00, LENGTH = 0x2017DF00 - 0x2017BB00	*/	/*  9KB 	 */
   
   /* Internal RAM for boot temp use to load image1, will be recycle when leave ROM code */
-  RAM_BOOT_TEMP (rwx)   : ORIGIN = 0x2017B800, LENGTH = 0x2017F000 - 0x2017B800  	/*  14kB	 */
+  RAM_BOOT_TEMP (rwx)   : ORIGIN = 0x20177800, LENGTH = 0x2017F000 - 0x20177800  	/*  30kB	 */
     
   /* reserved for ROM code */
   ROM_USED_RAM (rwx)    : ORIGIN = 0x2017F000, LENGTH = 0x20180000 - 0x2017F000		/*  4KB      */
@@ -109,6 +109,9 @@ SECTIONS
 		KEEP(*fw_uart_boot.o(.rodata.str1*))
 		KEEP(*fw_flash_boot.o(.rodata*))
 		KEEP(*fw_flash_boot.o(.rodata.str1*))
+		KEEP(*fw_voe_rom_boot.o(.rodata*))
+		KEEP(*fw_voe_rom_boot.o(.rodata.str1*))
+		KEEP(*fw_snand_boot.o(.rodata*))
 		KEEP(*(.rom.ssl.dtcm))
 	} > DTCM_ROM
 
@@ -161,6 +164,8 @@ SECTIONS
 		KEEP(*fw_pg.o(.text*))
 		KEEP(*fw_uart_boot.o(.text*))
 		KEEP(*fw_flash_boot.o(.text*))
+		KEEP(*fw_voe_rom_boot.o(.text*))
+		KEEP(*fw_snand_boot.o(.text*))
 		
 /*		KEEP(*cmse_nonsecure_call.o(.text)) */
 
@@ -265,6 +270,7 @@ SECTIONS
 		KEEP(*rtl8735b_snand.o(.rodata*))
 		KEEP(*rtl8735b_hkdf.o(.rodata*))
 		KEEP(*rtl8735b_flash_sec.o(.rodata*))
+		KEEP(*rtl8735b_trng.o(.rodata*))
 
 		KEEP(*rom_mbedtls_bignum.o(.rodata.str1*))
 		KEEP(*rom_mbedtls_ecp.o(.rodata.str1*))
@@ -436,8 +442,28 @@ SECTIONS
 		__rom_stubs_ssl_s = .;
 		KEEP(*(.rom.ssl.stubs))
 
+		/**** New stubs for A-Cut ROM start from here ****/
+		. = ALIGN(0x10);
+		__rom_stubs_flash_boot_tlv = .;
+		KEEP(*(.rom.sboot_tlv.stubs))
+		
+		. = ALIGN(0x10);
+		__rom_stubs_hal_hkdf_extend = .;
+		KEEP(*(.rom.hal_hkdf_extend.stubs))
+
+		. = ALIGN(0x10);
+		__rom_stubs_hal_trng = .;
+		KEEP(*(.rom.hal_trng.stubs))
+		
+		. = ALIGN(0x10);
+		__rom_stubs_hal_flash_sec_extend = .;
+		KEEP(*(.rom.hal_flash_sec_extend.stubs))
+
+		. = ALIGN(0x10);
+		__rom_stubs_snand_boot = .;
+		KEEP(*(.rom.snand_boot.stubs))
+
 		/**** New stubs for B-Cut ROM start from here ****/
-		/**** New stubs for C-Cut ROM start from here ****/
 	} > ROM_STUB
 
 
@@ -468,6 +494,8 @@ SECTIONS
 		KEEP(*fw_pg.o(.data*))
 		KEEP(*fw_uart_boot.o(.data*))
 		KEEP(*fw_flash_boot.o(.data*))
+		KEEP(*fw_vow_rom_boot.o(.data*))
+		KEEP(*(.rom.snand_boot.data))
 		KEEP(*(.rom.hal_uart.data))
 		KEEP(*(.rom.hal_i2c.data))
 		KEEP(*(.rom.hal_timer.data))
@@ -519,11 +547,14 @@ SECTIONS
 		KEEP(*(.rom.hal_hkdf.bss))
 		KEEP(*(.rom.hal_snand.bss))
 		KEEP(*(.rom.hal_flash_sec.bss))
+		KEEP(*(.rom.hal_trng.bss))
 		KEEP(*(.infra.rom.bss))
 		KEEP(*(.stdioport.bss))
 		KEEP(*strproc.o(.bss*))
 		KEEP(*(.rom.wlan.bss))
 		KEEP(*(.rom.ssl.bss))
+		KEEP(*(.rom.snand_boot.bss))
+		KEEP(*(.rom.hal_sys_ctrl.bss))
 		__rom_bss_end__ = .;
 
 	} > ROM_USED_RAM
@@ -562,8 +593,18 @@ SECTIONS
   	    __etext = .; 
 		__data_start__ = .;
 		*(vtable)
-		*(.data*)
-
+		*ram_start.o(.data*)
+		*hal_sys_ctrl.o(.data*)
+		*hal_pinmux.o(.data*)
+		*hal_gdma.o(.data*)
+		*hal_gpio.o(.data*)
+		*hal_flash.o(.data*)
+		*hal_timer.o(.data*)
+		*hal_uart.o(.data*)
+		*hal_i2s.o(.data*)
+		*lib_a*(.data*)
+		*hal_dram_init.o(.data*)
+		
 		. = ALIGN(4);
 		/* preinit data */
 		PROVIDE_HIDDEN (__preinit_array_start = .);
@@ -603,11 +644,17 @@ SECTIONS
 		
 		__ram_code_text_start__ = .;
 		*ram_start.o(.text*)
-		*app_start.o(.text*)
+		*hal_pinmux.o(.text*)
+		*hal_uart.o(.text*)
+		*hal_timer.o(.text*)
 		*hal_sys_ctrl.o(.text*)
 		*hal_dram_init.o(.text*)
-		*hal_timer.o(.text*)
+		*hal_spic.o(.text*)
+		*hal_gdma.o(.text*)
 		*hal_wdt.o(.text*)
+		*mpu_config.o(.text*)
+		*app_start.o(.text*)
+		*lib_a*(.text*)
 		*(.text*)
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
@@ -617,9 +664,19 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__ram_code_rodata_start__ = .;
+		*ram_start.o(.rodata*)
+		*hal_pinmux.o(.rodata*)
+		*hal_sys_ctrl.o(.rodata*)
+		*hal_gdma.o(.rodata*)
+		*hal_gpio.o(.rodata*)
+		*hal_spic.o(.rodata*)
+		*hal_flash.o(.rodata*)
+		*hal_timer.o(.rodata*)
+		*hal_uart.o(.rodata*)
+		*lib_a*(.rodata*)
+		*mpu_config.o(.rodata*)
 		*hal_dram_init.o(.rodata*)
-		*(.rodata*)
-		*(.rodata.str1*)
+		*hal_dram_init.o(.rodata.str1*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > RAM
@@ -630,9 +687,12 @@ SECTIONS
 		*(.ram.bss.noinit*)
 
 		__bss_start__ = .;
+		*lib_a*(.bss*)
+		*lib_a*(COMMON)
+		*(.ram.*.bss*)		
+		*ram_start.o(.bss*)
+		*ram_start.o(COMMON)
 		*hal_dram_init.o(.bss*)
-		*(.bss*)
-		*(COMMON)
 	} > RAM
 
 	.non_secure.bss :
@@ -640,6 +700,7 @@ SECTIONS
 		. = ALIGN(16);
 		__ns_bss_start__ = .;
 		*(.nonsecure.bss*)
+		*lib_a*(.nonsecure.bss*)
 
 		. = ALIGN(4);
 		__ns_bss_end__ = .;
@@ -668,8 +729,11 @@ SECTIONS
 		__rom_temp_bss_start__ = .;
 		KEEP(*startup.o(.rom_temp.bss))	
 		KEEP(*fw_pg.o(.rom_temp.bss))
+		KEEP(*fw_pg.o(.rom.pg.secure.bss))
 		KEEP(*fw_flash_boot.o(.rom_temp.bss))
+		KEEP(*fw_voe_rom_boot.o(.rom_temp.bss))
 		KEEP(*fw_uart_boot.o(.rom_temp.bss))	
+		KEEP(*(.rom_temp.bss))
 		__rom_temp_bss_end__ = .;
 
 		. = ALIGN(32);
@@ -692,7 +756,6 @@ SECTIONS
 		
 		__rom_sboot_bss_start__ = .;
 		KEEP(*fw_flash_boot.o(.rom.sboot.bss))
-		KEEP(*fw_pg.o(.rom.pg.secure.bss))
 		__rom_sboot_bss_end__ = .;	
 
 	} > DTCM_BOOT_TEMP
@@ -701,9 +764,36 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__eram_bss_start__ = .;	
+		*(.bss*)
+		*(COMMON)
 		__eram_bss_end__ = .;
 		__eram_heap_start__ = .;
 		
+	} > DDR
+	
+	.ddr.text :
+	{
+		. = ALIGN(4);
+		__eram_text_start__ = .;
+		*(.text*)							
+		__eram_text_end__ = .;
+	} > DDR
+	
+	.ddr.data :
+	{
+		. = ALIGN(4);
+		__eram_data_start__ = .;	
+		*(.data*)							
+		__eram_data_end__ = .;	
+	} > DDR
+
+	.ddr.rodata : 
+	{
+		. = ALIGN(4);
+		__eram_rodata_start__ = .;
+		*(.rodata*)
+		*(.rodata.str1*)
+		__eram_rodata_end__ = .;
 	} > DDR
 	
 	.heap (COPY):
