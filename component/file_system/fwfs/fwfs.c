@@ -170,10 +170,11 @@ void pfw_dump_mem(uint8_t *buf, int size)
 	int size_r = size - size16;
 	uint8_t *base = buf;
 	printf("Address  :  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n\r");
+	printf("----------------------------------------------------------\n\r");
 	for (int i = 0; i < size16; i += 16) {
 		printf("%08x :", i);
 		for (int x = 0; x < 16; x++) {
-			printf(" %2x", buf[i + x]);
+			printf(" %02x", buf[i + x]);
 		}
 		printf("\n\r");
 	}
@@ -181,7 +182,7 @@ void pfw_dump_mem(uint8_t *buf, int size)
 	if (size_r) {
 		printf("%08x :", size16);
 		for (int x = 0; x < size_r; x++) {
-			printf(" %2x", buf[size16 + x]);
+			printf(" %02x", buf[size16 + x]);
 		}
 		printf("\n\r");
 	}
@@ -516,6 +517,8 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 		tmp_rec = pfw_search_next_type_id(tmp_rec, type_id);
 	} while (tmp_rec != NULL);
 	fr->part_rec = fr->part_recs[0];
+	// default content length = record block count * block size
+	fr->content_len = ((fr->part_recs_cnt - 1) * 48 + fr->part_recs[fr->part_recs_cnt - 1]->blk_cnt) * snand_blksize;
 
 	printf("open: part_rec %x, part_recs_cnt %d, type_id %x\n\r", fr->part_rec, fr->part_recs_cnt, type_id);
 
@@ -530,8 +533,12 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 		free(fr);
 		return NULL;
 	}
+	//memset(tmp, 0, 4096 + sizeof(img_hdr_t));
 
 	nand_pfw_read(fr, tmp, 4096 + sizeof(img_hdr_t));
+	nand_pfw_seek(fr, 0, SEEK_SET);
+
+	//pfw_dump_mem(tmp, 64);
 
 	manifest_t *mani = (manifest_t *)tmp;
 	if (memcmp(mani->lbl, manifest_valid_label, 8) == 0) {
@@ -546,6 +553,8 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 		fr->content_len = ((fr->part_recs_cnt - 1) * 48 + fr->part_recs[fr->part_recs_cnt - 1]->blk_cnt) * snand_blksize;
 		fr->raw_offset = 0;
 	}
+
+	//printf("raw offset %d\n\r", fr->raw_offset);
 
 	// clean tmp page and reset position, curr_pos increased by nand_pfw_read and need reset to 0
 	fr->tmp_page_valid = 0;
@@ -1148,7 +1157,7 @@ static fwfs_interface_t nor_fw = {
 
 
 static fwfs_interface_t *curr = NULL;
-
+void atcmd_pfw_init(void);
 void pfw_init(void)
 {
 	// very ugly method to detect what type flash on SPIC, suck
@@ -1164,6 +1173,8 @@ void pfw_init(void)
 	if (curr && curr->init) {
 		curr->init();
 	}
+
+	//atcmd_pfw_init();
 }
 
 void pfw_deinit(void)
