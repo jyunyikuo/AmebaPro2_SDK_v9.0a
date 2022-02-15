@@ -656,6 +656,15 @@ int nand_pfw_read(void *fr, void *data, int size)
 	int page_idx = blkk_res / pgsize;
 	int byte_idx = blkk_res - page_idx * pgsize;
 
+	int rest_size = r->content_len - r->curr_pos;
+
+	if (rest_size <= 0) {
+		return EOF;
+	}
+	if (size > rest_size) {
+		size = rest_size;
+	}
+
 	//printf("fwrd: blk %x page %x byte %x rec %x\n\r", blkk_idx, page_idx, byte_idx, r);
 	//
 	if (r->tmp_page_valid && r->tmp_page_index == page_idx) {
@@ -959,14 +968,52 @@ void *nor_pfw_open_by_typeid(uint16_t type_id, int mode)
 
 void *nor_pfw_open(char *name, int mode)
 {
-	uint16_t type_id = __get_pt_type_id(name);
+	char name_dup[strlen(name) + 2];
+	strcpy(name_dup, name);
+	char *file_name = name_dup;
+
+	char *type_name = strsep(&file_name, "/");
+
+	printf("type_name %s, file_name %s\n\r", type_name, file_name);
+
+
+	uint16_t type_id = __get_pt_type_id(type_name);
 	if (type_id == 0xffff)	{
 		return NULL;
 	}
 
-	//printf("open fw partition %s type id %x\n\r", name, type_id);
+	//printf("open fw partition %s type id %x\n\r", type_name, type_id);
 
-	return nor_pfw_open_by_typeid(type_id, mode);
+	nor_fw_rec_t *fr = nor_pfw_open_by_typeid(type_id, mode);
+
+
+	if (file_name != NULL) {
+		// search filename and update file size and raw offset
+		fwfs_folder_t *tmp = malloc(sizeof(fwfs_folder_t));
+		if (!tmp) {
+			free(fr);
+			return NULL;
+		}
+
+		nor_pfw_read(fr, tmp, sizeof(fwfs_folder_t));
+		nor_pfw_seek(fr, 0, SEEK_SET);
+		//pfw_dump_mem(tmp, sizeof(fwfs_folder_t));
+		if (strcmp(tmp->tag, "FWFSDIR") == 0) {
+			//printf("FWFSDIR mode, file count %d\n\r", tmp->file_cnt);
+			for (int i = 0; i < tmp->file_cnt; i++) {
+				//printf("file[%d] %s\n\r", i, tmp->files[i].filename);
+				if (strcmp(file_name, tmp->files[i].filename) == 0) {
+					//printf("file %s, len %d\n\r", tmp->files[i].filename, tmp->files[i].filelen);
+					fr->content_len = tmp->files[i].filelen;
+					fr->raw_offset += tmp->files[i].offset;
+					break;
+				}
+			}
+		}
+	}
+
+	return fr;
+
 }
 
 void nor_pfw_close(void *fr)
@@ -1002,6 +1049,16 @@ int nor_pfw_read(void *fr, void *data, int size)
 	// copy to data
 
 	uint8_t *curr_addr = (uint8_t *)NOR_ADDR(r->part_rec->start_addr + r->curr_pos + r->raw_offset);
+
+	int rest_size = r->content_len - r->curr_pos;
+
+	if (rest_size <= 0)	{
+		return EOF;
+	}
+
+	if (rest_size < size) {
+		size = rest_size;
+	}
 
 	//printf("dst %x src %x size %d\n\r", data, curr_addr, size);
 	memcpy(data, curr_addr, size);
