@@ -104,8 +104,11 @@ int __vipnn_handle(void *p, void *input, void *output)
 	// set output
 
 	vipnn_mark(mark++);
-	status = vip_set_output(ctx->network, 0, ctx->output_buffers[0]);
-	status = vip_set_output(ctx->network, 1, ctx->output_buffers[1]);
+	for (int i = 0; i < ctx->output_count; i++) {
+		status = vip_set_output(ctx->network, i, ctx->output_buffers[i]);
+	}
+	//status = vip_set_output(ctx->network, 0, ctx->output_buffers[0]);
+	//status = vip_set_output(ctx->network, 1, ctx->output_buffers[1]);
 
 	vipnn_mark(mark++);
 	// run network
@@ -120,8 +123,11 @@ int __vipnn_handle(void *p, void *input, void *output)
 	NN_MEASURE_PRINT(0);
 
 	vipnn_mark(mark++);
-	vip_flush_buffer(ctx->output_buffers[0], VIP_BUFFER_OPER_TYPE_FLUSH);
-	vip_flush_buffer(ctx->output_buffers[1], VIP_BUFFER_OPER_TYPE_FLUSH);
+	for (int i = 0; i < ctx->output_count; i++) {
+		vip_flush_buffer(ctx->output_buffers[i], VIP_BUFFER_OPER_TYPE_INVALIDATE);
+	}
+	//vip_flush_buffer(ctx->output_buffers[0], VIP_BUFFER_OPER_TYPE_FLUSH);
+	//vip_flush_buffer(ctx->output_buffers[1], VIP_BUFFER_OPER_TYPE_FLUSH);
 
 	vipnn_mark(mark++);
 	// get output and do postprocessing
