@@ -55,9 +55,14 @@ typedef struct nn_data_param_s {
 			rect_t roi;
 		} img;
 		struct nn_aud_params_s {
-			int dummy;
+			int num_of_samples;
+			int bit_pre_sample;
+			int sample_rate;
+			int channel;
 		} aud;
 	};
+	// DONT use this
+	int size_in_byte;
 } nn_data_param_t;
 
 
@@ -89,8 +94,17 @@ typedef struct nnmodel_s {
 	// setup thresh in post-processing
 	nn_set_confidence_thresh_t set_confidence_thresh;
 	nn_set_nms_thresh_t set_nms_thresh;
+
+	char *name;
 } nnmodel_t;
 //------------------------------------------------------------------------------
+
+typedef struct vipnn_measure_s {
+	int32_t tick[8];
+	// for FPS
+	int time0;
+	int count;
+} vipnn_measure_t;
 
 typedef struct vipnn_param_s {
 	int model_type;
@@ -145,6 +159,7 @@ typedef struct vipnn_ctx_s {
 
 	bool module_out_en;
 
+	vipnn_measure_t measure;
 } vipnn_ctx_t;
 
 #define MAX_DETECT_OBJ_NUM 30

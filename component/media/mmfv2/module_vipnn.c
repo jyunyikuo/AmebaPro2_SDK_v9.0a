@@ -17,16 +17,27 @@
 #include "ssd_post_process.h"
 #include "pre_process.h"
 
-static int32_t nn_measure_tick[8];
+#include "gc_vip_lite.h"
 
+// TODO move to vipnn context
+/*
+static int32_t nn_measure_tick[8];
+static int nn_time0 = 0;
+static int nn_count = 0;
+static float nn_fps = 0;
+*/
+
+// TODO, init hardware and vip_init only one time
+static int vipnn_inited = 0;
+//static _mutex nn_mutex;
 
 #define TICK_INIT()
 #define TICK_GET() (uint32_t)xTaskGetTickCount()
 
-#define NN_MEASURE_INIT(n)	do{nn_measure_tick[n] = 0; TICK_INIT();}while(0)
-#define NN_MEASURE_START(n) do{nn_measure_tick[n] = TICK_GET();}while(0)
-#define NN_MEASURE_STOP(n)  do{nn_measure_tick[n] = TICK_GET() - nn_measure_tick[n];}while(0)
-#define NN_MEASURE_PRINT(n) do{printf("nn tick[%d] = %d\n\r", n, nn_measure_tick[n]);}while(0)
+#define NN_MEASURE_INIT(n)	do{ctx->measure.tick[n] = 0; TICK_INIT();}while(0)
+#define NN_MEASURE_START(n) do{ctx->measure.tick[n] = TICK_GET();}while(0)
+#define NN_MEASURE_STOP(n)  do{ctx->measure.tick[n] = TICK_GET() - ctx->measure.tick[n];}while(0)
+#define NN_MEASURE_PRINT(n) do{printf("%s tick[%d] = %d\n\r", ctx->params.model->name, n, ctx->measure.tick[n]);}while(0)
 //#define NN_MEASURE_PRINT(n) do{}while(0)
 
 
@@ -41,11 +52,7 @@ int vipnn_mark(int num)
 	*/
 }
 
-static int nn_time0 = 0;
-static int nn_count = 0;
-static float nn_fps = 0;
-
-int vipnn_handle(void *p, void *input, void *output)
+int __vipnn_handle(void *p, void *input, void *output)
 {
 	vipnn_ctx_t *ctx = (vipnn_ctx_t *)p;
 	mm_queue_item_t *input_item = (mm_queue_item_t *)input;
@@ -54,13 +61,14 @@ int vipnn_handle(void *p, void *input, void *output)
 	uint32_t file_size;
 	uint32_t buff_size;
 	vip_status_e status = VIP_SUCCESS;
+	int preprocess_status = 0;
 
 	if (ctx->status != VIPNN_APPLIED) {
 		return 0;
 	}
 
-	if (nn_time0 == 0) {
-		nn_time0 = (int)xTaskGetTickCount();
+	if (ctx->measure.time0 == 0) {
+		ctx->measure.time0 = (int)xTaskGetTickCount();
 	}
 
 	int mark = 0;
@@ -77,11 +85,18 @@ int vipnn_handle(void *p, void *input, void *output)
 
 	vipnn_mark(mark++);
 
+	//printf("->%s\n\r", ctx->params.model->name);
 	//printf("dst w h %d %d\n\r", ctx->params.model->input_param.dim[0].size[0], ctx->params.model->input_param.dim[0].size[1]);
 	if (ctx->params.model->preprocess) {
-		ctx->params.model->preprocess(input_item->data_addr, ctx->params.in_param, (void *)in_tensor, &ctx->params.model->input_param);
+		ctx->params.in_param->size_in_byte = input_item->size;
+		preprocess_status = ctx->params.model->preprocess(input_item->data_addr, ctx->params.in_param, (void *)in_tensor, &ctx->params.model->input_param);
 	} else {
 		memcpy(data, input_item->data_addr, buff_size > input_item->size ? input_item->size : buff_size);
+		preprocess_status = 0;
+	}
+
+	if (preprocess_status != 0) {
+		return 0;
 	}
 
 	vipnn_mark(mark++);
@@ -125,10 +140,10 @@ int vipnn_handle(void *p, void *input, void *output)
 		ctx->disp_postproc(post_res, ctx->params.in_param);
 	}
 
-	nn_count++;
-	if (nn_count % 16 == 0) {
-		nn_fps = (float)nn_count * 1000.0 / (float)(xTaskGetTickCount() - nn_time0);
-		printf("NN_FPS = %0.2f, %d %d\n\r", nn_fps, nn_count, xTaskGetTickCount() - nn_time0);
+	ctx->measure.count++;
+	if (ctx->measure.count % 16 == 0) {
+		float nn_fps = (float)ctx->measure.count * 1000.0 / (float)(xTaskGetTickCount() - ctx->measure.time0);
+		printf("%s FPS = %0.2f, %d %d\n\r", ctx->params.model->name, nn_fps, ctx->measure.count, xTaskGetTickCount() - ctx->measure.time0);
 	}
 
 	/*------------------------------------------------------*/
@@ -169,6 +184,15 @@ int vipnn_handle(void *p, void *input, void *output)
 	return 0;
 }
 
+int vipnn_handle(void *p, void *input, void *output)
+{
+	int ret = 0;
+	//rtw_mutex_get(&nn_mutex);
+	ret = __vipnn_handle(p, input, output);
+	//rtw_mutex_put(&nn_mutex);
+	return ret;
+}
+
 
 int vipnn_control(void *p, int cmd, int arg)
 {
@@ -196,7 +220,10 @@ int vipnn_control(void *p, int cmd, int arg)
 		((mm_context_t *)ctx->parent)->module->output_type = MM_TYPE_VSINK;
 		break;
 	case CMD_VIPNN_APPLY:
+		//rtw_mutex_get(&nn_mutex);
+		printf("Deploy %s\n\r", ctx->params.model->name);
 		ret = vipnn_deoply_network(ctx);
+		//rtw_mutex_put(&nn_mutex);
 		if (ret == 0) {
 			ctx->status = VIPNN_APPLIED;
 		}
@@ -308,13 +335,13 @@ static vip_int32_t init_io_buffers(void *p)
 
 	vip_query_network(network, VIP_NETWORK_PROP_INPUT_COUNT, &ctx->input_count);
 	if (ctx->input_count > MAX_IO_NUM) {
-		printf("error, input count is more than max value=%d\n", MAX_IO_NUM);
+		printf("error, input count is more than max value=%d\n\r", MAX_IO_NUM);
 		return -1;
 	}
 
 	vip_query_network(network, VIP_NETWORK_PROP_OUTPUT_COUNT, &ctx->output_count);
 	if (ctx->output_count > MAX_IO_NUM) {
-		printf("error, output count is more than max value=%d\n", MAX_IO_NUM);
+		printf("error, output count is more than max value=%d\n\r", MAX_IO_NUM);
 		return -1;
 	}
 
@@ -356,6 +383,7 @@ static vip_int32_t init_io_buffers(void *p)
 			printf(", none-quant\n\r");
 		}
 		vip_create_buffer(param, sizeof(vip_buffer_create_params_t), &ctx->input_buffers[i]);
+		printf("input buffer %d = %x, vid memory %x \n\r", i, ctx->input_buffers[i], ctx->input_buffers[i]->memory.physical);
 	}
 
 	for (i = 0; i < ctx->output_count; i++) {
@@ -385,16 +413,17 @@ static vip_int32_t init_io_buffers(void *p)
 
 		switch (param->quant_format) {
 		case VIP_BUFFER_QUANTIZE_DYNAMIC_FIXED_POINT:
-			printf(", dfp=%d\n", param->quant_data.dfp.fixed_point_pos);
+			printf(", dfp=%d\n\r", param->quant_data.dfp.fixed_point_pos);
 			break;
 		case VIP_BUFFER_QUANTIZE_TF_ASYMM:
-			printf(", scale=%f, zero_point=%d\n", param->quant_data.affine.scale,
+			printf(", scale=%f, zero_point=%d\n\r", param->quant_data.affine.scale,
 				   param->quant_data.affine.zeroPoint);
 			break;
 		default:
-			printf(", none-quant\n");
+			printf(", none-quant\n\r");
 		}
 		vip_create_buffer(param, sizeof(vip_buffer_create_params_t), &ctx->output_buffers[i]);
+		printf("output buffer %d = %x, vid memory %x \n\r", i, ctx->output_buffers[i], ctx->output_buffers[i]->memory.physical);
 	}
 
 	vipnn_dump_network_io_params(ctx);
@@ -422,6 +451,8 @@ int vipnn_deoply_network(void *p)
 		status = vip_create_network(ctx->params.model->nb(), 0, VIP_CREATE_NETWORK_FROM_FILE, &ctx->network);
 	}
 	ONERROR(status, "error: vip_create_network.", vipnn_depoly_error);
+
+	printf("network %x\n\r", ctx->network);
 
 	if (init_io_buffers(ctx) < 0) {
 		printf("error: init_io_buffers.\n\r");
@@ -502,18 +533,25 @@ void *vipnn_create(void *parent)
 
 	vip_status_e status = VIP_SUCCESS;
 
-	vipnn_hardware_init();
+	if (vipnn_inited == 0) {
+		vipnn_hardware_init();
 
-	status = vip_init();
-	ONERROR(status, "VIP Init failed.", vipnn_error);
+		status = vip_init();
+		ONERROR(status, "VIP Init failed.", vipnn_error);
+
+		//rtw_mutex_init(&nn_mutex);
+		vipnn_inited = 1;
+	}
 
 	ctx->params.fps = 1;
 
+	/*
 	NN_MEASURE_INIT(0);
 	NN_MEASURE_INIT(1);
 	NN_MEASURE_INIT(2);
 	NN_MEASURE_INIT(3);
 	NN_MEASURE_INIT(4);
+	*/
 	return ctx;
 
 vipnn_error:

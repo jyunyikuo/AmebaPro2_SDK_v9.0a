@@ -369,13 +369,26 @@ nand_part_rec_t *pfw_search_next(nand_part_rec_t *curr)
 	nand_part_rec_t *next = NULL;
 	while (curr->magic_num != 0xffffffff) {
 		int offset = 1;
-		if (curr->blk_cnt > 48) {
-			offset = offset + ((curr->blk_cnt - 48) + 63) / 64;
-		}
-
 		next = &curr[offset];
 		if (next->magic_num == 0xff35ff87) {
 			return next;
+		}
+		curr = next;
+	}
+
+	return NULL;
+}
+
+nand_part_rec_t *pfw_search_next_type_id(nand_part_rec_t *curr, uint16_t type_id)
+{
+	nand_part_rec_t *next = NULL;
+	while (curr->magic_num != 0xffffffff) {
+		int offset = 1;
+		next = &curr[offset];
+		if (next->magic_num == 0xff35ff87) {
+			if (next->type_id == type_id) {
+				return next;
+			}
 		}
 		curr = next;
 	}
@@ -396,10 +409,6 @@ nand_part_rec_t *pfw_search_type_id(uint16_t type_id)
 
 			if (rec[i].type_id == type_id) {
 				return &rec[i];
-			}
-
-			if (rec[i].blk_cnt > 48) {
-				i = i + ((rec[i].blk_cnt - 48) + 63) / 64;
 			}
 			i++;
 		} else {
@@ -437,6 +446,7 @@ void nand_pfw_list(void)
 {
 	nand_part_rec_t *rec = g_partition.part_rec;
 	nand_part_rec_t *base = g_partition.part_rec;
+	nand_part_rec_t *next = NULL;
 
 	if (g_pfw_inited == 0) {
 		return;
@@ -445,7 +455,21 @@ void nand_pfw_list(void)
 	printf("%4s%8s%8s\t%s\n\r", "rec", "type_id", "blk_cnt", "name");
 
 	while (rec != NULL) {
-		printf("%4d%8x%8d\t%s\n\r", (rec - base) / sizeof(nand_part_rec_t), rec->type_id, rec->blk_cnt, __get_pt_name(rec->type_id));
+		next = NULL;
+		uint16_t type_id = rec->type_id;
+		uint16_t blk_cnt = rec->blk_cnt;
+
+		if (rec->blk_cnt == 48) {
+			do {
+				nand_part_rec_t *next = pfw_search_next_type_id(rec, type_id);
+				blk_cnt += next->blk_cnt;
+				if (next) {
+					rec = next;
+				}
+			} while (next != NULL && (next->blk_cnt == 48));
+		}
+
+		printf("%4d%8x%8d\t%s\n\r", (rec - base) / sizeof(nand_part_rec_t), type_id, blk_cnt, __get_pt_name(type_id));
 		rec = pfw_search_next(rec);
 	}
 }
@@ -454,6 +478,8 @@ typedef struct fw_rec_s {
 	uint8_t tmp_page[4096 + 32];
 	int tmp_page_index;
 	int tmp_page_valid;
+	nand_part_rec_t *part_recs[32];
+	int part_recs_cnt;
 	nand_part_rec_t *part_rec;
 
 	int curr_pos;
@@ -483,12 +509,18 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 
 	fr->type_id = type_id;
 
-	fr->part_rec = pfw_search_type_id(type_id);
+	nand_part_rec_t *tmp_rec = pfw_search_type_id(type_id);
+	do {
+		fr->part_recs[fr->part_recs_cnt] = tmp_rec;
+		fr->part_recs_cnt ++;
+		tmp_rec = pfw_search_next_type_id(tmp_rec, type_id);
+	} while (tmp_rec != NULL);
+	fr->part_rec = fr->part_recs[0];
 
-	printf("open: part_rec %x, type_id %x\n\r", fr->part_rec, type_id);
+	printf("open: part_rec %x, part_recs_cnt %d, type_id %x\n\r", fr->part_rec, fr->part_recs_cnt, type_id);
 
 	// read 4k
-	if (!fr->part_rec) {
+	if (!fr->part_rec || (fr->part_recs_cnt == 0)) {
 		free(fr);
 		return NULL;
 	}
@@ -510,7 +542,8 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 		fr->raw_offset = 4096 + sizeof(img_hdr_t);
 	} else {
 		fr->manifest_valid = 0;
-		fr->content_len = fr->part_rec->blk_cnt * snand_blksize;
+		//fr->content_len = fr->part_rec->blk_cnt * snand_blksize;
+		fr->content_len = ((fr->part_recs_cnt - 1) * 48 + fr->part_recs[fr->part_recs_cnt - 1]->blk_cnt) * snand_blksize;
 		fr->raw_offset = 0;
 	}
 
@@ -524,16 +557,60 @@ void *nand_pfw_open_by_typeid(uint16_t type_id, int mode)
 	return fr;
 }
 
+typedef struct fwfs_file_s {
+	char filename[32 + 8];
+	int filelen;
+	int offset;
+} fwfs_file_t;
+
+typedef struct fwfs_folder_s {
+	char tag[12];
+	int file_cnt;
+	fwfs_file_t files[32];
+} fwfs_folder_t;
+
 void *nand_pfw_open(char *name, int mode)
 {
-	uint16_t type_id = __get_pt_type_id(name);
+	char name_dup[strlen(name) + 2];
+	strcpy(name_dup, name);
+	char *file_name = name_dup;
+
+	char *type_name = strsep(&file_name, "/");
+
+	printf("type_name %s, file_name %s\n\r", type_name, file_name);
+
+	uint16_t type_id = __get_pt_type_id(type_name);
 	if (type_id == 0xffff)	{
 		return NULL;
 	}
 
 	//printf("open fw partition %s type id %x\n\r", name, type_id);
 
-	return nand_pfw_open_by_typeid(type_id, mode);
+	fw_rec_t *fr = nand_pfw_open_by_typeid(type_id, mode);
+
+	if (file_name != NULL) {
+		// search filename and update file size and raw offset
+		fwfs_folder_t *tmp = malloc(sizeof(fwfs_folder_t));
+		if (!tmp) {
+			free(fr);
+			return NULL;
+		}
+
+		nand_pfw_read(fr, tmp, sizeof(fwfs_folder_t));
+		nand_pfw_seek(fr, 0, SEEK_SET);
+		if (strcmp(tmp->tag, "FWFSDIR") == 0) {
+			for (int i = 0; i < tmp->file_cnt; i++) {
+				if (strcmp(file_name, tmp->files[i].filename) == 0) {
+					printf("file %s, len %d\n\r", tmp->files[i].filename, tmp->files[i].filelen);
+					fr->content_len = tmp->files[i].filelen;
+					fr->raw_offset += tmp->files[i].offset;
+					break;
+				}
+			}
+		}
+
+	}
+	return fr;
 }
 
 int nand_pfw_tell(void *fr)
@@ -617,8 +694,11 @@ int nand_pfw_read(void *fr, void *data, int size)
 		page_idx = blkk_res / pgsize;
 		byte_idx = blkk_res - page_idx * pgsize;
 
-		int real_blk_idx = r->part_rec->vmap[blkk_idx];
+		int real_blk_idx = 0;
 
+		r->part_rec = r->part_recs[blkk_idx / 48];
+
+		real_blk_idx = r->part_rec->vmap[blkk_idx % 48];
 		//printf("fwrd: logical blk %x physical blk %x\n\r", blkk_idx, real_blk_idx);
 		//printf("fwrd: blk %x phyb %x page %x byte %x rec %x\n\r", blkk_idx, real_blk_idx, page_idx, byte_idx, r);
 
@@ -649,6 +729,12 @@ int nand_pfw_read(void *fr, void *data, int size)
 
 	return (int)data8 - (int)data;
 	//printf("fwrd: <<< curr pos %x\n\r", r->curr_pos );
+}
+
+int nand_pfw_write(void *fr, void *data, int size)
+{
+	// TODO
+	return 0;
 }
 
 /* SEEK_SET 0, SEEK_CUR 1, SEEK_END 2 */
@@ -694,7 +780,11 @@ int nand_pfw_seek(void *fr, int offset, int pos)
 	int blkk_res = curr_pos - blkk_idx * blksize;
 	int page_idx = blkk_res / pgsize;
 	int byte_idx = blkk_res - page_idx * pgsize;
-	int real_blk_idx = r->part_rec->vmap[blkk_idx];
+	int real_blk_idx = 0;
+
+	r->part_rec = r->part_recs[blkk_idx / 48];
+
+	real_blk_idx = r->part_rec->vmap[blkk_idx % 48];
 	// update tmp_buffer
 
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
