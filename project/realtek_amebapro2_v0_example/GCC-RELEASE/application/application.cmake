@@ -557,6 +557,8 @@ list(
 	${sdk_root}/component/media/mmfv2/module_opusd.c
     ${sdk_root}/component/media/mmfv2/module_uvcd.c
     ${sdk_root}/component/media/mmfv2/module_demuxer.c
+    ${sdk_root}/component/media/mmfv2/module_fileloader.c
+    ${sdk_root}/component/media/mmfv2/module_filesaver.c
 )
 
 #MISC

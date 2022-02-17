@@ -110,6 +110,8 @@ static void example_mmf2_video_surport()
 
 	//mmf2_video_example_vipnn_rtsp_init();
 
+	//mmf2_example_file_vipnn_tester();
+
 	//mmf2_video_example_demuxer_rtsp_init();
 
 	//mmf2_video_example_h264_pcmu_array_mp4_init();
