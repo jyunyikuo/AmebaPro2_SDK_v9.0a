@@ -13,7 +13,7 @@
 /**
 * User data for common flash usage
 */
-#define CONFIG_USAGE_NAND_FLASH	0
+#define CONFIG_USAGE_NAND_FLASH	1
 
 #if CONFIG_USAGE_NAND_FLASH
 // nand flash, EVB: 128MB
@@ -31,6 +31,7 @@
 #define SECURE_STORAGE_BASS		(0xF00000 + 0x4000) // 4KB
 #define FACE_FEATURE_DATA		(0xF00000 + 0x5000) /*!< FACE data begin address, default size used is 32KB (can be adjusted based on user requirement)*/
 #endif
+#define FLASH_APP_BASE			0xE00000
 
 /**
  * For AT cmd Log service configurations
@@ -128,7 +129,7 @@
 /*For fast dhcp*/
 #define CONFIG_FAST_DHCP    1
 /*For fast connect*/
-#define ENABLE_FAST_CONNECT 1
+#define ENABLE_FAST_CONNECT 0
 
 #if defined(ENABLE_FAST_CONNECT) && ENABLE_FAST_CONNECT
 #define ENABLE_FAST_CONNECT_NAND 1

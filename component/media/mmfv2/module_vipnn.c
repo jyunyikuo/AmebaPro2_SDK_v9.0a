@@ -17,7 +17,7 @@
 #include "ssd_post_process.h"
 #include "pre_process.h"
 
-#include "gc_vip_lite.h"
+//#include "gc_vip_lite.h"
 
 // TODO move to vipnn context
 /*
@@ -389,7 +389,7 @@ static vip_int32_t init_io_buffers(void *p)
 			printf(", none-quant\n\r");
 		}
 		vip_create_buffer(param, sizeof(vip_buffer_create_params_t), &ctx->input_buffers[i]);
-		printf("input buffer %d = %x, vid memory %x \n\r", i, ctx->input_buffers[i], ctx->input_buffers[i]->memory.physical);
+		//printf("input buffer %d = %x, vid memory %x \n\r", i, ctx->input_buffers[i], ctx->input_buffers[i]->memory.physical);
 	}
 
 	for (i = 0; i < ctx->output_count; i++) {
@@ -429,7 +429,7 @@ static vip_int32_t init_io_buffers(void *p)
 			printf(", none-quant\n\r");
 		}
 		vip_create_buffer(param, sizeof(vip_buffer_create_params_t), &ctx->output_buffers[i]);
-		printf("output buffer %d = %x, vid memory %x \n\r", i, ctx->output_buffers[i], ctx->output_buffers[i]->memory.physical);
+		//printf("output buffer %d = %x, vid memory %x \n\r", i, ctx->output_buffers[i], ctx->output_buffers[i]->memory.physical);
 	}
 
 	vipnn_dump_network_io_params(ctx);
