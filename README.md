@@ -43,11 +43,11 @@ git clone -b v9.3a https://github.com/sychouwk/AmebaPro2_SDK_v9.0a.git
 ### Download and Run
 
 - If Nand flash
-  - use **tools/Pro2_PG_tool_linux_v1.2.2.zip** command line tool to download image and reboot
+  - use **tools/Pro2_PG_tool_linux_v1.2.3.zip** command line tool to download image and reboot
     ```
     uartfwburn.linux -p dev/ttyUSB? -f flash_ntz.bin -b 3000000 -n pro2
     ```
-    Note: It may require to copy the flash_ntz.bin to Pro2_PG_tool_linux_v1.2.2 folder before running this command 
+    Note: It may require to copy the flash_ntz.bin to Pro2_PG_tool_linux_v1.2.3 folder before running this command 
 
 - Configure WiFi Connection  
   - While runnung the example, you may need to configure WiFi connection by using these commands in uart terminal.  

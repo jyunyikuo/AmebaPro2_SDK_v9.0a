@@ -53,11 +53,11 @@ The image is located in `<AmebaPro2_SDK>/project/realtek_amebapro2_v0_example/GC
 Make sure your AmebaPro2 is connected and powered on. Use the Realtek image tool to flash image:
 
 - If Nand flash  
-  use **tools/Pro2_PG_tool_linux_v1.2.2.zip** command line tool to download image and reboot
+  use **tools/Pro2_PG_tool_linux_v1.2.3.zip** command line tool to download image and reboot
   ```
   uartfwburn.linux -p dev/ttyUSB? -f flash_ntz.nn.bin -b 3000000 -n pro2
   ```
-  Note: It may require to copy the flash_ntz.nn.bin to Pro2_PG_tool_linux_v1.2.2 folder before running this command 
+  Note: It may require to copy the flash_ntz.nn.bin to Pro2_PG_tool_linux_v1.2.3 folder before running this command 
 
 ## Validation
 
