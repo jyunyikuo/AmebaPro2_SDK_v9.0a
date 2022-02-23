@@ -16,9 +16,9 @@
 #ifndef __PLATFORM_STDLIB_H__
 #define __PLATFORM_STDLIB_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
+
+
 
 #if defined(CONFIG_PLATFORM_8711B)+\
 		defined(CONFIG_PLATFORM_8721D)+\
@@ -31,28 +31,80 @@ extern "C" {
 #error "Cannot define two or more platform at one time"
 #endif
 
+
 #if defined (CONFIG_PLATFORM_8711B)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_rtl8711b.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined (CONFIG_PLATFORM_8721D)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_rtl8721d.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined (CONFIG_PLATFORM_AMEBAD2)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_amebad2.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined (CONFIG_PLATFORM_AMEBALITE)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_amebalite.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined(CONFIG_PLATFORM_8195BHP)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_rtl8195bhp.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined(CONFIG_PLATFORM_8735B)
 #include "platform_stdlib_rtl8735b.h"
 #elif defined(USE_STM322xG_EVAL) || defined(USE_STM324xG_EVAL)  || defined(STM32F10X_XL)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_stm32.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined(CONFIG_PLATFOMR_CUSTOMER_RTOS)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_customer.h"
+#ifdef __cplusplus
+}
+#endif
 #elif defined (CONFIG_PLATFORM_8710C)
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "platform_stdlib_rtl8710c.h"
+#ifdef __cplusplus
+}
+#endif
 #else
 #error "Undefined Platform stdlib"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if defined(CONFIG_PLATFORM_AMEBA_X) && (CONFIG_PLATFORM_AMEBA_X == 0)
 #ifndef CONFIG_PLATFOMR_CUSTOMER_RTOS
@@ -64,5 +116,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
 #endif //__PLATFORM_STDLIB_H__
 

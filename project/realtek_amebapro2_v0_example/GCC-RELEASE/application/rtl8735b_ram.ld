@@ -144,8 +144,18 @@ SECTIONS
 		*memp.*o*(.bss*)
 		__eram_bss_end__ = .;			
 	} > DDR	
-
-	.ram.code_text : AT (__etext2)
+    
+    /* for C++ supporting */
+	.ddr.code.text : 
+    {
+        . = ALIGN(32);
+        __ddr_code_text_start__ = .;
+        *libgcc.a:pr-support.o*(.text*) /*libgcc.a*/
+        *libstdc++.a:list.o*(.text*)
+        __ddr_code_text_end__ = .;
+    } > DDR    
+    
+    .ram.code_text : AT (__etext2)
 	{
 		. = ALIGN(4);
 		__etext2 = .;
@@ -199,6 +209,7 @@ SECTIONS
 		*verify_uart.*o*(.text*)
 		*verify_uart_irq_ram.*o*(.text*)
 		*lib_a*(.text*)
+        *libstdc++.a*(.text*)
 			
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;

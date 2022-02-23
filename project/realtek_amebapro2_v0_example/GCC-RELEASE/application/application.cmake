@@ -877,6 +877,7 @@ target_link_libraries(
 	qrcode
 	nn
 	${soclib}
+	stdc++
 	m
 	c
 	gcc
