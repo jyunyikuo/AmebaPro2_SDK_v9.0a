@@ -5,6 +5,9 @@
 // Include Files
 //----- ------------------------------------------------------------------
 //#include "wireless.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "dlist.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -17,6 +20,10 @@
 // --------------------------------------------
 #if defined(CONFIG_PLATFORM_8735B)
 #include "basic_types.h"
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8735B)
@@ -39,6 +46,9 @@ extern VOID RtlUdelayOS(u32 us);
 #include <string.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if (defined CONFIG_GSPI_HCI || defined CONFIG_SDIO_HCI) || defined(CONFIG_LX_HCI)
 /* For SPI interface transfer and us delay implementation */
@@ -104,8 +114,19 @@ typedef void			    *_thread_hdl_;
 typedef void			    thread_return;
 typedef void			    *thread_context;
 
+#ifdef __cplusplus
+}
+#endif
+
 #if defined(STDATOMIC)
-#include <stdatomic.h>
+//#include <stdatomic.h>
+#ifndef __cplusplus
+# include <stdatomic.h>
+#else
+# include <atomic>
+# define _Atomic(X) std::atomic< X >
+#endif
+
 #define ATOMIC_T atomic_int
 #define atomic_t atomic_int
 

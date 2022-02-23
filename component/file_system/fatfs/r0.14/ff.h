@@ -31,10 +31,16 @@ extern "C" {
 #if defined(CONFIG_PLATFORM_8195BHP)// for mult-thread FATFS
 #include "freertos_service.h"
 #endif
+#ifdef __cplusplus
+}
+#endif
 
 #include "ffconf.h"		/* FatFs configuration options */
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #if FF_DEFINED != FFCONF_DEF
 #error Wrong configuration file (ffconf.h).
 #endif
