@@ -83,9 +83,36 @@ Note: If you don't have a pre-trained YOLO model, you can use the model given in
 
 ### Choose the model used
 
-Go to `project\realtek_amebapro2_v0_example\GCC-RELEASE\config.cmake` and set model .nb be used
+Go to `project/realtek_amebapro2_v0_example/GCC-RELEASE/mpamebapro2_fwfs_nn_models.json` and set model yolov4_tiny - "MODEL0" be used
 ```
-set(USED_NN_MODEL ${prj_root}/src/test_model/yolov4_tiny.nb)
+{
+    "msg_level":3,
+
+	"PROFILE":["FWFS"],
+	"FWFS":{
+        "files":[
+			"MODEL0"
+		]
+	},
+    "MODEL0":{
+		"name" : "yolov4_tiny.nb",
+		"source":"binary",
+		"file":"yolov4_tiny.nb"
+ 
+    },
+    "MODEL1":{
+		"name" : "yamnet_fp16.nb",
+		"source":"binary",
+		"file":"yamnet_fp16.nb"
+
+    },
+    "MODEL2":{
+		"name" : "yamnet_s.nb",
+		"source":"binary",
+		"file":"yamnet_s.nb"
+
+    }
+}
 ```
 
 ### Build image

@@ -17,6 +17,11 @@ git clone -b v9.3a https://github.com/sychouwk/AmebaPro2_SDK_v9.0a.git
   <img src="https://img.shields.io/badge/-Getting%20Started-green" valign="middle" height=25px width=120px/>
 </a>
 
+:bulb: **Edge AI - audio recognition on AmebaPro2 (YAMNet)**
+<a href="https://github.com/sychouwk/AmebaPro2_SDK_v9.0a/blob/v9.3a/doc/NN_audio_example_README.md">
+  <img src="https://img.shields.io/badge/-Getting%20Started-green" valign="middle" height=25px width=120px/>
+</a>
+
 :bulb: **NN tester - test your image dataset in SD card (YOLOv4-tiny)**
 <a href="https://github.com/sychouwk/AmebaPro2_SDK_v9.0a/blob/v9.3a/doc/NN_file_tester_README.md">
   <img src="https://img.shields.io/badge/-Getting%20Started-green" valign="middle" height=25px width=120px/>
