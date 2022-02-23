@@ -159,7 +159,7 @@ void *yolov3t_free_model(void *nn_model)
 
 void *yolov3t_get_network_filename(void)
 {
-	return (void *)"NN_MDL";	// fix name for NN model binary
+	return (void *)"NN_MDL/yolov4_tiny.nb";	// fix name for NN model binary
 }
 
 int yolov3t_get_network_size(void)
@@ -576,6 +576,8 @@ nnmodel_t yolov3_tiny = {
 	.model_src 		= MODEL_SRC_MEM,
 	.set_confidence_thresh   = set_yolov3t_confidence_thresh,
 	.set_nms_thresh     = set_yolov3t_nms_thresh,
+
+	.name = "YOLO"
 };
 
 nnmodel_t yolov3_tiny_fwfs = {
@@ -585,4 +587,6 @@ nnmodel_t yolov3_tiny_fwfs = {
 	.model_src 		= MODEL_SRC_FILE,
 	.set_confidence_thresh   = set_yolov3t_confidence_thresh,
 	.set_nms_thresh     = set_yolov3t_nms_thresh,
+
+	.name = "YOLO"
 };

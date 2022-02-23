@@ -89,8 +89,10 @@ add_custom_target(
 	
 add_custom_target(
 	flash_nn
-	COMMAND cp ${USED_NN_MODEL} model.nb
+	COMMAND cp ${NN_MODEL_PATH}/*.nb .
 	COMMAND cp ${POSTBUILD_NNMDL} amebapro2_nn_model.json
+	COMMAND cp ${POSTBUILD_FWFS_NN} amebapro2_fwfs_nn_models.json
+	COMMAND ${ELF2BIN} convert amebapro2_fwfs_nn_models.json FWFS fwfs_nn_model.bin
 	COMMAND ${ELF2BIN} convert amebapro2_nn_model.json FIRMWARE nn_model.bin
 	COMMAND ${ELF2BIN} combine amebapro2_partitiontable.json ${target}.nn.bin PT_PT=partition.bin,CER_TBL=certable.bin,KEY_CER1=certificate.bin,PT_BL_PRI=boot.bin,PT_FW1=firmware.bin,PT_NN_MDL=nn_model.bin
 	

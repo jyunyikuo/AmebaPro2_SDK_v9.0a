@@ -97,12 +97,15 @@ if(NOT DEFINED CONFIG_DONE)
 		set(POSTBUILD_CERT		${prj_root}/GCC-RELEASE/mp/certificate.json)
 		set(POSTBUILD_PART		${prj_root}/GCC-RELEASE/mp/amebapro2_partitiontable.json)
 		set(POSTBUILD_NNMDL		${prj_root}/GCC-RELEASE/mp/amebapro2_nn_model.json)
+		set(POSTBUILD_FWFS_NN	${prj_root}/GCC-RELEASE/mp/amebapro2_fwfs_nn_models.json)
 		
 		set(POSTBUILD_ENC_BOOT	${prj_root}/GCC-RELEASE/mp/encrypt_bl.json)
 		set(POSTBUILD_ENC_NTZ	${prj_root}/GCC-RELEASE/mp/encrypt_fw.json)
 		set(POSTBUILD_ENC_TZ	${prj_root}/GCC-RELEASE/mp/encrypt_fw_tz.json)	
 		
-		set(USED_NN_MODEL		${prj_root}/src/test_model/yolov4_tiny.nb)
+		set(NN_MODEL_PATH		${prj_root}/src/test_model)
+		#set(USED_NN_MODEL		${prj_root}/src/test_model/yolov4_tiny.nb)
+		#set(USED_NN_MODEL		${prj_root}/src/test_model/yamnet_fp16.nb)
 	endif()	
 
 	execute_process(

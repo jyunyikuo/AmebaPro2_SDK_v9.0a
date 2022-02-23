@@ -646,6 +646,17 @@ list(
 	APPEND app_sources
 	${prj_root}/src/test_model/model_mbnetssd.c
 	${prj_root}/src/test_model/model_yolov3t.c
+    ${prj_root}/src/test_model/model_yamnet.c
+    ${prj_root}/src/test_model/model_yamnet_s.c
+	${prj_root}/src/test_model/mel_spectrogram.c
+	${prj_root}/src/test_model/wave_sample/DCBOS2UWKAA_30_0.c
+	${prj_root}/src/test_model/wave_sample/Pgprrf93CtE_30_2.c
+	${prj_root}/src/test_model/wave_sample/KOS5gxwxFlI_170_0.c
+	${prj_root}/src/test_model/wave_sample/YpGd1FUqzwY_0_0.c
+	${prj_root}/src/test_model/wave_sample/ZthT5nwFkJg_60_1.c
+	${prj_root}/src/test_model/wave_sample/fvYPQygklIo_30_2.c
+	${prj_root}/src/test_model/wave_sample/jSC3k_UgPOI_120_2.c
+	${prj_root}/src/test_model/wave_sample/vUXCWzZyMew_20_1.c
 )
 #NN example
 list(

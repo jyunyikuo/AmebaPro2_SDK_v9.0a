@@ -179,6 +179,8 @@ nnmodel_t mbnetssd = {
 	.postprocess 	= mbnetssd_postprocess,
 	.set_confidence_thresh   = set_mbnetssd_confidence_thresh,
 	.set_nms_thresh     = set_mbnetssd_nms_thresh,
+
+	.name = "MBNETSSD"
 };
 
 nnmodel_t mbnetssd_fwfs = {
@@ -188,4 +190,6 @@ nnmodel_t mbnetssd_fwfs = {
 	.model_src 		= MODEL_SRC_FILE,
 	.set_confidence_thresh   = set_mbnetssd_confidence_thresh,
 	.set_nms_thresh     = set_mbnetssd_nms_thresh,
+
+	.name = "MBNETSSD"
 };

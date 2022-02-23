@@ -33,6 +33,6 @@
 		"header":{
 			"type":"NN_MDL"
 		},
-        "file":"model.nb"
+        "file":"fwfs_nn_model.bin"
 	}
 }

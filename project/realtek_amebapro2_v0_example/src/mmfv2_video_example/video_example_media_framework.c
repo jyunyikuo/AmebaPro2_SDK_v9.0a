@@ -115,6 +115,9 @@ static void example_mmf2_video_surport()
 	//mmf2_video_example_demuxer_rtsp_init();
 
 	//mmf2_video_example_h264_pcmu_array_mp4_init();
+
+	//mmf2_video_example_audio_vipnn_init();
+
 }
 
 void video_example_main(void *param)
