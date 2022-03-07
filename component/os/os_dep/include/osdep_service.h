@@ -21,9 +21,6 @@
  *  @{
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /*************************** OS dep feature enable *******************************/
 
 /******************************************************
@@ -40,6 +37,35 @@ extern "C" {
 #define CONFIG_MEM_MONITOR	MEM_MONITOR_SIMPLE
 #else
 #define CONFIG_MEM_MONITOR	MEM_MONITOR_SIMPLE
+#endif
+
+#if defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
+#include <platform_conf.h>
+#include <basic_types.h>
+#if (CONFIG_CMSIS_FREERTOS_EN==1)
+#define PLATFORM_FREERTOS 1
+#endif
+#else
+#if defined(CONFIG_PLATFORM_AMEBA_X) && (CONFIG_PLATFORM_AMEBA_X == 1)
+#include "platform_autoconf.h"
+#endif
+#endif
+
+#if defined(PLATFORM_ALIOS)
+#include "alios_service.h"
+#elif defined(PLATFORM_FREERTOS)
+#include "freertos_service.h"
+#elif defined(PLATFORM_ECOS)
+#include "ecos/ecos_service.h"
+#elif defined(PLATFORM_CMSIS_RTOS)
+#include "cmsis_rtos_service.h"
+#elif defined(CONFIG_PLATFOMR_CUSTOMER_RTOS)
+#include "customer_rtos_service.h"
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Define compilor specific symbol */
@@ -68,18 +94,6 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-
-#if defined(CONFIG_PLATFORM_8710C) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8735B)
-#include <platform_conf.h>
-#include <basic_types.h>
-#if (CONFIG_CMSIS_FREERTOS_EN==1)
-#define PLATFORM_FREERTOS 1
-#endif
-#else
-#if defined(CONFIG_PLATFORM_AMEBA_X) && (CONFIG_PLATFORM_AMEBA_X == 1)
-#include "platform_autoconf.h"
-#endif
-#endif
 
 #if defined(CONFIG_PLATFORM_AMEBA_X) && (CONFIG_PLATFORM_AMEBA_X == 0)
 #ifndef SUCCESS
@@ -127,17 +141,6 @@ extern "C" {
 #define RTW_RBUF_PKT_UNAVAIL	6
 #define RTW_SDIO_READ_PORT_FAIL	7
 
-#if defined(PLATFORM_ALIOS)
-#include "alios_service.h"
-#elif defined(PLATFORM_FREERTOS)
-#include "freertos_service.h"
-#elif defined(PLATFORM_ECOS)
-#include "ecos/ecos_service.h"
-#elif defined(PLATFORM_CMSIS_RTOS)
-#include "cmsis_rtos_service.h"
-#elif defined(CONFIG_PLATFOMR_CUSTOMER_RTOS)
-#include "customer_rtos_service.h"
-#endif
 
 #define RTW_MAX_DELAY			0xFFFFFFFF
 #define RTW_WAIT_FOREVER		0xFFFFFFFF
@@ -832,93 +835,6 @@ void	rtw_udelay_os(int us);
 */
 void	rtw_yield_os(void);
 
-/*************************** ATOMIC Integer *******************************/
-
-/**
- * @brief  This function atomically sets the value of the variable.
- * @param[in] v: Pointer of type atomic_t that to be set value.
- * @param[in] i: Required value.
- * @return	  None
- * @note    The guaranteed useful range of an atomic_t is only 24 bits.
-*/
-void 	ATOMIC_SET(ATOMIC_T *v, int i);
-
-/**
- * @brief  This function atomically reads the value of the variable.
- * @param[in] v: Pointer of type atomic_t that to be read.
- * @return	  The value of the variable.
- * @note	The guaranteed useful range of an atomic_t is only 24 bits.
-*/
-int		ATOMIC_READ(ATOMIC_T *v);
-
-/**
- * @brief  This function adds "i" to the contained "v".
- * @param[in] v: Pointer of type atomic_t.
- * @param[in] i: value to add.
- * @return	  None
-*/
-void 	ATOMIC_ADD(ATOMIC_T *v, int i);
-
-/**
- * @brief  This function subtracts "i" from th econtained "v".
- * @param[in] v: Pointer of type atomic_t.
- * @param[in] i: value to subtract.
- * @return	  None
-*/
-void 	ATOMIC_SUB(ATOMIC_T *v, int i);
-
-/**
- * @brief  This function adds 1 to the contained "v".
- * @param[in] v: Pointer of type atomic_t.
- * @return	  None
-*/
-void 	ATOMIC_INC(ATOMIC_T *v);
-
-/**
- * @brief  This function subtracts 1 from th econtained "v".
- * @param[in] v: Pointer of type atomic_t.
- * @return	  None
-*/
-void 	ATOMIC_DEC(ATOMIC_T *v);
-
-/**
- * @brief  This function adds "i" to the contained "v" and returns the result.
- * @param[in] v: Pointer of type atomic_t.
- * @param[in] i: value to add.
- * @return	  None
-*/
-int 	ATOMIC_ADD_RETURN(ATOMIC_T *v, int i);
-
-/**
- * @brief  This function subtracts "i" from th econtained "v" and returns the result.
- * @param[in] v: Pointer of type atomic_t.
- * @param[in] i: value to subtract.
- * @return	  None
-*/
-int 	ATOMIC_SUB_RETURN(ATOMIC_T *v, int i);
-
-/**
- * @brief  This function adds 1 to the contained "v" and returns the result.
- * @param[in] v: Pointer of type atomic_t.
- * @return	  None
-*/
-int 	ATOMIC_INC_RETURN(ATOMIC_T *v);
-
-/**
- * @brief  This function subtracts 1 from th econtained "v" and returns the result.
- * @param[in] v: Pointer of type atomic_t.
- * @return	  None
-*/
-int 	ATOMIC_DEC_RETURN(ATOMIC_T *v);
-
-/**
- * @brief  This function subtracts 1 from th econtained "v" and test if the result equals 0.
- * @param[in] v: Pointer of type atomic_t.
- * @return	  0: The result after subtracting 1 is 0
- * @return	 -1: The result after subtracting 1 is not 0
-*/
-int ATOMIC_DEC_AND_TEST(ATOMIC_T *v);
-/*************************** End ATOMIC *******************************/
 
 u64	rtw_modular64(u64 x, u64 y);
 
@@ -1397,6 +1313,94 @@ struct osdep_service_ops {
 #ifdef __cplusplus
 }
 #endif
+
+/*************************** ATOMIC Integer *******************************/
+
+/**
+ * @brief  This function atomically sets the value of the variable.
+ * @param[in] v: Pointer of type atomic_t that to be set value.
+ * @param[in] i: Required value.
+ * @return	  None
+ * @note    The guaranteed useful range of an atomic_t is only 24 bits.
+*/
+void 	ATOMIC_SET(ATOMIC_T *v, int i);
+
+/**
+ * @brief  This function atomically reads the value of the variable.
+ * @param[in] v: Pointer of type atomic_t that to be read.
+ * @return	  The value of the variable.
+ * @note	The guaranteed useful range of an atomic_t is only 24 bits.
+*/
+int		ATOMIC_READ(ATOMIC_T *v);
+
+/**
+ * @brief  This function adds "i" to the contained "v".
+ * @param[in] v: Pointer of type atomic_t.
+ * @param[in] i: value to add.
+ * @return	  None
+*/
+void 	ATOMIC_ADD(ATOMIC_T *v, int i);
+
+/**
+ * @brief  This function subtracts "i" from th econtained "v".
+ * @param[in] v: Pointer of type atomic_t.
+ * @param[in] i: value to subtract.
+ * @return	  None
+*/
+void 	ATOMIC_SUB(ATOMIC_T *v, int i);
+
+/**
+ * @brief  This function adds 1 to the contained "v".
+ * @param[in] v: Pointer of type atomic_t.
+ * @return	  None
+*/
+void 	ATOMIC_INC(ATOMIC_T *v);
+
+/**
+ * @brief  This function subtracts 1 from th econtained "v".
+ * @param[in] v: Pointer of type atomic_t.
+ * @return	  None
+*/
+void 	ATOMIC_DEC(ATOMIC_T *v);
+
+/**
+ * @brief  This function adds "i" to the contained "v" and returns the result.
+ * @param[in] v: Pointer of type atomic_t.
+ * @param[in] i: value to add.
+ * @return	  None
+*/
+int 	ATOMIC_ADD_RETURN(ATOMIC_T *v, int i);
+
+/**
+ * @brief  This function subtracts "i" from th econtained "v" and returns the result.
+ * @param[in] v: Pointer of type atomic_t.
+ * @param[in] i: value to subtract.
+ * @return	  None
+*/
+int 	ATOMIC_SUB_RETURN(ATOMIC_T *v, int i);
+
+/**
+ * @brief  This function adds 1 to the contained "v" and returns the result.
+ * @param[in] v: Pointer of type atomic_t.
+ * @return	  None
+*/
+int 	ATOMIC_INC_RETURN(ATOMIC_T *v);
+
+/**
+ * @brief  This function subtracts 1 from th econtained "v" and returns the result.
+ * @param[in] v: Pointer of type atomic_t.
+ * @return	  None
+*/
+int 	ATOMIC_DEC_RETURN(ATOMIC_T *v);
+
+/**
+ * @brief  This function subtracts 1 from th econtained "v" and test if the result equals 0.
+ * @param[in] v: Pointer of type atomic_t.
+ * @return	  0: The result after subtracting 1 is 0
+ * @return	 -1: The result after subtracting 1 is not 0
+*/
+int ATOMIC_DEC_AND_TEST(ATOMIC_T *v);
+/*************************** End ATOMIC *******************************/
 
 /*\@}*/
 

@@ -46,6 +46,11 @@ extern VOID RtlUdelayOS(u32 us);
 #include <string.h>
 #endif
 
+#if defined(CONFIG_PLATFORM_8735B)
+// experimental feature, use stdatomic to replace customized defined atomic
+#define STDATOMIC
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,11 +62,6 @@ extern "C" {
 #endif
 #endif
 
-
-#if defined(CONFIG_PLATFORM_8735B)
-// experimental feature, use stdatomic to replace customized defined atomic
-#define STDATOMIC
-#endif
 
 // --------------------------------------------
 //	Platform dependent type define
@@ -121,20 +121,22 @@ typedef void			    *thread_context;
 #if defined(STDATOMIC)
 //#include <stdatomic.h>
 #ifndef __cplusplus
-# include <stdatomic.h>
-#else
-# include <atomic>
-# define _Atomic(X) std::atomic< X >
-#endif
-
+#include <stdatomic.h>
 #define ATOMIC_T atomic_int
 #define atomic_t atomic_int
+#else
+#include <atomic>
+#define _Atomic(X) std::atomic< X >
+#define ATOMIC_T std::atomic_int
+#define atomic_t std::atomic_int
+#endif
 
 #undef atomic_read
 #define atomic_read(v)  atomic_load(v)
 #undef atomic_set
 #define atomic_set(v,i) atomic_store(v, i)
 #else
+
 /* old implement */
 #if !defined(CONFIG_PLATFORM_8710C)
 typedef struct {
