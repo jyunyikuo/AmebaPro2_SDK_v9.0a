@@ -81,15 +81,15 @@
         },
         "nn":{
             "start_addr" : "0x710000",
-            "length" : "0x1000000",
+            "length" : "0x650000",
             "type": "PT_NN_MDL",
             "valid": true
         },
         "mp":{
-        	"start_addr" : "0x1710000",
+        	"start_addr" : "0xD60000",
         	"length" : "0x1000",
         	"type": "PT_MP",
-        	"valid": false
+        	"valid": true
 		}
 	}
 }

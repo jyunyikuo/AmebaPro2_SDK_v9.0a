@@ -1,6 +1,15 @@
 #ifndef FWFS_H
 #define FWFS_H
 
+#define M_NORMAL		0x00
+#define M_MANI			0x01
+#define M_MANI_UNPT		0x02
+#define M_RAW			0x03
+
+#define M_CREATE		0x10
+#define M_RDONLY		0x20
+#define M_RDWR			0x30
+
 void *pfw_open(char *name, int mode);
 void pfw_close(void *fr);
 int pfw_read(void *fr, void *data, int size);

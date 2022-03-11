@@ -115,6 +115,8 @@ list (
 	"${sdk_root}/component/soc/8735b/fwlib/rtl8735b/lib/source/ram/video"
 	"${sdk_root}/component/soc/8735b/fwlib/rtl8735b/lib/source/ram/video/semihost"
 	"${sdk_root}/component/soc/8735b/cmsis/voe/rom"
+
+	"${prj_root}/src/ai_agent_src"
 	   
 )
 

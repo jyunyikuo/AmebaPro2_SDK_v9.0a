@@ -13,7 +13,7 @@
 /**
 * User data for common flash usage
 */
-#define CONFIG_USAGE_NAND_FLASH	1
+#define CONFIG_USAGE_NAND_FLASH	0
 
 #if CONFIG_USAGE_NAND_FLASH
 // nand flash, EVB: 128MB

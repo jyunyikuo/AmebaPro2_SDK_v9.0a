@@ -106,6 +106,8 @@ if(NOT DEFINED CONFIG_DONE)
 		set(NN_MODEL_PATH		${prj_root}/src/test_model)
 		#set(USED_NN_MODEL		${prj_root}/src/test_model/yolov4_tiny.nb)
 		#set(USED_NN_MODEL		${prj_root}/src/test_model/yamnet_fp16.nb)
+
+		set(POSTBUILD_AIAGENT		${prj_root}/GCC-RELEASE/mp/amebapro2_ai_agent.json)
 	endif()	
 
 	execute_process(

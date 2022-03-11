@@ -10,6 +10,7 @@ set (sdk_root "${CMAKE_CURRENT_SOURCE_DIR}/../../..")
 include(./config.cmake)
 
 #add_subdirectory (bootloader)
+add_subdirectory (ai_agent)
 
 if(BUILD_TZ)
 	if(BUILD_WLANMP)
@@ -65,10 +66,12 @@ add_custom_target(
 	
 	COMMAND cp ${prj_root}/GCC-RELEASE/bootloader/boot.bin .
 	COMMAND cp ${fw} ./firmware.bin
+	COMMAND cp ai_agent/ai_agent.bin .
 
 	COMMAND cp ${bttrace} ./APP.trace
 	
 	#DEPENDS bootloader
+	DEPENDS ai_agent
 	DEPENDS ${app_dep}
 	DEPENDS ${POSTBUILD_CERT}
 	DEPENDS ${POSTBUILD_KEY_CFG}

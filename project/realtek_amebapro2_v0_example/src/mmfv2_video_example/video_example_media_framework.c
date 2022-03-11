@@ -118,6 +118,8 @@ static void example_mmf2_video_surport()
 
 	//mmf2_video_example_audio_vipnn_init();
 
+	mmf2_video_ai_agent_init();
+
 }
 
 void video_example_main(void *param)

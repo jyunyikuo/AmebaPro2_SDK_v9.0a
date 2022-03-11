@@ -21,7 +21,8 @@ MEMORY
 						/* Raymond  workaround for JIRA-537 issue 0x70000000 --> 0x70000040 */
 						  
   VOE    (rwx)          : ORIGIN = 0x70000000, LENGTH = 0x70100000 - 0x70000000	/*  1MB */
-  DDR    (rwx) 		    : ORIGIN = 0x70100000, LENGTH = 0x72000000 - 0x70100000 /* 55MB -> 31MB */
+  DDR    (rwx) 		    : ORIGIN = 0x70100000, LENGTH = 0x71F00000 - 0x70100000 /* 55MB -> 30MB */
+  DDR2   (rwx) 		    : ORIGIN = 0x71F00000, LENGTH = 0x72000000 - 0x71F00000 /* 1MB */
   NN     (rwx)      : ORIGIN = 0x72000000, LENGTH = 0x74000000 - 0x72000000	/* 8MB -> 32MB */
   
   BTRACE (rx)          : ORIGIN = 0x00800000, LENGTH = 0x00C00000 - 0x00800000	/* Bluetooth Trace */
@@ -75,6 +76,8 @@ __voe_code_size__   = LENGTH(VOE);
 
 __nn_eram_start__   = ORIGIN(NN);
 __nn_eram_end__     = ORIGIN(NN) + LENGTH(NN);
+
+__eram2_start__		= ORIGIN(DDR2);
 
 SECTIONS
 {
