@@ -1,3 +1,5 @@
+#include "stdio.h"
+#include "string.h"
 #include <iostream>
 #include "agent_test.h"
 
