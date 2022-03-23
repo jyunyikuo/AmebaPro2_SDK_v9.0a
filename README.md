@@ -54,6 +54,9 @@ git clone -b v9.3a https://github.com/sychouwk/AmebaPro2_SDK_v9.0a.git
     ```
     Note: It may require to copy the flash_ntz.bin to Pro2_PG_tool_linux_v1.2.3 folder before running this command 
 
+- If Nor flash
+  - use image tool(AmebaZII_PGTool_Linux) to download the image to AmebaPro2 and reboot
+
 - Configure WiFi Connection  
   - While runnung the example, you may need to configure WiFi connection by using these commands in uart terminal.  
     ```

@@ -85,6 +85,9 @@ Make sure your AmebaPro2 is connected and powered on. Use the Realtek image tool
   uartfwburn.linux -p dev/ttyUSB? -f flash_ntz.nn.bin -b 3000000 -n pro2
   ```
   Note: It may require to copy the flash_ntz.nn.bin to Pro2_PG_tool_linux_v1.2.3 folder before running this command 
+  
+- If Nor flash  
+  use image tool(AmebaZII_PGTool_Linux) to download the image to AmebaPro2 and reboot
 
 ## Validation
 

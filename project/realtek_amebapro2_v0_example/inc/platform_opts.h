@@ -13,24 +13,22 @@
 /**
 * User data for common flash usage
 */
-#define CONFIG_USAGE_NAND_FLASH	1
+#define CONFIG_USAGE_NAND_FLASH	0
 
 #if CONFIG_USAGE_NAND_FLASH
 // nand flash, EVB: 128MB
-#define NAND_APP_BASE			0x4000000 /*NAND FLASH FILESYSTEM begin address It need to alignment block size, the default is 512 BLOCK*/
 #define FAST_RECONNECT_DATA		0x7A00000 // 4KB
 #define BT_FTL_BKUP_ADDR		(0x7A00000 + 0x1000) // 12KB
 #define SECURE_STORAGE_BASS		(0x7A00000 + 0x4000) // 4KB
 #define FACE_FEATURE_DATA		(0x7A00000 + 0x5000) /*!< FACE data begin address, default size used is 32KB (can be adjusted based on user requirement)*/
 #else
-// nor flash, EVB: 16MB
-#define NAND_APP_BASE			0x4000000 /*NAND FLASH FILESYSTEM begin address It need to alignment block size, the default is 512 BLOCK*/
-#define FLASH_APP_BASE			0xE00000
 #define FAST_RECONNECT_DATA		0xF00000 // 4KB
 #define BT_FTL_BKUP_ADDR		(0xF00000 + 0x1000) // 12KB
 #define SECURE_STORAGE_BASS		(0xF00000 + 0x4000) // 4KB
 #define FACE_FEATURE_DATA		(0xF00000 + 0x5000) /*!< FACE data begin address, default size used is 32KB (can be adjusted based on user requirement)*/
 #endif
+
+#define NAND_APP_BASE			0x4000000 /*NAND FLASH FILESYSTEM begin address It need to alignment block size, the default is 512 BLOCK*/
 #define FLASH_APP_BASE			0xE00000
 
 /**
@@ -129,7 +127,7 @@
 /*For fast dhcp*/
 #define CONFIG_FAST_DHCP    1
 /*For fast connect*/
-#define ENABLE_FAST_CONNECT 0
+#define ENABLE_FAST_CONNECT 1
 
 #if defined(ENABLE_FAST_CONNECT) && ENABLE_FAST_CONNECT
 #define ENABLE_FAST_CONNECT_NAND 1
