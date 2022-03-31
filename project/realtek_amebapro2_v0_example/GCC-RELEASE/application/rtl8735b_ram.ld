@@ -150,8 +150,11 @@ SECTIONS
     {
         . = ALIGN(32);
         __ddr_code_text_start__ = .;
-        *libgcc.a:pr-support.o*(.text*) /*libgcc.a*/
-        *libstdc++.a:list.o*(.text*)
+        //*libgcc.a:pr-support.o*(.text*)
+        //*libstdc++.a:list.o*(.text*)
+		*libstdc++.a:*(.text*)
+		*libgcc.a:*(.text*)
+		*lib_a*(.text*)
         __ddr_code_text_end__ = .;
     } > DDR    
     
@@ -208,8 +211,6 @@ SECTIONS
 		*verify_sgpio.*o*(.text*)
 		*verify_uart.*o*(.text*)
 		*verify_uart_irq_ram.*o*(.text*)
-		*lib_a*(.text*)
-        *libstdc++.a*(.text*)
 			
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
@@ -254,6 +255,9 @@ SECTIONS
 		KEEP(*(SORT(.fini_array.*)))
 		KEEP(*(.fini_array))
 		PROVIDE_HIDDEN (__fini_array_end = .);
+
+		KEEP (*(.ctors*))
+		KEEP (*(.dtors*))
 
 		KEEP(*(.jcr*))
 		*(.ram.hal_pmc.data*)

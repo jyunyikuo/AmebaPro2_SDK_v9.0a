@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 
 project(app)
 
-enable_language(C ASM)
+enable_language(C CXX ASM)
 
 if(BUILD_TZ)
 set(app application.ns)

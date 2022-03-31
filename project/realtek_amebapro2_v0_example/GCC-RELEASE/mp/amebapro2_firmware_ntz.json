@@ -56,6 +56,7 @@
 		"ddr": {
 			"type":"SIMG_DDR",
 			"sections":	[
+				".ddr.code.text",
 				".ddr.text",
                 ".ddr.data",
                 ".ddr.rodata"
