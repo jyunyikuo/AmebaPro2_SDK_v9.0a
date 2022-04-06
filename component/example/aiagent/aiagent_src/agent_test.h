@@ -9,5 +9,6 @@ extern "C" void test2(void);
 extern "C" void test3(void);
 extern "C" void test4(void);
 extern "C" void test5(string str);
+extern "C" void test6(void);
 
 #endif /* __AGENT_TEST_H__ */

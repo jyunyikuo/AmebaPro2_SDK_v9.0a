@@ -4,6 +4,7 @@
 #include "agent_test.h"
 
 #include <vector>
+#include <list>
 
 using namespace std;
 
@@ -124,6 +125,34 @@ extern "C" void test5(string str)
     cout << str << endl;
 }
 
+extern "C" void test6(void)
+{
+    printf("test6 -> list test\r\n");
+    
+    //
+    list<int> my_list = {1, 2, 3};
+    for (list<int>::iterator it = my_list.begin(); it != my_list.end(); it++) {
+        printf("%d ", *it);
+    }
+    printf("\r\n");
+    
+    my_list.push_back(4);
+    for (list<int>::iterator it = my_list.begin(); it != my_list.end(); it++) {
+        printf("%d ", *it);
+    }
+    printf("\r\n");
 
+    my_list.push_front(0);
+    for (list<int>::iterator it = my_list.begin(); it != my_list.end(); it++) {
+        printf("%d ", *it);
+    }
+    printf("\r\n");
+    
+    my_list.push_front(0);
+    for (list<int>::reverse_iterator it = my_list.rbegin(); it != my_list.rend(); it++) {
+        printf("%d ", *it);
+    }
+    printf("\r\n");
+}
 
 
