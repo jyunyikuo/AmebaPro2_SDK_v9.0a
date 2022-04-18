@@ -34,6 +34,7 @@ struct codec_info {
 #define AV_CODEC_ID_BMP   10
 #define AV_CODEC_ID_JPEG   11
 #define AV_CODEC_ID_NN_RAW  12
+#define AV_CODEC_ID_MD_RAW  13
 #define AV_CODEC_ID_UNKNOWN -1
 
 /*rtp payload type mapping and standard rtp payload type table -- range from 0-255 in 1 BYTE*/

@@ -6,13 +6,11 @@
 
 #define CMD_VIPNN_SET_MODEL             MM_MODULE_CMD(0x00)  // set model
 #define CMD_VIPNN_SET_IN_PARAMS    	    MM_MODULE_CMD(0x01)  // set input imaage parameter
-#define CMD_VIPNN_SET_OUTPUT            MM_MODULE_CMD(0x02)  // set parameter
+#define CMD_VIPNN_SET_OUTPUT            MM_MODULE_CMD(0x02)  // enable module output
 #define CMD_VIPNN_SET_DISPPOST          MM_MODULE_CMD(0x03)  // set display callback
 
 #define CMD_VIPNN_SET_CONFIDENCE_THRES  MM_MODULE_CMD(0x06)  // set confidence threshold for object detection 
 #define CMD_VIPNN_SET_NMS_THRES         MM_MODULE_CMD(0x07)  // set NMS threshold for object detection 
-
-#define CMD_VIPNN_SET_OUTPUT     	    MM_MODULE_CMD(0x15)  // enable module output
 
 #define CMD_VIPNN_APPLY				    MM_MODULE_CMD(0x20)  // for hardware module
 
